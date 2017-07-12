@@ -15,6 +15,7 @@ const colors = require('colors')
 const { askSimpleWebAppQuestions } = require('./src/questions')
 const { createSimpleWebApp } = require('./src/projectInit')
 const { deploy } = require('./src/deploy')
+const { logs } = require('./src/logs')
 
 program
 	.version('1.0.0')
@@ -26,6 +27,11 @@ program
 	.command('deploy [env]')
 	.usage('Deploys a Google Cloud Functions projects locally or to a Google Cloud Account.')
 	.action(env => deploy(env))
+
+program
+	.command('logs [limit]')
+	.usage('Access local logs.')
+	.action(limit => logs(limit))
 
 /*eslint-disable */
 program.parse(process.argv) 

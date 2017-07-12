@@ -6,10 +6,14 @@
  * LICENSE file in the root directory of this source tree.
 */
 const shell = require('shelljs')
-/*eslint-disable */
-const limit = process.argv[2]
-/*eslint-enable */
-if (limit)
-	shell.exec(`functions logs read --limit=${limit}`)
-else
-	shell.exec('functions logs read')
+
+const logs = limit => {
+	if (limit)
+		shell.exec(`functions logs read --limit=${limit}`)
+	else
+		shell.exec('functions logs read')
+}
+
+module.exports = {
+	logs
+}

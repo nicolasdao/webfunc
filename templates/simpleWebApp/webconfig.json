@@ -13,6 +13,13 @@
 			"entryPoint": "{{entryPoint}}",
 			"googleProject": "{{googleProject}}",
 			"bucket": "{{bucket}}"
+		},
+		"build": {
+			"functionName": "{{functionName}}",
+			"trigger": "{{trigger}}",
+			"entryPoint": "{{entryPoint}}",
+			"googleProject": "{{googleProject}}",
+			"bucket": "{{bucket}}"
 		}
 	}
 }
