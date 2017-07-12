@@ -11,7 +11,7 @@ const fs = require('fs')
 const colors = require('colors')
 /*eslint-enable */
 
-module.exports.deploy = env => {
+module.exports.deploy = (env = 'default') => {
 	const startClock = Date.now()
 
 	/*eslint-disable */
@@ -19,46 +19,46 @@ module.exports.deploy = env => {
 	/*eslint-enable */
 
 	if (!fs.existsSync(webconfigPath)) {
-		console.log('Missing webconfig.json file')
+		console.log(`Missing webconfig.json file. Run ${`webfunc init`.italic.bold} to initialize a new one.`.red)
 		/*eslint-disable */
 		process.exit(1)
 		/*eslint-enable */
 	}
 	
 	const webconfig =  require(webconfigPath)
+	const environments = webconfig.env
 
-	// CONFIGURE ANY ENVIRONMENT BY ADDING A NEW CONFIG HERE.
-	const config = !env
-		? {
-			GCPproject: '{{GCPproject}}',
-			GCPbucket: '{{GCPbucket}',
-			GCFname: '{{GCFname}}',
-			GCFtrigger: '{{GCFtrigger}}',
-			GCFmainFunc: '{{GCFmainFunc}}'
-		} 
-		: env == 'staging'
-			? {
-				GCPproject: '{{GCPproject}}',
-				GCPbucket: '{{GCPbucket}',
-				GCFname: '{{GCFname}}',
-				GCFtrigger: '{{GCFtrigger}}',
-				GCFmainFunc: '{{GCFmainFunc}}'
-			} 
-			: env == 'prod'
-				? {
-					GCPproject: '{{GCPproject}}',
-					GCPbucket: '{{GCPbucket}',
-					GCFname: '{{GCFname}}',
-					GCFtrigger: '{{GCFtrigger}}',
-					GCFmainFunc: '{{GCFmainFunc}}'
-				} : (() => { 
-					console.log(`${`Failed to deploy: Environment '${env}' is unknown. Please configure your 'deploy.js' for that environment.`.red}`)
-					/*eslint-disable */
-					process.exit(1)
-					/*eslint-enable */
-				})()
+	if (!environments) {
+		console.log(`${`webconfig.json`.italic.bold} is missing the ${`env`.italic.bold} property.`.red)
+		/*eslint-disable */
+		process.exit(1)
+		/*eslint-enable */
+	}
 
-	if (!env) { // Local environment. Make Sure the Google function emulator is running.
+	const config = environments[env]
+
+	if (!config) {
+		console.log(`${`webconfig.json`.italic.bold} does not define any ${env.italic.bold} property under its ${`env`.italic.bold} property.`.red)
+		/*eslint-disable */
+		process.exit(1)
+		/*eslint-enable */
+	}
+
+	if (!config.trigger) {
+		console.log(`${`webconfig.json`.italic.bold} does not define any ${`trigger`.italic.bold} property under its ${env.italic.bold} environment.`.red)
+		/*eslint-disable */
+		process.exit(1)
+		/*eslint-enable */
+	}
+
+	if (!config.entryPoint) {
+		console.log(`${`webconfig.json`.italic.bold} does not define any ${`entryPoint`.italic.bold} property under its ${env.italic.bold} environment.`.red)
+		/*eslint-disable */
+		process.exit(1)
+		/*eslint-enable */
+	}
+
+	if (env == 'default') { // Local environment. Make Sure the Google function emulator is running.
 		const emulatorsRunning = shell.exec('ps -ax | grep functions-emulator | wc -l', {silent:true}).stdout * 1
 
 		if (emulatorsRunning < 3) {
@@ -66,16 +66,40 @@ module.exports.deploy = env => {
 			shell.exec('functions start')
 		}
 
-		console.log(`${'LOCALLY'.italic.bold} deploying entry-point ${config.GCFmainFunc.italic.bold} using trigger type ${config.GCFtrigger.italic.bold}`.cyan)
-		shell.exec(`functions deploy ${config.GCFmainFunc} ${config.GCFtrigger}`)
+		console.log(`${'LOCALLY'.italic.bold} deploying entry-point ${config.entryPoint.italic.bold} using trigger type ${config.trigger.italic.bold}.`.cyan)
+		shell.exec(`functions deploy ${config.entryPoint} ${config.trigger}`)
 	}
 	else {
-		console.log(`Deploying entry-point ${config.GCFmainFunc.italic.bold} to ${`GOOGLE CLOUD FUNCTION ${config.GCFname}`.italic.bold} located in project ${config.GCPproject.italic.bold} using trigger type ${config.GCFtrigger.italic.bold}`.cyan)
-		shell.exec(`gcloud config set project ${config.GCPproject}`)
-		shell.exec(`gcloud beta functions deploy ${config.GCFname} --stage-bucket ${config.GCPbucket} ${config.GCFtrigger} --entry-point ${config.GCFmainFunc}`)
+		if (!config.functionName) {
+			console.log(`${`webconfig.json`.italic.bold} does not define any ${`functionName`.italic.bold} property under its ${env.italic.bold} environment.`.red)
+			/*eslint-disable */
+			process.exit(1)
+			/*eslint-enable */
+		}
+
+		if (!config.googleProject) {
+			console.log(`${`webconfig.json`.italic.bold} does not define any ${`googleProject`.italic.bold} property under its ${env.italic.bold} environment.`.red)
+			/*eslint-disable */
+			process.exit(1)
+			/*eslint-enable */
+		}
+
+		if (!config.bucket) {
+			console.log(`${`webconfig.json`.italic.bold} does not define any ${`bucket`.italic.bold} property under its ${env.italic.bold} environment.`.red)
+			/*eslint-disable */
+			process.exit(1)
+			/*eslint-enable */
+		}
+
+		console.log(`Deploying entry-point ${config.entryPoint.italic.bold} to ${`GOOGLE CLOUD FUNCTION ${config.functionName}`.italic.bold} located in project ${config.googleProject.italic.bold} using trigger type ${config.trigger.italic.bold}`.cyan)
+		shell.exec(`gcloud config set project ${config.googleProject}`)
+		shell.exec(`gcloud beta functions deploy ${config.functionName} --stage-bucket ${config.bucket} ${config.trigger} --entry-point ${config.entryPoint}`)
 	}
 
 	console.log(`Deployment successful (${(Date.now() - startClock)/1000} sec.)`.green)
+	/*eslint-disable */
+	process.exit(1)
+	/*eslint-enable */
 }
 
 

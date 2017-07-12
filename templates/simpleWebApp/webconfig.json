@@ -7,7 +7,7 @@
 		"Access-Control-Max-Age": "1296000"
 	},
 	"env": {
-		"dev": {
+		"default": {
 			"functionName": "{{functionName}}",
 			"trigger": "{{trigger}}",
 			"entryPoint": "{{entryPoint}}",
