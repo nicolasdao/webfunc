@@ -14,7 +14,7 @@ const colors = require('colors')
 /*eslint-enable */
 const { askSimpleWebAppQuestions } = require('./src/questions')
 const { createSimpleWebApp } = require('./src/projectInit')
-const deploy = require('./src/deploy')
+const { deploy } = require('./src/deploy')
 
 program
 	.version('1.0.0')

@@ -7,11 +7,12 @@
 */
 const shell = require('shelljs')
 const fs = require('fs')
+const path = require('path')
 /*eslint-disable */
 const colors = require('colors')
 /*eslint-enable */
 
-module.exports.deploy = (env = 'default') => {
+const deploy = (env = 'default') => {
 	const startClock = Date.now()
 
 	/*eslint-disable */
@@ -102,5 +103,7 @@ module.exports.deploy = (env = 'default') => {
 	/*eslint-enable */
 }
 
-
+module.exports = {
+	deploy
+}
 
