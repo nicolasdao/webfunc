@@ -1,0 +1,45 @@
+{
+  "name": "webfunc",
+  "version": "0.0.1-alpha.1",
+  "description": "Mini web server for Google Cloud Functions. Also assists in initialization of web app projects hosted on Google Cloud Functions.",
+  "contributors": [
+    "Nicolas Dao <nic@neap.co> (https://neap.co/)"
+  ],
+  "bin": {
+    "webfunc": "./index.js"
+  },
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "eslint": "eslint index.js src/",
+    "release": "standard-version"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nicolasdao/google-graphql-functions.git"
+  },
+  "keywords": [
+    "web",
+    "cors",
+    "server",
+    "google",
+    "cloud",
+    "functions"
+  ],
+  "author": "Nicolas Dao",
+  "license": "BSD-3-Clause",
+  "bugs": {
+    "url": "https://github.com/nicolasdao/google-graphql-functions/issues"
+  },
+  "homepage": "https://github.com/nicolasdao/google-graphql-functions#readme",
+  "dependencies": {
+    "colors": "^1.1.2",
+    "commander": "^2.11.0",
+    "lodash": "^4.17.4",
+    "shelljs": "^0.7.8",
+    "standard-version": "^4.2.0"
+  },
+  "devDependencies": {
+    "eslint": "^4.1.1"
+  }
+}

@@ -1,0 +1,18 @@
+{
+	"headers": {
+		"Access-Control-Allow-Methods": "GET, HEAD, OPTIONS, POST",
+		"Access-Control-Allow-Headers": "authentication, Content-Type, Origin",
+		"Access-Control-Allow-Origin": "*",
+		"Access-Control-Allow-Credentials": "true",
+		"Access-Control-Max-Age": "1296000"
+	},
+	"env": {
+		"dev": {
+			"functionName": "hello",
+			"trigger": "--trigger-http",
+			"entryPoint": "Hello",
+			"googleProject": "P",
+			"bucket": "b"
+		}
+	}
+}
