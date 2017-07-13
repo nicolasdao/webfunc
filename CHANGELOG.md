@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.1.0-alpha.1"></a>
+# [0.1.0-alpha.1](https://github.com/nicolasdao/webfunc/compare/v0.1.0-alpha.0...v0.1.0-alpha.1) (2017-07-13)
+
+
+### Features
+
+* Add the mini server + add unit testing ([1e997eb](https://github.com/nicolasdao/webfunc/commit/1e997eb))
+
+
+
 <a name="0.1.0-alpha.0"></a>
 # 0.1.0-alpha.0 (2017-07-12)
 
