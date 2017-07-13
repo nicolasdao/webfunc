@@ -8,10 +8,10 @@
   "bin": {
     "webfunc": "./index.js"
   },
-  "main": "index.js",
+  "main": "src/webfunc.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "eslint": "eslint index.js src/",
+    "test": "mocha",
+    "eslint": "eslint index.js src/ test/",
     "release": "standard-version"
   },
   "repository": {
@@ -35,6 +35,7 @@
   "dependencies": {
     "colors": "^1.1.2",
     "commander": "^2.11.0",
+    "http-errors": "^1.6.1",
     "lodash": "^4.17.4",
     "ncp": "^2.0.0",
     "replace": "^0.3.0",
@@ -42,6 +43,9 @@
     "standard-version": "^4.2.0"
   },
   "devDependencies": {
-    "eslint": "^4.1.1"
+    "chai": "^4.1.0",
+    "eslint": "^4.1.1",
+    "mocha": "^3.4.2",
+    "node-mocks-http": "^1.6.4"
   }
 }

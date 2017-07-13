@@ -32,13 +32,15 @@ This is the main 'raison d'être' of this project. Out-of-the box, Google Cloud 
 {
   "headers": {
     "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS, POST",
-    "Access-Control-Allow-Headers": "Content-Type, Origin",
+    "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept",
     "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Credentials": "true",
     "Access-Control-Max-Age": "1296000"
   }
 }
 ```
+More details about those headers in the [Annexes](#annexes) section under [A.1. CORS Refresher](#a1-cors-refresher).
+
+> CORS is a classic source of headache. Though webfunc allows to easily configure any Google Cloud Functions project, it will not prevent anybody to badly configure a project, and therefore loose a huge amount of time. For that reason, a series of common mistakes have been documented in the [Annexes](#annexes) section under [A.2. CORS Basic Errors](#a2-cors-basic-errors).
 
 #### Adding Multiple Deployment Environments
 Let's imagine that 3 different environments have been setup on a Google Cloud Account, the webfunc can easily deploy to any of those environment if they have been configured in the project's _**webconfig.json**_ file:
@@ -82,6 +84,51 @@ To deploy to a specific environment(prod for example):
 ```
 webfunc deploy prod
 ```
+## Annexes
+#### A.1. CORS Refresher
+_COMING SOON..._
+
+#### A.2. CORS Basic Errors
+_**WithCredentials & CORS**_
+The following configuration is forbidden:
+```js
+{
+  "headers": {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Credentials": "true"
+  }
+}
+```
+
+You cannot allow anybody to access a resource("Access-Control-Allow-Origin": "*") while at the same time allowing anybody to share cookies("Access-Control-Allow-Credentials": "true"). This would be a huge security breach (i.e. [CSRF attach](https://en.wikipedia.org/wiki/Cross-site_request_forgery)). 
+
+For that reason, this configuration, though it allow your resource to be called from the same origin, would fail once your API is called from a different origin. A error similar to the following would be thrown by the browser:
+```
+The value of the 'Access-Control-Allow-Origin' header in the response must not be the wildcard '*' when the request's credentials mode is 'include'.
+```
+
+__*Solutions*__
+
+If you do need to share cookies, you will have to be explicitely specific about the origins that are allowed to do so:
+```js
+{
+  "headers": {
+    "Access-Control-Allow-Origin": "http://your-allowed-origin.com",
+    "Access-Control-Allow-Credentials": "true"
+  }
+}
+```
+
+If you do need to allow access to anybody, then do not allow requests to send cookies:
+```js
+{
+  "headers": {
+    "Access-Control-Allow-Headers": "Authorization",
+    "Access-Control-Allow-Origin": "*",
+  }
+}
+```
+If you do need to pass authentication token, you will have to pass it using a special header(e.g. Authorization), or pass it in the query string if you want to avoid preflight queries (preflight queries happens in cross-origin requests when special headers are being used). However, passing credentials in the query string are considered a bad practice. 
 
 ## License
 Copyright (c) 2017, Neap Pty Ltd.
