@@ -62,6 +62,7 @@ const setResponseHeaders = (res, webconfig) => Promise.resolve((webconfig || get
 const handleHttpRequest = (req, res, webconfig) => Promise.resolve(webconfig || getWebConfig() || {})
 	.then(webConfig => {
 		const headers = webConfig.headers
+		const noConfig = !webconfig || (!webconfig.headers && !webconfig.env)
 		const memoize = !webconfig
 		const origins = getAllowedOrigins(headers, memoize)
 		const methods = getAllowedMethods(headers, memoize)
@@ -70,11 +71,18 @@ const handleHttpRequest = (req, res, webconfig) => Promise.resolve(webconfig || 
 		const method = new String(req.method).toLowerCase()
 		const sameOrigin = referer.indexOf(origin) == 0
 
-		// Check CORS
-		if (Object.keys(origins).length == 0 && !sameOrigin) {
-			setResponseHeaders(res, webConfig)
-			throw httpError(403, `Forbidden - CORS issue. Origin '${origin}' is not allowed.`)
+		if (noConfig) {
+			if (!sameOrigin) {
+				setResponseHeaders(res, webConfig)
+				throw httpError(403, `Forbidden - CORS issue. Origin '${origin}' is not allowed.`)
+			}
+			if (method != 'head' && method != 'get' && method != 'options' && method != 'POST') {
+				setResponseHeaders(res, webConfig)
+				throw httpError(403, `Forbidden - CORS issue. Method '${method.toUpperCase()}' is not allowed.`)
+			}
 		}
+		// Check CORS
+		
 		if (!origins['*'] && Object.keys(origins).length != 0 && !(origin in origins)) {
 			setResponseHeaders(res, webConfig)
 			throw httpError(403, `Forbidden - CORS issue. Origin '${origin}' is not allowed.`)
@@ -89,7 +97,9 @@ const handleHttpRequest = (req, res, webconfig) => Promise.resolve(webconfig || 
 	})
 
 const serveHttp = (processHttpRequest, webconfig) => (req, res) => handleHttpRequest(req, res, webconfig)
-	.then(() => !res.headersSent ? processHttpRequest(req, res) : res)
+	.then(() => !res.headersSent 
+		? setResponseHeaders(res, webconfig).then(res => processHttpRequest(req, res)) 
+		: res)
 
 module.exports = {
 	setResponseHeaders,

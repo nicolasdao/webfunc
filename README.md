@@ -1,6 +1,12 @@
 <a href="https://neap.co" target="_blank"><img src="https://neap.co/img/neap_black_small_logo.png" alt="Neap Pty Ltd logo" title="Neap" align="right" height="50" width="120"/></a>
 
 # WebFunc - The Mini Web Server For Google Cloud Functions
+[![NPM][1]][2] [![Tests][3]][4]
+
+[1]: https://img.shields.io/npm/v/webfunc.svg?style=flat
+[2]: https://www.npmjs.com/package/webfunc
+[3]: https://travis-ci.org/nicolasdao/webfunc.svg?branch=master
+[4]: https://travis-ci.org/nicolasdao/webfunc
 ## Intro
 Add easy CORS support with a _**webconfig.json**_ file and simplify creation & deployment of Google Cloud Functions projects.
 

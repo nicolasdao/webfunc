@@ -55,7 +55,8 @@ describe('webfunc', () =>
 				}
 			})
 			const res = httpMocks.createResponse()
-			return handleHttpRequest(req, res).then(() => {
+			const webconfig = {}
+			return handleHttpRequest(req, res, webconfig).then(() => {
 				assert.isOk(1)
 			})
 		})))
@@ -73,7 +74,10 @@ describe('webfunc', () =>
 				}
 			})
 			const res = httpMocks.createResponse()
-			return handleHttpRequest(req, res).catch(err => {
+			const webconfig = {}
+			return handleHttpRequest(req, res, webconfig).then(err => {
+				assert.equal(1,2)
+			}).catch(err => {
 				assert.equal(err.message,'Forbidden - CORS issue. Origin \'http://localhost:8080\' is not allowed.')
 			})
 		})))
@@ -151,7 +155,9 @@ describe('webfunc', () =>
 					"Access-Control-Max-Age": "1296000"
 				}
 			}
-			return handleHttpRequest(req, res, webconfig).catch(err => {
+			return handleHttpRequest(req, res, webconfig).then(err => {
+				assert.equal(1,2)
+			}).catch(err => {
 				assert.equal(err.message,`Forbidden - CORS issue. Origin 'http://localhost:8080' is not allowed.`)
 			})
 		})))
@@ -203,7 +209,9 @@ describe('webfunc', () =>
 					"Access-Control-Max-Age": "1296000"
 				}
 			}
-			return handleHttpRequest(req, res, webconfig).catch((err) => {
+			return handleHttpRequest(req, res, webconfig).then(err => {
+				assert.equal(1,2)
+			}).catch((err) => {
 				assert.equal(err.message, `Forbidden - CORS issue. Method 'POST' is not allowed.`)
 			})
 		})))
@@ -211,10 +219,10 @@ describe('webfunc', () =>
 /*eslint-disable */
 describe('webfunc', () => 
 	describe('#handleHttpRequest: 08', () => 
-		it('Should NOT fail if a POST request if sent and the CORS settings have been set up (POST is supported) and the same origin policy if NOT satisfied.', () => {
+		it('Should NOT fail if a PUT request if sent and the CORS settings have been set up (POST is supported) and the same origin policy if NOT satisfied.', () => {
 			/*eslint-enable */
 			const req = httpMocks.createRequest({
-				method: 'POST',
+				method: 'PUT',
 				headers: {
 					origin: 'http://localhost:8080',
 					referer: 'http://localhost:8080'
@@ -223,7 +231,7 @@ describe('webfunc', () =>
 			const res = httpMocks.createResponse()
 			const webconfig = {
 				headers: {
-					"Access-Control-Allow-Methods": "GET, HEAD, OPTIONS, POST",
+					"Access-Control-Allow-Methods": "GET, HEAD, OPTIONS, POST, PUT",
 					"Access-Control-Allow-Headers": "Authorization, Content-Type, Origin",
 					"Access-Control-Allow-Origin": "http://boris.com, http://localhost:8080",
 					"Access-Control-Max-Age": "1296000"
@@ -232,6 +240,26 @@ describe('webfunc', () =>
 			return handleHttpRequest(req, res, webconfig).then(() => {
 				assert.equal(1,1)
 			})
+		})))
+
+/*eslint-disable */
+describe('webfunc', () => 
+	describe('#handleHttpRequest: 09', () => 
+		it('Should fail if a PUT request if sent and no CORS settings have been set up.', () => {
+			/*eslint-enable */
+			const req = httpMocks.createRequest({
+				method: 'PUT',
+				headers: {
+					origin: 'http://localhost:8080',
+					referer: 'http://localhost:8080'
+				}
+			})
+			const res = httpMocks.createResponse()
+			const webconfig = {}
+			return handleHttpRequest(req, res, webconfig).then(err => {
+				assert.equal(1,2)
+			})
+			.catch(err => assert.equal(err.message, `Forbidden - CORS issue. Method 'PUT' is not allowed.`))
 		})))
 
 /*eslint-disable */
@@ -247,10 +275,11 @@ describe('webfunc', () =>
 				}
 			})
 			const res = httpMocks.createResponse()
+			const webconfig = {}
 			const fn = serveHttp((req, res) => {
 				res.status(200).send('Hello World')
 				return res
-			})
+			}, webconfig)
 			return fn(req, res).then(res => {
 				assert.equal(res._getData(),'Hello World')
 			})
@@ -269,11 +298,18 @@ describe('webfunc', () =>
 				}
 			})
 			const res = httpMocks.createResponse()
+			const webconfig = {}
 			const fn = serveHttp((req, res) => {
+				console.log("HELLO")
 				res.status(200).send('Hello World')
 				return res
-			})
-			return fn(req, res).catch(err => {
+			}, webconfig)
+			return fn(req, res)
+			.then(err => {
+				console.log("THEN")
+				assert.equal(1,2)
+			}).catch(err => {
+				console.log("CATCH")
 				assert.equal(err.message,'Forbidden - CORS issue. Origin \'http://localhost:8080\' is not allowed.')
 			})
 		})))
@@ -363,7 +399,9 @@ describe('webfunc', () =>
 				res.status(200).send('Hello World')
 				return res
 			}, webconfig)
-			return fn(req, res).catch(err => {
+			return fn(req, res).then(err => {
+				assert.equal(1,2)
+			}).catch(err => {
 				assert.equal(err.message,`Forbidden - CORS issue. Origin 'http://localhost:8080' is not allowed.`)
 			})
 		})))
@@ -423,7 +461,9 @@ describe('webfunc', () =>
 				res.status(200).send('Hello World')
 				return res
 			}, webconfig)
-			return fn(req, res).catch((err) => {
+			return fn(req, res).then(err => {
+				assert.equal(1,2)
+			}).catch((err) => {
 				assert.equal(err.message, `Forbidden - CORS issue. Method 'POST' is not allowed.`)
 			})
 		})))
@@ -431,10 +471,64 @@ describe('webfunc', () =>
 /*eslint-disable */
 describe('webfunc', () => 
 	describe('#serveHttp: 08', () => 
-		it('Should NOT fail if a POST request if sent and the CORS settings have been set up (POST is supported) and the same origin policy if NOT satisfied.', () => {
+		it('Should NOT fail if a PUT request if sent and the CORS settings have been set up (POST is supported) and the same origin policy if NOT satisfied.', () => {
 			/*eslint-enable */
 			const req = httpMocks.createRequest({
-				method: 'POST',
+				method: 'PUT',
+				headers: {
+					origin: 'http://localhost:8080',
+					referer: 'http://localhost:8080'
+				}
+			})
+			const res = httpMocks.createResponse()
+			const webconfig = {
+				headers: {
+					"Access-Control-Allow-Methods": "GET, HEAD, OPTIONS, POST, PUT",
+					"Access-Control-Allow-Headers": "Authorization, Content-Type, Origin",
+					"Access-Control-Allow-Origin": "http://boris.com, http://localhost:8080",
+					"Access-Control-Max-Age": "1296000"
+				}
+			}
+			const fn = serveHttp((req, res) => {
+				res.status(200).send('Hello World')
+				return res
+			}, webconfig)
+			return fn(req, res).then(res => {
+				assert.equal(res._getData(),'Hello World')
+			})
+		})))
+
+/*eslint-disable */
+describe('webfunc', () => 
+	describe('#serveHttp: 09', () => 
+		it('Should fail if a PUT request if sent and no CORS settings have been set up.', () => {
+			/*eslint-enable */
+			const req = httpMocks.createRequest({
+				method: 'PUT',
+				headers: {
+					origin: 'http://localhost:8080',
+					referer: 'http://localhost:8080'
+				}
+			})
+			const res = httpMocks.createResponse()
+			const webconfig = {}
+			const fn = serveHttp((req, res) => {
+				res.status(200).send('Hello World')
+				return res
+			}, webconfig)
+			return fn(req, res).then(err => {
+				assert.equal(1,2)
+			})
+			.catch(err => assert.equal(err.message, `Forbidden - CORS issue. Method 'PUT' is not allowed.`))
+		})))
+
+/*eslint-disable */
+describe('webfunc', () => 
+	describe('#serveHttp: 10', () => 
+		it(`Should contains CORS headers if they've been set up.`, () => {
+			/*eslint-enable */
+			const req = httpMocks.createRequest({
+				method: 'GET',
 				headers: {
 					origin: 'http://localhost:8080',
 					referer: 'http://localhost:8080'
@@ -455,5 +549,11 @@ describe('webfunc', () =>
 			}, webconfig)
 			return fn(req, res).then(res => {
 				assert.equal(res._getData(),'Hello World')
+				const headers = res._getHeaders()
+				assert.isOk(headers)
+				assert.equal(headers["Access-Control-Allow-Methods"], "GET, HEAD, OPTIONS, POST")
+				assert.equal(headers["Access-Control-Allow-Headers"], "Authorization, Content-Type, Origin")
+				assert.equal(headers["Access-Control-Allow-Origin"], "http://boris.com, http://localhost:8080")
+				assert.equal(headers["Access-Control-Max-Age"], "1296000")
 			})
 		})))
