@@ -41,6 +41,11 @@ npm run deploy
 npm run deploy -- build
 ```
 
+In case you simply want to initialize a new _webconfig.json_ inside an existing Google Cloud Functions project, simply run the following command:
+```
+webfunc init
+```
+
 ## Configuring Your Mini Web Server - webconfig.json
 #### CORS
 This is the main 'raison d'être' of this project. Out-of-the box, Google Cloud Functions does not support easy configuration for CORS when triggered through HTTP (at least as of July 2017). Webfunc provides an easy to configure CORS through its _**webconfig.json**_ file. 
