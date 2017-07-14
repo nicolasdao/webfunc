@@ -16,11 +16,13 @@ npm install webfunc -g
 ```
 ## How To Use It
 ```
-webfunc init
+webfunc init your-web-app
+cd your-web-app
+npm install
 ```
 This will ask some basic questions and will initialize a HelloWorld Web App ready to be hosted on Google Cloud.
 
-To deploy it locally (using @google-cloud/functions-emulator)
+To deploy it locally (using [@google-cloud/functions-emulator](https://github.com/GoogleCloudPlatform/cloud-functions-emulator/))
 ```
 webfunc deploy
 ```
@@ -28,6 +30,15 @@ webfunc deploy
 To deploy it to a Google Cloud Account (that you must have presumably configured during the ```webfunc init``` step)
 ```
 webfunc deploy build
+```
+
+Alternatively, you can also run those 2 commands through npm:
+```
+npm run deploy
+```
+
+```
+npm run deploy -- build
 ```
 
 ## Configuring Your Mini Web Server - webconfig.json
@@ -135,6 +146,9 @@ If you do need to allow access to anybody, then do not allow requests to send co
 }
 ```
 If you do need to pass authentication token, you will have to pass it using a special header(e.g. Authorization), or pass it in the query string if you want to avoid preflight queries (preflight queries happens in cross-origin requests when special headers are being used). However, passing credentials in the query string are considered a bad practice. 
+
+## This Is What We re Up To
+We are Neap, an Australian Technology consultancy powering the startup ecosystem in Sydney. We simply love building Tech and also meeting new people, so don't hesitate to connect with us at [https://neap.co](https://neap.co).
 
 ## License
 Copyright (c) 2017, Neap Pty Ltd.
