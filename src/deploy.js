@@ -60,9 +60,19 @@ const deploy = (env = 'default') => {
 	}
 
 	if (env == 'default') { // Local environment. Make Sure the Google function emulator is running.
-		const emulatorsRunning = shell.exec('ps -ax | grep functions-emulator | wc -l', {silent:true}).stdout * 1
+		const functionsNotInstalled = !shell.exec('which functions', {silent:true}).stdout
+		if (functionsNotInstalled) {
+			console.log(`${'Google Function Emulator'.italic} seems to not be installed on your machine.
 
-		if (emulatorsRunning < 3) {
+You cannot run this project on your local machine. To install it globally, simply run the following: 
+${'npm install -g @google-cloud/functions-emulator'.bold.italic}`.red)
+			process.exit(1)
+		}
+
+		const functionStatus = shell.exec('functions status', {silent:true}).stdout
+		const functionsStopped = functionStatus.indexOf('│ STOPPED') > 0
+
+		if (functionsStopped) {
 			console.log('No emulator running. Time to start one!'.cyan)
 			shell.exec('functions start')
 		}
@@ -98,9 +108,6 @@ const deploy = (env = 'default') => {
 	}
 
 	console.log(`Deployment successful (${(Date.now() - startClock)/1000} sec.)`.green)
-	/*eslint-disable */
-	process.exit(1)
-	/*eslint-enable */
 }
 
 module.exports = {

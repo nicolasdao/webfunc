@@ -12,7 +12,7 @@
   "scripts": {
     "test": "mocha",
     "eslint": "eslint index.js src/ test/",
-    "release": "standard-version"
+    "release": "standard-version --prerelease alpha"
   },
   "repository": {
     "type": "git",
