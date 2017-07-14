@@ -1,6 +1,6 @@
 {
   "name": "webfunc",
-  "version": "0.1.0-alpha.2",
+  "version": "0.1.0-alpha.3",
   "description": "Mini web server for Google Cloud Functions. Also assists in initialization of web app projects hosted on Google Cloud Functions.",
   "contributors": [
     "Nicolas Dao <nic@neap.co> (https://neap.co/)"
