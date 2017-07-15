@@ -11,6 +11,7 @@
 Add easy CORS support with a _**webconfig.json**_ file and simplify creation & deployment of Google Cloud Functions projects.
 
 ## Install
+#### Creating A New Project From Scratch
 ```
 npm install webfunc -g
 ```
@@ -45,6 +46,30 @@ In case you simply want to initialize a new _webconfig.json_ inside an existing 
 ```
 webfunc init
 ```
+#### webfunc.js In An Existing Google Cloud Functions Project
+
+First, install webfunc.js in your project
+```
+npm install webfunc --save
+``` 
+
+In its simplest form, a Google Cloud Functions project looks like this:
+```js
+exports.yourapp = (req, res) => {
+  res.status(200).send('Hello World')
+}
+```
+
+Simply update it as follow:
+```js
+const { serveHttp } = require('webfunc')
+
+exports.yourapp = serveHttp((req, res) => {
+  res.status(200).send('Hello World')
+})
+```
+
+Easy isn't it!?
 
 ## Configuring Your Mini Web Server - webconfig.json
 #### CORS

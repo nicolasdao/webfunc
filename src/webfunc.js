@@ -62,7 +62,7 @@ const setResponseHeaders = (res, webconfig) => Promise.resolve((webconfig || get
 const handleHttpRequest = (req, res, webconfig) => Promise.resolve(webconfig || getWebConfig() || {})
 	.then(webConfig => {
 		const headers = webConfig.headers
-		const noConfig = !webconfig || (!webconfig.headers && !webconfig.env)
+		const noConfig = !webConfig.headers && !webConfig.env
 		const memoize = !webconfig
 		const origins = getAllowedOrigins(headers, memoize)
 		const methods = getAllowedMethods(headers, memoize)
@@ -76,7 +76,7 @@ const handleHttpRequest = (req, res, webconfig) => Promise.resolve(webconfig || 
 				setResponseHeaders(res, webConfig)
 				throw httpError(403, `Forbidden - CORS issue. Origin '${origin}' is not allowed.`)
 			}
-			if (method != 'head' && method != 'get' && method != 'options' && method != 'POST') {
+			if (method != 'head' && method != 'get' && method != 'options' && method != 'post') {
 				setResponseHeaders(res, webConfig)
 				throw httpError(403, `Forbidden - CORS issue. Method '${method.toUpperCase()}' is not allowed.`)
 			}
