@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.1.0-alpha.7"></a>
+# [0.1.0-alpha.7](https://github.com/nicolasdao/webfunc/compare/v0.1.0-alpha.6...v0.1.0-alpha.7) (2017-07-17)
+
+
+### Features
+
+* Add new template called GraphQL ([0b7d14f](https://github.com/nicolasdao/webfunc/commit/0b7d14f))
+
+
+
 <a name="0.1.0-alpha.6"></a>
 # [0.1.0-alpha.6](https://github.com/nicolasdao/webfunc/compare/v0.1.0-alpha.5...v0.1.0-alpha.6) (2017-07-15)
 
