@@ -66,7 +66,9 @@ const deploy = (env = 'default') => {
 
 You cannot run this project on your local machine. To install it globally, simply run the following: 
 ${'npm install -g @google-cloud/functions-emulator'.bold.italic}`.red)
+			/*eslint-disable */
 			process.exit(1)
+			/*eslint-enable */
 		}
 
 		const functionStatus = shell.exec('functions status', {silent:true}).stdout

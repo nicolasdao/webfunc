@@ -1,7 +1,7 @@
 const { serveHttp } = require('webfunc')
 
 /**
- * Responds to any HTTP request that can provide a "message" field in the body.
+ * Responds to any HTTP request.
  *
  * @param {!Object} req Cloud Function request context.
  * @param {!Object} res Cloud Function response context.

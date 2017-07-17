@@ -11,7 +11,7 @@
   "main": "src/webfunc.js",
   "scripts": {
     "test": "mocha",
-    "eslint": "eslint index.js src/ test/",
+    "eslint": "eslint index.js src/ test/ templates/",
     "release": "standard-version --prerelease alpha"
   },
   "repository": {

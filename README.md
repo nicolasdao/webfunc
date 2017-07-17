@@ -1,6 +1,6 @@
 <a href="https://neap.co" target="_blank"><img src="https://neap.co/img/neap_black_small_logo.png" alt="Neap Pty Ltd logo" title="Neap" align="right" height="50" width="120"/></a>
 
-# WebFunc - The Mini Web Server For Google Cloud Functions
+# WebFunc - Lightweight HTTP Handler & Project Builder For Google Cloud Functions
 [![NPM][1]][2] [![Tests][3]][4]
 
 [1]: https://img.shields.io/npm/v/webfunc.svg?style=flat
@@ -15,7 +15,20 @@ Add easy CORS support with a _**webconfig.json**_ file and simplify creation & d
 ```
 npm install webfunc -g
 ```
+#### Using it inside a Google Cloud Functions project to add support for CORS and ease deployment. 
+```
+npm install webfunc --save
+```
+
 ## How To Use It
+#### Creating a new project from scratch
+webfunc currently support 2 types of new projects:
+
+1. _**Basic HTTP**_ - This is a simple Hello World app.
+2. _**GraphQL**_ - This template is built using the [google-graphql-functions](https://github.com/nicolasdao/google-graphql-functions) package which hosts a GraphQL API.
+
+All those projects come with a basic pre-configuration in their _webconfig.json_ file which makes it trivial to configure CORS as well as multiple depoyments in various environments.
+
 ```
 webfunc init your-web-app
 cd your-web-app

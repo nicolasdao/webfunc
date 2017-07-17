@@ -1,0 +1,22 @@
+{
+	"headers": {
+		"Access-Control-Allow-Methods": "GET, HEAD, OPTIONS, POST",
+		"Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept"
+	},
+	"env": {
+		"default": {
+			"functionName": "{{functionName}}",
+			"trigger": "{{trigger}}",
+			"entryPoint": "{{entryPoint}}",
+			"googleProject": "{{googleProject}}",
+			"bucket": "{{bucket}}"
+		},
+		"build": {
+			"functionName": "{{functionName}}",
+			"trigger": "{{trigger}}",
+			"entryPoint": "{{entryPoint}}",
+			"googleProject": "{{googleProject}}",
+			"bucket": "{{bucket}}"
+		}
+	}
+}

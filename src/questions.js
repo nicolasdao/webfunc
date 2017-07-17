@@ -7,12 +7,13 @@
 */
 const _ = require('lodash')
 const shell = require('shelljs')
+const path = require('path')
 /*eslint-disable */
 const colors = require('colors')
 /*eslint-enable */
 const  { askQuestion } = require('./utilities')
 
-const preQ1 = functionsNotInstalled => functionsNotInstalled 
+const emulatorNotInstalledWarningQuestion = functionsNotInstalled => functionsNotInstalled 
 	? askQuestion(`
 ${'WARNING'.bold.italic}: ${'Google Function Emulator'.italic} seems to not be installed on your machine.
 
@@ -28,7 +29,7 @@ Do you want to ignore this warning? (y/n) `.yellow)
 		})
 	: Promise.resolve('ok')
 
-const preQ2 = gcloudNotInstalled => gcloudNotInstalled 
+const gcloudNotInstalledWarningQuestion = gcloudNotInstalled => gcloudNotInstalled 
 	? askQuestion(
 		`${`
 WARNING`.bold.italic}: The ${'gcloud SDK'.italic} seems to not be installed on your machine.
@@ -45,24 +46,55 @@ Do you want to ignore this warning? (y/n) `.yellow)
 		})
 	: Promise.resolve('ok')
 
-const projectNameQuestion = () => askQuestion(`
+const projectTypeQuestion = (options = {}) => askQuestion(`project type:
+  [1] Basic HTTP
+  [2] GraphQL
+Choose one of the above: ([1]): `.cyan)
+	.then(answer => {
+		if (!answer || answer == '')
+			answer = 1
+
+		const a = _.toNumber(answer)
+		if (a != 1 && a != 2) {
+			console.log(`'${a}' is not a valid project type.`.red)
+			projectTypeQuestion(options)
+		} else {
+			let templatePath = null
+			switch (a) {
+			case 1:
+				/*eslint-disable */
+				templatePath = path.join(__dirname, '../' ,'templates/simpleWebApp')
+				/*eslint-enable */
+				break
+			case 2:
+				/*eslint-disable */
+				templatePath = path.join(__dirname, '../' ,'templates/graphql')
+				/*eslint-enable */
+				break
+			}
+
+			return Object.assign(options, { templatePath })
+		}
+	})
+
+const projectNameQuestion = (options = {}) => askQuestion(`
 project name: `.cyan)
 	.then(answer => {
 		if (answer)
-			return { projectName: answer }
+			return Object.assign(options, { projectName: answer })
 		else {
 			console.log('You must choose a name!'.red)
 			return projectNameQuestion()
 		}
 	})
 
-const projectVersionQuestion = options => askQuestion('project version: (1.0.0) '.cyan)
+const projectVersionQuestion = (options = {}) => askQuestion('project version: (1.0.0) '.cyan)
 	.then(answer => Object.assign(options, { projectVersion: answer || '1.0.0' }))
 
-const entryPointQuestion = options => askQuestion(`Google Cloud Function entry-point (no spaces, no hyphens): (${options.projectName.replace(' ', '').replace('-', '')}) `.cyan)
+const entryPointQuestion = (options = {}) => askQuestion(`Google Cloud Function entry-point (no spaces, no hyphens): (${options.projectName.replace(' ', '').replace('-', '')}) `.cyan)
 	.then(answer => Object.assign(options, { entryPoint: !answer || answer == '' ? options.projectName.replace(' ', '').replace('-', '') : answer }))
 
-const googleCloudProjectQuestion = options => askQuestion('Google Cloud Project(no spaces): '.cyan)
+const googleCloudProjectQuestion = (options = {}) => askQuestion('Google Cloud Project(no spaces): '.cyan)
 	.then(answer => {
 		if (!answer || answer == '') {
 			console.log('You must define a Google Cloud Project!'.red)
@@ -72,7 +104,7 @@ const googleCloudProjectQuestion = options => askQuestion('Google Cloud Project(
 			return Object.assign(options, { googleProject: answer })
 	})
 
-const googleFunctionNameQuestion = options => askQuestion(`Google Cloud Function name : (${options.projectName.toLowerCase().split(' ').join('-')}) `.cyan)
+const googleFunctionNameQuestion = (options = {}) => askQuestion(`Google Cloud Function name : (${options.projectName.toLowerCase().split(' ').join('-')}) `.cyan)
 	.then(answer => Object.assign(options, { functionName: !answer || answer == '' ? options.projectName.toLowerCase().split(' ').join('-') : answer }))
 
 const bucketQuestion = (options) => askQuestion('Google Cloud Function bucket(no spaces): '.cyan)
@@ -85,7 +117,7 @@ const bucketQuestion = (options) => askQuestion('Google Cloud Function bucket(no
 		}
 	})
 
-const triggerQuestion = options => askQuestion(`Google Cloud Function trigger:
+const triggerQuestion = (options = {}) => askQuestion(`Google Cloud Function trigger:
   [1] HTTP
   [2] Pub/Sub
   [3] Storage
@@ -117,17 +149,18 @@ Choose one of the above: ([1]): `.cyan)
 	})
 
 const askPrerequisiteQuestions = () => {
-	const functionsNotInstalled = !shell.exec('which functions', {silent:true}).stdout
-	return preQ1(functionsNotInstalled)
+	const gcloudNotInstalled = !shell.exec('which gcloud', {silent:true}).stdout
+	return gcloudNotInstalledWarningQuestion(gcloudNotInstalled)
 		.then(() => {
-			const gcloudNotInstalled = !shell.exec('which gcloud', {silent:true}).stdout
-			return preQ2(gcloudNotInstalled)
+			const functionsNotInstalled = !shell.exec('which functions', {silent:true}).stdout
+			return emulatorNotInstalledWarningQuestion(functionsNotInstalled)
 		})
 }
 
-const askSimpleWebAppQuestions = () => 
+const askProjectQuestions = () => 
 	askPrerequisiteQuestions()
-		.then(() => projectNameQuestion())
+		.then(() => projectTypeQuestion())
+		.then(options => projectNameQuestion(options))
 		.then(options => projectVersionQuestion(options))
 		.then(options => googleFunctionNameQuestion(options))
 		.then(options => triggerQuestion(options))
@@ -136,7 +169,7 @@ const askSimpleWebAppQuestions = () =>
 		.then(options => bucketQuestion(options))
 
 module.exports = {
-	askSimpleWebAppQuestions
+	askProjectQuestions
 }
 
 

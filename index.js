@@ -12,8 +12,8 @@ const program = require('commander')
 /*eslint-disable */
 const colors = require('colors')
 /*eslint-enable */
-const { askSimpleWebAppQuestions } = require('./src/questions')
-const { createSimpleWebApp } = require('./src/projectInit')
+const { askProjectQuestions } = require('./src/questions')
+const { createApp } = require('./src/projectInit')
 const { deploy } = require('./src/deploy')
 const { logs } = require('./src/logs')
 
@@ -21,7 +21,7 @@ program
 	.version('1.0.0')
 	.command('init [dest]')
 	.usage('Creates a new Google Cloud Function mini web server project.')
-	.action(dest => askSimpleWebAppQuestions().then(options => createSimpleWebApp(Object.assign(options, { dest }))))
+	.action(dest => askProjectQuestions().then(options => createApp(Object.assign(options, { dest }))))
 
 program
 	.command('deploy [env]')

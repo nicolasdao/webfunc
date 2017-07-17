@@ -19,10 +19,10 @@ const { setResponseHeaders, serveHttp, handleHttpRequest } = require('../src/web
 
 const webconfig = {
 	headers: {
-		"Access-Control-Allow-Methods": "GET, HEAD, OPTIONS, POST",
-		"Access-Control-Allow-Headers": "Authorization, Content-Type, Origin",
-		"Access-Control-Allow-Origin": "*",
-		"Access-Control-Max-Age": "1296000"
+		'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS, POST',
+		'Access-Control-Allow-Headers': 'Authorization, Content-Type, Origin',
+		'Access-Control-Allow-Origin': '*',
+		'Access-Control-Max-Age': '1296000'
 	}
 }
 
@@ -35,10 +35,10 @@ describe('webfunc', () =>
 			return setResponseHeaders(res, webconfig).then(res => {
 				const headers = res._getHeaders()
 				assert.isOk(headers)
-				assert.equal(headers["Access-Control-Allow-Methods"], "GET, HEAD, OPTIONS, POST")
-				assert.equal(headers["Access-Control-Allow-Headers"], "Authorization, Content-Type, Origin")
-				assert.equal(headers["Access-Control-Allow-Origin"], "*")
-				assert.equal(headers["Access-Control-Max-Age"], "1296000")
+				assert.equal(headers['Access-Control-Allow-Methods'], 'GET, HEAD, OPTIONS, POST')
+				assert.equal(headers['Access-Control-Allow-Headers'], 'Authorization, Content-Type, Origin')
+				assert.equal(headers['Access-Control-Allow-Origin'], '*')
+				assert.equal(headers['Access-Control-Max-Age'], '1296000')
 			})
 		})))
 
@@ -75,7 +75,7 @@ describe('webfunc', () =>
 			})
 			const res = httpMocks.createResponse()
 			const webconfig = {}
-			return handleHttpRequest(req, res, webconfig).then(err => {
+			return handleHttpRequest(req, res, webconfig).then(() => {
 				assert.equal(1,2)
 			}).catch(err => {
 				assert.equal(err.message,'Forbidden - CORS issue. Origin \'http://localhost:8080\' is not allowed.')
@@ -97,10 +97,10 @@ describe('webfunc', () =>
 			const res = httpMocks.createResponse()
 			const webconfig = {
 				headers: {
-					"Access-Control-Allow-Methods": "GET, HEAD, OPTIONS, POST",
-					"Access-Control-Allow-Headers": "Authorization, Content-Type, Origin",
-					"Access-Control-Allow-Origin": "*",
-					"Access-Control-Max-Age": "1296000"
+					'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS, POST',
+					'Access-Control-Allow-Headers': 'Authorization, Content-Type, Origin',
+					'Access-Control-Allow-Origin': '*',
+					'Access-Control-Max-Age': '1296000'
 				}
 			}
 			return handleHttpRequest(req, res, webconfig).then(() => {
@@ -123,10 +123,10 @@ describe('webfunc', () =>
 			const res = httpMocks.createResponse()
 			const webconfig = {
 				headers: {
-					"Access-Control-Allow-Methods": "GET, HEAD, OPTIONS, POST",
-					"Access-Control-Allow-Headers": "Authorization, Content-Type, Origin",
-					"Access-Control-Allow-Origin": "http://localhost:8080",
-					"Access-Control-Max-Age": "1296000"
+					'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS, POST',
+					'Access-Control-Allow-Headers': 'Authorization, Content-Type, Origin',
+					'Access-Control-Allow-Origin': 'http://localhost:8080',
+					'Access-Control-Max-Age': '1296000'
 				}
 			}
 			return handleHttpRequest(req, res, webconfig).then(() => {
@@ -149,16 +149,16 @@ describe('webfunc', () =>
 			const res = httpMocks.createResponse()
 			const webconfig = {
 				headers: {
-					"Access-Control-Allow-Methods": "GET, HEAD, OPTIONS, POST",
-					"Access-Control-Allow-Headers": "Authorization, Content-Type, Origin",
-					"Access-Control-Allow-Origin": "http://boris.com",
-					"Access-Control-Max-Age": "1296000"
+					'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS, POST',
+					'Access-Control-Allow-Headers': 'Authorization, Content-Type, Origin',
+					'Access-Control-Allow-Origin': 'http://boris.com',
+					'Access-Control-Max-Age': '1296000'
 				}
 			}
-			return handleHttpRequest(req, res, webconfig).then(err => {
+			return handleHttpRequest(req, res, webconfig).then(() => {
 				assert.equal(1,2)
 			}).catch(err => {
-				assert.equal(err.message,`Forbidden - CORS issue. Origin 'http://localhost:8080' is not allowed.`)
+				assert.equal(err.message,'Forbidden - CORS issue. Origin \'http://localhost:8080\' is not allowed.')
 			})
 		})))
 
@@ -177,10 +177,10 @@ describe('webfunc', () =>
 			const res = httpMocks.createResponse()
 			const webconfig = {
 				headers: {
-					"Access-Control-Allow-Methods": "GET, HEAD, OPTIONS, POST",
-					"Access-Control-Allow-Headers": "Authorization, Content-Type, Origin",
-					"Access-Control-Allow-Origin": "http://boris.com, http://localhost:8080",
-					"Access-Control-Max-Age": "1296000"
+					'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS, POST',
+					'Access-Control-Allow-Headers': 'Authorization, Content-Type, Origin',
+					'Access-Control-Allow-Origin': 'http://boris.com, http://localhost:8080',
+					'Access-Control-Max-Age': '1296000'
 				}
 			}
 			return handleHttpRequest(req, res, webconfig).then(() => {
@@ -203,16 +203,16 @@ describe('webfunc', () =>
 			const res = httpMocks.createResponse()
 			const webconfig = {
 				headers: {
-					"Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
-					"Access-Control-Allow-Headers": "Authorization, Content-Type, Origin",
-					"Access-Control-Allow-Origin": "http://boris.com, http://localhost:8080",
-					"Access-Control-Max-Age": "1296000"
+					'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
+					'Access-Control-Allow-Headers': 'Authorization, Content-Type, Origin',
+					'Access-Control-Allow-Origin': 'http://boris.com, http://localhost:8080',
+					'Access-Control-Max-Age': '1296000'
 				}
 			}
-			return handleHttpRequest(req, res, webconfig).then(err => {
+			return handleHttpRequest(req, res, webconfig).then(() => {
 				assert.equal(1,2)
 			}).catch((err) => {
-				assert.equal(err.message, `Forbidden - CORS issue. Method 'POST' is not allowed.`)
+				assert.equal(err.message, 'Forbidden - CORS issue. Method \'POST\' is not allowed.')
 			})
 		})))
 
@@ -231,10 +231,10 @@ describe('webfunc', () =>
 			const res = httpMocks.createResponse()
 			const webconfig = {
 				headers: {
-					"Access-Control-Allow-Methods": "GET, HEAD, OPTIONS, POST, PUT",
-					"Access-Control-Allow-Headers": "Authorization, Content-Type, Origin",
-					"Access-Control-Allow-Origin": "http://boris.com, http://localhost:8080",
-					"Access-Control-Max-Age": "1296000"
+					'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS, POST, PUT',
+					'Access-Control-Allow-Headers': 'Authorization, Content-Type, Origin',
+					'Access-Control-Allow-Origin': 'http://boris.com, http://localhost:8080',
+					'Access-Control-Max-Age': '1296000'
 				}
 			}
 			return handleHttpRequest(req, res, webconfig).then(() => {
@@ -256,10 +256,10 @@ describe('webfunc', () =>
 			})
 			const res = httpMocks.createResponse()
 			const webconfig = {}
-			return handleHttpRequest(req, res, webconfig).then(err => {
+			return handleHttpRequest(req, res, webconfig).then(() => {
 				assert.equal(1,2)
 			})
-			.catch(err => assert.equal(err.message, `Forbidden - CORS issue. Method 'PUT' is not allowed.`))
+				.catch(err => assert.equal(err.message, 'Forbidden - CORS issue. Method \'PUT\' is not allowed.'))
 		})))
 
 /*eslint-disable */
@@ -300,18 +300,16 @@ describe('webfunc', () =>
 			const res = httpMocks.createResponse()
 			const webconfig = {}
 			const fn = serveHttp((req, res) => {
-				console.log("HELLO")
 				res.status(200).send('Hello World')
 				return res
 			}, webconfig)
 			return fn(req, res)
-			.then(err => {
-				console.log("THEN")
-				assert.equal(1,2)
-			}).catch(err => {
-				console.log("CATCH")
-				assert.equal(err.message,'Forbidden - CORS issue. Origin \'http://localhost:8080\' is not allowed.')
-			})
+				.then(() => {
+					assert.equal(1,2)
+				}).catch(err => {
+					console.log('CATCH')
+					assert.equal(err.message,'Forbidden - CORS issue. Origin \'http://localhost:8080\' is not allowed.')
+				})
 		})))
 
 /*eslint-disable */
@@ -329,10 +327,10 @@ describe('webfunc', () =>
 			const res = httpMocks.createResponse()
 			const webconfig = {
 				headers: {
-					"Access-Control-Allow-Methods": "GET, HEAD, OPTIONS, POST",
-					"Access-Control-Allow-Headers": "Authorization, Content-Type, Origin",
-					"Access-Control-Allow-Origin": "*",
-					"Access-Control-Max-Age": "1296000"
+					'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS, POST',
+					'Access-Control-Allow-Headers': 'Authorization, Content-Type, Origin',
+					'Access-Control-Allow-Origin': '*',
+					'Access-Control-Max-Age': '1296000'
 				}
 			}
 			const fn = serveHttp((req, res) => {
@@ -359,10 +357,10 @@ describe('webfunc', () =>
 			const res = httpMocks.createResponse()
 			const webconfig = {
 				headers: {
-					"Access-Control-Allow-Methods": "GET, HEAD, OPTIONS, POST",
-					"Access-Control-Allow-Headers": "Authorization, Content-Type, Origin",
-					"Access-Control-Allow-Origin": "http://localhost:8080",
-					"Access-Control-Max-Age": "1296000"
+					'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS, POST',
+					'Access-Control-Allow-Headers': 'Authorization, Content-Type, Origin',
+					'Access-Control-Allow-Origin': 'http://localhost:8080',
+					'Access-Control-Max-Age': '1296000'
 				}
 			}
 			const fn = serveHttp((req, res) => {
@@ -389,20 +387,20 @@ describe('webfunc', () =>
 			const res = httpMocks.createResponse()
 			const webconfig = {
 				headers: {
-					"Access-Control-Allow-Methods": "GET, HEAD, OPTIONS, POST",
-					"Access-Control-Allow-Headers": "Authorization, Content-Type, Origin",
-					"Access-Control-Allow-Origin": "http://boris.com",
-					"Access-Control-Max-Age": "1296000"
+					'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS, POST',
+					'Access-Control-Allow-Headers': 'Authorization, Content-Type, Origin',
+					'Access-Control-Allow-Origin': 'http://boris.com',
+					'Access-Control-Max-Age': '1296000'
 				}
 			}
 			const fn = serveHttp((req, res) => {
 				res.status(200).send('Hello World')
 				return res
 			}, webconfig)
-			return fn(req, res).then(err => {
+			return fn(req, res).then(() => {
 				assert.equal(1,2)
 			}).catch(err => {
-				assert.equal(err.message,`Forbidden - CORS issue. Origin 'http://localhost:8080' is not allowed.`)
+				assert.equal(err.message,'Forbidden - CORS issue. Origin \'http://localhost:8080\' is not allowed.')
 			})
 		})))
 
@@ -421,10 +419,10 @@ describe('webfunc', () =>
 			const res = httpMocks.createResponse()
 			const webconfig = {
 				headers: {
-					"Access-Control-Allow-Methods": "GET, HEAD, OPTIONS, POST",
-					"Access-Control-Allow-Headers": "Authorization, Content-Type, Origin",
-					"Access-Control-Allow-Origin": "http://boris.com, http://localhost:8080",
-					"Access-Control-Max-Age": "1296000"
+					'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS, POST',
+					'Access-Control-Allow-Headers': 'Authorization, Content-Type, Origin',
+					'Access-Control-Allow-Origin': 'http://boris.com, http://localhost:8080',
+					'Access-Control-Max-Age': '1296000'
 				}
 			}
 			const fn = serveHttp((req, res) => {
@@ -451,20 +449,20 @@ describe('webfunc', () =>
 			const res = httpMocks.createResponse()
 			const webconfig = {
 				headers: {
-					"Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
-					"Access-Control-Allow-Headers": "Authorization, Content-Type, Origin",
-					"Access-Control-Allow-Origin": "http://boris.com, http://localhost:8080",
-					"Access-Control-Max-Age": "1296000"
+					'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
+					'Access-Control-Allow-Headers': 'Authorization, Content-Type, Origin',
+					'Access-Control-Allow-Origin': 'http://boris.com, http://localhost:8080',
+					'Access-Control-Max-Age': '1296000'
 				}
 			}
 			const fn = serveHttp((req, res) => {
 				res.status(200).send('Hello World')
 				return res
 			}, webconfig)
-			return fn(req, res).then(err => {
+			return fn(req, res).then(() => {
 				assert.equal(1,2)
 			}).catch((err) => {
-				assert.equal(err.message, `Forbidden - CORS issue. Method 'POST' is not allowed.`)
+				assert.equal(err.message, 'Forbidden - CORS issue. Method \'POST\' is not allowed.')
 			})
 		})))
 
@@ -483,10 +481,10 @@ describe('webfunc', () =>
 			const res = httpMocks.createResponse()
 			const webconfig = {
 				headers: {
-					"Access-Control-Allow-Methods": "GET, HEAD, OPTIONS, POST, PUT",
-					"Access-Control-Allow-Headers": "Authorization, Content-Type, Origin",
-					"Access-Control-Allow-Origin": "http://boris.com, http://localhost:8080",
-					"Access-Control-Max-Age": "1296000"
+					'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS, POST, PUT',
+					'Access-Control-Allow-Headers': 'Authorization, Content-Type, Origin',
+					'Access-Control-Allow-Origin': 'http://boris.com, http://localhost:8080',
+					'Access-Control-Max-Age': '1296000'
 				}
 			}
 			const fn = serveHttp((req, res) => {
@@ -516,10 +514,10 @@ describe('webfunc', () =>
 				res.status(200).send('Hello World')
 				return res
 			}, webconfig)
-			return fn(req, res).then(err => {
+			return fn(req, res).then(() => {
 				assert.equal(1,2)
 			})
-			.catch(err => assert.equal(err.message, `Forbidden - CORS issue. Method 'PUT' is not allowed.`))
+				.catch(err => assert.equal(err.message, 'Forbidden - CORS issue. Method \'PUT\' is not allowed.'))
 		})))
 
 /*eslint-disable */
@@ -537,10 +535,10 @@ describe('webfunc', () =>
 			const res = httpMocks.createResponse()
 			const webconfig = {
 				headers: {
-					"Access-Control-Allow-Methods": "GET, HEAD, OPTIONS, POST",
-					"Access-Control-Allow-Headers": "Authorization, Content-Type, Origin",
-					"Access-Control-Allow-Origin": "http://boris.com, http://localhost:8080",
-					"Access-Control-Max-Age": "1296000"
+					'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS, POST',
+					'Access-Control-Allow-Headers': 'Authorization, Content-Type, Origin',
+					'Access-Control-Allow-Origin': 'http://boris.com, http://localhost:8080',
+					'Access-Control-Max-Age': '1296000'
 				}
 			}
 			const fn = serveHttp((req, res) => {
@@ -551,9 +549,9 @@ describe('webfunc', () =>
 				assert.equal(res._getData(),'Hello World')
 				const headers = res._getHeaders()
 				assert.isOk(headers)
-				assert.equal(headers["Access-Control-Allow-Methods"], "GET, HEAD, OPTIONS, POST")
-				assert.equal(headers["Access-Control-Allow-Headers"], "Authorization, Content-Type, Origin")
-				assert.equal(headers["Access-Control-Allow-Origin"], "http://boris.com, http://localhost:8080")
-				assert.equal(headers["Access-Control-Max-Age"], "1296000")
+				assert.equal(headers['Access-Control-Allow-Methods'], 'GET, HEAD, OPTIONS, POST')
+				assert.equal(headers['Access-Control-Allow-Headers'], 'Authorization, Content-Type, Origin')
+				assert.equal(headers['Access-Control-Allow-Origin'], 'http://boris.com, http://localhost:8080')
+				assert.equal(headers['Access-Control-Max-Age'], '1296000')
 			})
 		})))

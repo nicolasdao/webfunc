@@ -14,7 +14,7 @@ const u = require('./utilities')
 const createDir = u.createDir
 const copyFolderContent = u.copyFolderContent
 
-const createSimpleWebApp = ({ projectName, projectVersion, functionName, trigger, entryPoint, googleProject, bucket, dest }, templatePath) => {
+const createApp = ({ projectName, projectVersion, functionName, trigger, entryPoint, googleProject, bucket, dest, templatePath }) => {
 	/*eslint-disable */
 	const destination = dest ? path.join(process.cwd(), dest) : process.cwd()
 	/*eslint-enable */
@@ -84,10 +84,6 @@ const createSimpleWebApp = ({ projectName, projectVersion, functionName, trigger
 		}) 
 }
 
-/*eslint-disable */
-const simpleWebAppTemplatePath = path.join(__dirname, '../' ,'templates/simpleWebApp') 
-/*eslint-enable */
-
 module.exports = {
-	createSimpleWebApp: options => createSimpleWebApp(options, simpleWebAppTemplatePath)
+	createApp
 }
