@@ -21,7 +21,7 @@ program
 	.version('1.0.0')
 	.command('init [dest]')
 	.usage('Creates a new Google Cloud Function mini web server project.')
-	.action(dest => askProjectQuestions().then(options => createApp(Object.assign(options, { dest }))))
+	.action(dest => askProjectQuestions(dest).then(options => createApp(options)))
 
 program
 	.command('deploy [env]')

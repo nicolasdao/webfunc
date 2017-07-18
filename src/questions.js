@@ -49,7 +49,7 @@ Do you want to ignore this warning? (y/n) `.yellow)
 const projectTypeQuestion = (options = {}) => askQuestion(`project type:
   [1] Basic HTTP
   [2] GraphQL
-Choose one of the above: ([1]): `.cyan)
+Choose one of the above: ([1]) `.cyan)
 	.then(answer => {
 		if (!answer || answer == '')
 			answer = 1
@@ -77,11 +77,12 @@ Choose one of the above: ([1]): `.cyan)
 		}
 	})
 
-const projectNameQuestion = (options = {}) => askQuestion(`
-project name: `.cyan)
+const projectNameQuestion = (options = {}) => askQuestion(`project name: ${options.dest ? `(${sanitizeDest(options.dest)}) ` : ''}`.cyan)
 	.then(answer => {
 		if (answer)
-			return Object.assign(options, { projectName: answer })
+			return Object.assign(options, { projectName: sanitizeProjectName(answer) })
+		else if (options.dest)
+			return Object.assign(options, { projectName: sanitizeDest(options.dest) })
 		else {
 			console.log('You must choose a name!'.red)
 			return projectNameQuestion()
@@ -91,37 +92,23 @@ project name: `.cyan)
 const projectVersionQuestion = (options = {}) => askQuestion('project version: (1.0.0) '.cyan)
 	.then(answer => Object.assign(options, { projectVersion: answer || '1.0.0' }))
 
-const entryPointQuestion = (options = {}) => askQuestion(`Google Cloud Function entry-point (no spaces, no hyphens): (${options.projectName.replace(' ', '').replace('-', '')}) `.cyan)
-	.then(answer => Object.assign(options, { entryPoint: !answer || answer == '' ? options.projectName.replace(' ', '').replace('-', '') : answer }))
+const entryPointQuestion = (options = {}) => askQuestion(`Google Cloud Function entry-point (no spaces, no hyphens): (${sanitizeEntryPoint(options.projectName)}) `.cyan)
+	.then(answer => Object.assign(options, { entryPoint: !answer || answer == '' ? sanitizeEntryPoint(options.projectName) : sanitizeEntryPoint(answer) }))
 
-const googleCloudProjectQuestion = (options = {}) => askQuestion('Google Cloud Project(no spaces): '.cyan)
-	.then(answer => {
-		if (!answer || answer == '') {
-			console.log('You must define a Google Cloud Project!'.red)
-			return googleCloudProjectQuestion(options)
-		}
-		else
-			return Object.assign(options, { googleProject: answer })
-	})
+const googleCloudProjectQuestion = (options = {}) => askQuestion(`Google Cloud Project: (${options.projectName.toLowerCase()}) `.cyan)
+	.then(answer => Object.assign(options, { googleProject: answer || options.projectName.toLowerCase() }))
 
-const googleFunctionNameQuestion = (options = {}) => askQuestion(`Google Cloud Function name : (${options.projectName.toLowerCase().split(' ').join('-')}) `.cyan)
-	.then(answer => Object.assign(options, { functionName: !answer || answer == '' ? options.projectName.toLowerCase().split(' ').join('-') : answer }))
+const googleFunctionNameQuestion = (options = {}) => askQuestion(`Google Cloud Function name : (${sanitizeFunctionName(options.projectName)}) `.cyan)
+	.then(answer => Object.assign(options, { functionName: !answer || answer == '' ? sanitizeFunctionName(options.projectName) : sanitizeFunctionName(answer) }))
 
-const bucketQuestion = (options) => askQuestion('Google Cloud Function bucket(no spaces): '.cyan)
-	.then(answer => {
-		if (answer)
-			return Object.assign(options, { bucket: answer.toLowerCase().split(' ').join('') })
-		else {
-			console.log('You must define a bucket!'.red)
-			return bucketQuestion(options)
-		}
-	})
+const bucketQuestion = (options) => askQuestion(`Google Cloud Function bucket: (${sanitizeBucket(options.projectName)}) `.cyan)
+	.then(answer => Object.assign(options, { bucket: answer ? sanitizeBucket(answer) : sanitizeBucket(options.projectName) }))
 
 const triggerQuestion = (options = {}) => askQuestion(`Google Cloud Function trigger:
   [1] HTTP
   [2] Pub/Sub
   [3] Storage
-Choose one of the above: ([1]): `.cyan)
+Choose one of the above: ([1]) `.cyan)
 	.then(answer => {
 		if (!answer || answer == '')
 			answer = 1
@@ -157,9 +144,15 @@ const askPrerequisiteQuestions = () => {
 		})
 }
 
-const askProjectQuestions = () => 
+const sanitizeDest = dest => dest ? dest.split(' ').map(x => x.trim().toLowerCase()).join('') : null
+const sanitizeProjectName = name => name ? name.split(' ').join('-') : null
+const sanitizeEntryPoint = name => name ? name.split(' ').join('') : null
+const sanitizeFunctionName = name => name ? name.trim().split(' ').map(x => x.toLowerCase()).join('-') : null
+const sanitizeBucket = name => name ? name.trim().split(' ').map(x => x.toLowerCase()).join('-') : null
+
+const askProjectQuestions = dest => 
 	askPrerequisiteQuestions()
-		.then(() => projectTypeQuestion())
+		.then(() => projectTypeQuestion({ dest }))
 		.then(options => projectNameQuestion(options))
 		.then(options => projectVersionQuestion(options))
 		.then(options => googleFunctionNameQuestion(options))
