@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.1.0-alpha.11"></a>
+# [0.1.0-alpha.11](https://github.com/nicolasdao/webfunc/compare/v0.1.0-alpha.10...v0.1.0-alpha.11) (2017-07-18)
+
+
+### Bug Fixes
+
+* Remove hardcoded value from the index.js ([cc5b11f](https://github.com/nicolasdao/webfunc/commit/cc5b11f))
+
+
+
 <a name="0.1.0-alpha.10"></a>
 # [0.1.0-alpha.10](https://github.com/nicolasdao/webfunc/compare/v0.1.0-alpha.9...v0.1.0-alpha.10) (2017-07-18)
 
