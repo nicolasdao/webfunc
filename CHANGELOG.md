@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.1.0-alpha.8"></a>
+# [0.1.0-alpha.8](https://github.com/nicolasdao/webfunc/compare/v0.1.0-alpha.7...v0.1.0-alpha.8) (2017-07-18)
+
+
+### Features
+
+* Improve the format of the questions ([d830281](https://github.com/nicolasdao/webfunc/commit/d830281))
+
+
+
 <a name="0.1.0-alpha.7"></a>
 # [0.1.0-alpha.7](https://github.com/nicolasdao/webfunc/compare/v0.1.0-alpha.6...v0.1.0-alpha.7) (2017-07-17)
 
