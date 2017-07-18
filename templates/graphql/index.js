@@ -1,5 +1,13 @@
 const { serveHTTP } = require('google-graphql-functions')
-const { executableSchema } = require('./src/schema')
+const { makeExecutableSchema } = require('graphql-tools')
+const { glue } = require('schemaglue')
+
+const { schema, resolver } = glue()
+
+const executableSchema = makeExecutableSchema({
+    typeDefs: schema,
+    resolvers: resolver
+})
 
 const graphqlOptions = {
     schema: executableSchema,
@@ -7,10 +15,4 @@ const graphqlOptions = {
     endpointURL: "/graphiql"
 }
 
-/**
- * Responds to any HTTP request.
- *
- * @param {!Object} req Cloud Function request context.
- * @param {!Object} res Cloud Function response context.
- */
-exports.{{entryPoint}} = serveHTTP(graphqlOptions)
+exports.settlements = serveHTTP(graphqlOptions)

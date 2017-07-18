@@ -34,7 +34,7 @@ const createDir = (dirname) => {
 
 const copyFolderContent = (src, dest) => {
 	/*eslint-disable */
-	return new Promise((onSuccess, onFailure) => ncp(src, dest, { clobber: false },onSuccess)) // clobber false means do not override existing files
+	return new Promise((onSuccess, onFailure) => ncp(src, dest, { clobber: false }, onSuccess)) // clobber false means do not override existing files
 	/*eslint-enable */
 }
 

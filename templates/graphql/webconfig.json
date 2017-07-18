@@ -18,5 +18,8 @@
 			"googleProject": "{{googleProject}}",
 			"bucket": "{{bucket}}"
 		}
+	},
+	"graphql":{
+		"schema": "src/graphql"
 	}
 }
