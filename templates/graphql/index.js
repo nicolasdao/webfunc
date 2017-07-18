@@ -15,4 +15,4 @@ const graphqlOptions = {
     endpointURL: "/graphiql"
 }
 
-exports.settlements = serveHTTP(graphqlOptions)
+exports.{{entryPoint}} = serveHTTP(graphqlOptions)
