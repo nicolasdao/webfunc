@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.1.0-alpha.10"></a>
+# [0.1.0-alpha.10](https://github.com/nicolasdao/webfunc/compare/v0.1.0-alpha.9...v0.1.0-alpha.10) (2017-07-18)
+
+
+### Features
+
+* Integrate 'schemaglue' in the graphql template ([35d7745](https://github.com/nicolasdao/webfunc/commit/35d7745))
+
+
+
 <a name="0.1.0-alpha.9"></a>
 # [0.1.0-alpha.9](https://github.com/nicolasdao/webfunc/compare/v0.1.0-alpha.8...v0.1.0-alpha.9) (2017-07-18)
 
