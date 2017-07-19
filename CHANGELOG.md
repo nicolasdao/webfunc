@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.1.0-alpha.12"></a>
+# [0.1.0-alpha.12](https://github.com/nicolasdao/webfunc/compare/v0.1.0-alpha.11...v0.1.0-alpha.12) (2017-07-19)
+
+
+### Features
+
+* Allow to set up glocal environment variable in the webconfig.json file at deployment time ([ff0e897](https://github.com/nicolasdao/webfunc/commit/ff0e897))
+
+
+
 <a name="0.1.0-alpha.11"></a>
 # [0.1.0-alpha.11](https://github.com/nicolasdao/webfunc/compare/v0.1.0-alpha.10...v0.1.0-alpha.11) (2017-07-18)
 
