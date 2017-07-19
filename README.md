@@ -145,7 +145,7 @@ To deploy to a specific environment(prod for example):
 ```
 webfunc deploy prod
 ```
-> TIPS: The above command will not only deploy the project to "prod" (whatever _prod_ means depending on the configuration defined under the prod property above), but prior to that, it will update the _**active**_ property from "default" to "prod". The sole purpose of the _**active**_ property is to behave as a sort of environment variable that let's your code figure out which environment is currently active. More details about this in the next section.
+> TIPS: The above command will not only deploy the project to "prod" (whatever _prod_ means depending on the configuration defined under the prod property above), but prior to that, it will update the _**active**_ property from "default" to "prod". The sole purpose of the _**active**_ property is to behave as a sort of environment variable that lets your code figure out which environment is currently active. More details about this in the next section.
 
 #### Configuring Custom Environment Variables
 The previous _webconfig.json_ file example highlighted the _**active**_ property. As mentioned before, it's sole purpose is to behave as a sort of environment variable that let's your code figure out which environment is currently active. The code below demonstrates how to programmatically access the current environment:
@@ -154,7 +154,7 @@ The previous _webconfig.json_ file example highlighted the _**active**_ property
 const { getActiveEnv } = require('webfunc')
 const activeEnv = getActiveEnv()
 ```
-Using the previous _webconfig.json_, if the _active_ property is set to "default", the the value of _activeEnv_ will be the following JSON object:
+Using the previous _webconfig.json_, if the _active_ property is set to "default", then the value of _activeEnv_ will be the following JSON object:
 ```js
 {
   "functionName": "helloneap",
