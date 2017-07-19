@@ -23,7 +23,7 @@ npm install webfunc --save
 ## Features Set
 - [Project builder through a console app](#creating-a-new-project-from-scratch)
 - [Adding an HTTP handler into an existing Google Cloud Functions project](#adding-an-http-handler-into-an-existing-google-cloud-functions-project)
-- [One command to deploying a Google Cloud Functions project to any environment](#adding-multiple-deployment-environments)
+- [One command to deploy your Google Cloud Functions project to any environment](#adding-multiple-deployment-environments)
 - [Adding environment variables](#configuring-custom-environment-variables)
 
 ## How To Use It
