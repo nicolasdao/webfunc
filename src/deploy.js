@@ -12,6 +12,17 @@ const path = require('path')
 const colors = require('colors')
 /*eslint-enable */
 
+const updateWebconfigActive = (webconfig, env = 'default') => {
+	if (webconfig && webconfig.env) {
+		webconfig.env.active = env
+		const fileContent = JSON.stringify(webconfig, null, '\t')
+		/*eslint-disable */
+		const webconfigPath = path.join(process.cwd(), 'webconfig.json')
+		/*eslint-enable */
+		fs.writeFileSync(webconfigPath, fileContent)
+	}
+}
+
 const deploy = (env = 'default') => {
 	const startClock = Date.now()
 
@@ -104,6 +115,8 @@ ${'npm install -g @google-cloud/functions-emulator'.bold.italic}`.red)
 			/*eslint-enable */
 		}
 
+		updateWebconfigActive(webconfig, env)
+
 		console.log(`Deploying entry-point ${config.entryPoint.italic.bold} to ${`GOOGLE CLOUD FUNCTION ${config.functionName}`.italic.bold} located in project ${config.googleProject.italic.bold} using trigger type ${config.trigger.italic.bold}`.cyan)
 		shell.exec(`gcloud config set project ${config.googleProject}`)
 		shell.exec(`gcloud beta functions deploy ${config.functionName} --stage-bucket ${config.bucket} ${config.trigger} --entry-point ${config.entryPoint}`)
@@ -115,4 +128,6 @@ ${'npm install -g @google-cloud/functions-emulator'.bold.italic}`.red)
 module.exports = {
 	deploy
 }
+
+
 

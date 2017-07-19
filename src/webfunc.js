@@ -10,8 +10,9 @@ const fs = require('fs')
 const httpError = require('http-errors')
 
 let webconfig = null
-const getWebConfig = () => {
-	if (webconfig == null) {
+const getWebConfig = memoize => {
+	const skipMemoization = memoize == undefined ? false : !memoize
+	if (!skipMemoization || webconfig == null) {
 		/*eslint-disable */
 		const webconfigPath = path.join(process.cwd(), 'webconfig.json')
 		/*eslint-enable */
@@ -104,5 +105,6 @@ const serveHttp = (processHttpRequest, webconfig) => (req, res) => handleHttpReq
 module.exports = {
 	setResponseHeaders,
 	handleHttpRequest,
-	serveHttp
+	serveHttp,
+	getWebConfig
 }

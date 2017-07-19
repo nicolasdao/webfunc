@@ -4,6 +4,7 @@
 		"Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept"
 	},
 	"env": {
+		"active": "default",
 		"default": {
 			"functionName": "{{functionName}}",
 			"trigger": "{{trigger}}",
