@@ -20,6 +20,12 @@ npm install webfunc -g
 npm install webfunc --save
 ```
 
+## Features Set
+- [Project builder through a console app](#creating-a-new-project-from-scratch)
+- [Adding an HTTP handler into an existing Google Cloud Functions project](#adding-an-http-handler-into-an-existing-google-cloud-functions-project)
+- [One command to deploying a Google Cloud Functions project to any environment](#adding-multiple-deployment-environments)
+- [Adding environment variables](#configuring-custom-environment-variables)
+
 ## How To Use It
 #### Creating a new project from scratch
 webfunc currently support 2 types of new projects:
@@ -59,7 +65,7 @@ In case you simply want to initialize a new _webconfig.json_ inside an existing 
 ```
 webfunc init
 ```
-#### webfunc.js In An Existing Google Cloud Functions Project
+#### Adding an HTTP Handler Into An Existing Google Cloud Functions Project
 
 First, install webfunc.js in your project
 ```
@@ -83,6 +89,8 @@ exports.yourapp = serveHttp((req, res) => {
 ```
 
 Easy isn't it!?
+
+To configure the HTTP handler, simply configure the _**webconfig.json**_ file as explained in the next section.
 
 ## Configuring The HTTP Handler - webconfig.json
 #### CORS
