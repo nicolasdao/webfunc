@@ -12,7 +12,8 @@ const executableSchema = makeExecutableSchema({
 const graphqlOptions = {
     schema: executableSchema,
     graphiql: true,
-    endpointURL: "/graphiql"
+    endpointURL: "/graphiql",
+    context: {} // add whatever global context is relevant to you app
 }
 
 exports.{{entryPoint}} = serveHTTP(graphqlOptions)

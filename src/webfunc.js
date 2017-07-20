@@ -9,16 +9,25 @@ const path = require('path')
 const fs = require('fs')
 const httpError = require('http-errors')
 
-let webconfig = null
+let _webconfig = null
 const getWebConfig = memoize => {
 	const skipMemoization = memoize == undefined ? false : !memoize
-	if (!skipMemoization || webconfig == null) {
+	if (!skipMemoization || _webconfig == null) {
 		/*eslint-disable */
 		const webconfigPath = path.join(process.cwd(), 'webconfig.json')
 		/*eslint-enable */
-		webconfig = fs.existsSync(webconfigPath) ? require(webconfigPath) : undefined
+		_webconfig = fs.existsSync(webconfigPath) ? require(webconfigPath) : undefined
 	}
-	return webconfig
+	return _webconfig
+}
+
+const getActiveEnv = memoize => {
+	const webconfig = getWebConfig(memoize)
+	const env = ((webconfig || {}).env || {}).active
+	if (env) 
+		return Object.assign(webconfig.env, { _name: env })
+	else
+		return null
 }
 
 let headersCollection = null
@@ -106,5 +115,6 @@ module.exports = {
 	setResponseHeaders,
 	handleHttpRequest,
 	serveHttp,
-	getWebConfig
+	getWebConfig,
+	getActiveEnv
 }
