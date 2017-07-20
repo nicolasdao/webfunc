@@ -20,6 +20,12 @@ npm install webfunc -g
 npm install webfunc --save
 ```
 
+## Features Set
+- [Project builder through a console app](#creating-a-new-project-from-scratch)
+- [Adding an HTTP handler into an existing Google Cloud Functions project](#adding-an-http-handler-into-an-existing-google-cloud-functions-project)
+- [One command to deploy your Google Cloud Functions project to any environment](#adding-multiple-deployment-environments)
+- [Adding environment variables](#configuring-custom-environment-variables)
+
 ## How To Use It
 #### Creating a new project from scratch
 webfunc currently support 2 types of new projects:
@@ -59,7 +65,7 @@ In case you simply want to initialize a new _webconfig.json_ inside an existing 
 ```
 webfunc init
 ```
-#### webfunc.js In An Existing Google Cloud Functions Project
+#### Adding an HTTP Handler Into An Existing Google Cloud Functions Project
 
 First, install webfunc.js in your project
 ```
@@ -84,7 +90,9 @@ exports.yourapp = serveHttp((req, res) => {
 
 Easy isn't it!?
 
-## Configuring Your Mini Web Server - webconfig.json
+To configure the HTTP handler, simply configure the _**webconfig.json**_ file as explained in the next section.
+
+## Configuring The HTTP Handler - webconfig.json
 #### CORS
 This is the main 'raison d'être' of this project. Out-of-the box, Google Cloud Functions does not support easy configuration for CORS when triggered through HTTP (at least as of July 2017). Webfunc provides an easy to configure CORS through its _**webconfig.json**_ file. 
 
@@ -108,6 +116,7 @@ Let's imagine that 3 different environments have been setup on a Google Cloud Ac
 ```js
 {
   "env": {
+    "active": "default",
     "default": {
       "functionName": "helloneap",
       "trigger": "--trigger-http",
@@ -144,6 +153,39 @@ To deploy to a specific environment(prod for example):
 ```
 webfunc deploy prod
 ```
+> TIPS: The above command will not only deploy the project to "prod" (whatever _prod_ means depending on the configuration defined under the prod property above), but prior to that, it will update the _**active**_ property from "default" to "prod". The sole purpose of the _**active**_ property is to behave as a sort of environment variable that lets your code figure out which environment is currently active. More details about this in the next section.
+
+#### Configuring Custom Environment Variables
+The previous _webconfig.json_ file example highlighted the _**active**_ property. As mentioned before, it's sole purpose is to behave as a sort of environment variable that let's your code figure out which environment is currently active. The code below demonstrates how to programmatically access the current environment:
+
+```js
+const { getActiveEnv } = require('webfunc')
+const activeEnv = getActiveEnv()
+```
+Using the previous _webconfig.json_, if the _active_ property is set to "default", then the value of _activeEnv_ will be the following JSON object:
+```js
+{
+  "functionName": "helloneap",
+  "trigger": "--trigger-http",
+  "entryPoint": "helloNeap",
+  "googleProject": "DevEnv",
+  "bucket": "devenvbucket"
+}
+```
+
+But after deployment to prod, its value will be:
+
+```js
+{
+  "functionName": "helloneap",
+  "trigger": "--trigger-http",
+  "entryPoint": "helloNeap",
+  "googleProject": "ProdEnv",
+  "bucket": "prodenvbucket"
+}
+```
+> NOTE: _**getActiveEnv**_ accepts one optional boolean called 'memoize'. By default it is set to true. That means that calling it multiple times will not incure more read resources. 
+
 ## Annexes
 #### A.1. CORS Refresher
 _COMING SOON..._
