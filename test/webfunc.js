@@ -9,14 +9,6 @@ const { assert } = require('chai')
 const httpMocks = require('node-mocks-http')
 const { setResponseHeaders, serveHttp, handleHttpRequest } = require('../src/webfunc')
 
-// const req  = httpMocks.createRequest({
-// 	method: 'GET',
-// 	url: '/user/42',
-// 	params: {
-// 	  id: 42
-// 	}
-// })
-
 const webconfig = {
 	headers: {
 		'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS, POST',

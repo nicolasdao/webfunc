@@ -8,14 +8,14 @@
     "logs": "webfunc logs"
   },
   "dependencies": {
-    "google-graphql-functions": "^0.1.0-alpha",
+    "google-graphql-functions": "^0.1.0-alpha.1",
     "graphql": "^0.9.3",
     "graphql-s2s": "^0.2.1",
     "graphql-tools": "^0.11.0",
     "lodash": "^4.17.4",
     "http-errors": "^1.6.1",
     "schemaglue": "^1.2.0",
-    "webfunc": "^0.1.0-alpha"
+    "webfunc": "^0.1.0-alpha.1"
   },
   "devDependencies": {
     "chai": "^4.1.0",

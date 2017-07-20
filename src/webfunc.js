@@ -23,9 +23,9 @@ const getWebConfig = memoize => {
 
 const getActiveEnv = memoize => {
 	const webconfig = getWebConfig(memoize)
-	const env = ((webconfig || {}).env || {}).active
-	if (env) 
-		return Object.assign(webconfig.env, { _name: env })
+	const activeEnv = ((webconfig || {}).env || {}).active
+	if (activeEnv) 
+		return Object.assign((webconfig.env[activeEnv] || {}), { _name: activeEnv })
 	else
 		return null
 }
