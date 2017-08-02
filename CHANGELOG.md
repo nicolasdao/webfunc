@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.1.0-alpha.15"></a>
+# [0.1.0-alpha.15](https://github.com/nicolasdao/webfunc/compare/v0.1.0-alpha.14...v0.1.0-alpha.15) (2017-08-02)
+
+
+### Bug Fixes
+
+* Clean project. Refactor the console part into the gimpy project ([2e98cd0](https://github.com/nicolasdao/webfunc/commit/2e98cd0))
+
+
+
 <a name="0.1.0-alpha.14"></a>
 # [0.1.0-alpha.14](https://github.com/nicolasdao/webfunc/compare/v0.1.0-alpha.13...v0.1.0-alpha.14) (2017-07-20)
 
