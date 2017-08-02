@@ -9,7 +9,7 @@ const { assert } = require('chai')
 const httpMocks = require('node-mocks-http')
 const { setResponseHeaders, serveHttp, handleHttpRequest } = require('../src/webfunc')
 
-const webconfig = {
+const appconfig = {
 	headers: {
 		'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS, POST',
 		'Access-Control-Allow-Headers': 'Authorization, Content-Type, Origin',
@@ -24,7 +24,7 @@ describe('webfunc', () =>
 		it('Should set headers.', () => {
 			/*eslint-enable */
 			const res = httpMocks.createResponse()
-			return setResponseHeaders(res, webconfig).then(res => {
+			return setResponseHeaders(res, appconfig).then(res => {
 				const headers = res._getHeaders()
 				assert.isOk(headers)
 				assert.equal(headers['Access-Control-Allow-Methods'], 'GET, HEAD, OPTIONS, POST')
@@ -47,8 +47,8 @@ describe('webfunc', () =>
 				}
 			})
 			const res = httpMocks.createResponse()
-			const webconfig = {}
-			return handleHttpRequest(req, res, webconfig).then(() => {
+			const appconfig = {}
+			return handleHttpRequest(req, res, appconfig).then(() => {
 				assert.isOk(1)
 			})
 		})))
@@ -66,8 +66,8 @@ describe('webfunc', () =>
 				}
 			})
 			const res = httpMocks.createResponse()
-			const webconfig = {}
-			return handleHttpRequest(req, res, webconfig).then(() => {
+			const appconfig = {}
+			return handleHttpRequest(req, res, appconfig).then(() => {
 				assert.equal(1,2)
 			}).catch(err => {
 				assert.equal(err.message,'Forbidden - CORS issue. Origin \'http://localhost:8080\' is not allowed.')
@@ -87,7 +87,7 @@ describe('webfunc', () =>
 				}
 			})
 			const res = httpMocks.createResponse()
-			const webconfig = {
+			const appconfig = {
 				headers: {
 					'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS, POST',
 					'Access-Control-Allow-Headers': 'Authorization, Content-Type, Origin',
@@ -95,7 +95,7 @@ describe('webfunc', () =>
 					'Access-Control-Max-Age': '1296000'
 				}
 			}
-			return handleHttpRequest(req, res, webconfig).then(() => {
+			return handleHttpRequest(req, res, appconfig).then(() => {
 				assert.equal(1,1)
 			})
 		})))
@@ -113,7 +113,7 @@ describe('webfunc', () =>
 				}
 			})
 			const res = httpMocks.createResponse()
-			const webconfig = {
+			const appconfig = {
 				headers: {
 					'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS, POST',
 					'Access-Control-Allow-Headers': 'Authorization, Content-Type, Origin',
@@ -121,7 +121,7 @@ describe('webfunc', () =>
 					'Access-Control-Max-Age': '1296000'
 				}
 			}
-			return handleHttpRequest(req, res, webconfig).then(() => {
+			return handleHttpRequest(req, res, appconfig).then(() => {
 				assert.equal(1,1)
 			})
 		})))
@@ -139,7 +139,7 @@ describe('webfunc', () =>
 				}
 			})
 			const res = httpMocks.createResponse()
-			const webconfig = {
+			const appconfig = {
 				headers: {
 					'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS, POST',
 					'Access-Control-Allow-Headers': 'Authorization, Content-Type, Origin',
@@ -147,7 +147,7 @@ describe('webfunc', () =>
 					'Access-Control-Max-Age': '1296000'
 				}
 			}
-			return handleHttpRequest(req, res, webconfig).then(() => {
+			return handleHttpRequest(req, res, appconfig).then(() => {
 				assert.equal(1,2)
 			}).catch(err => {
 				assert.equal(err.message,'Forbidden - CORS issue. Origin \'http://localhost:8080\' is not allowed.')
@@ -167,7 +167,7 @@ describe('webfunc', () =>
 				}
 			})
 			const res = httpMocks.createResponse()
-			const webconfig = {
+			const appconfig = {
 				headers: {
 					'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS, POST',
 					'Access-Control-Allow-Headers': 'Authorization, Content-Type, Origin',
@@ -175,7 +175,7 @@ describe('webfunc', () =>
 					'Access-Control-Max-Age': '1296000'
 				}
 			}
-			return handleHttpRequest(req, res, webconfig).then(() => {
+			return handleHttpRequest(req, res, appconfig).then(() => {
 				assert.equal(1,1)
 			})
 		})))
@@ -193,7 +193,7 @@ describe('webfunc', () =>
 				}
 			})
 			const res = httpMocks.createResponse()
-			const webconfig = {
+			const appconfig = {
 				headers: {
 					'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
 					'Access-Control-Allow-Headers': 'Authorization, Content-Type, Origin',
@@ -201,7 +201,7 @@ describe('webfunc', () =>
 					'Access-Control-Max-Age': '1296000'
 				}
 			}
-			return handleHttpRequest(req, res, webconfig).then(() => {
+			return handleHttpRequest(req, res, appconfig).then(() => {
 				assert.equal(1,2)
 			}).catch((err) => {
 				assert.equal(err.message, 'Forbidden - CORS issue. Method \'POST\' is not allowed.')
@@ -221,7 +221,7 @@ describe('webfunc', () =>
 				}
 			})
 			const res = httpMocks.createResponse()
-			const webconfig = {
+			const appconfig = {
 				headers: {
 					'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS, POST, PUT',
 					'Access-Control-Allow-Headers': 'Authorization, Content-Type, Origin',
@@ -229,7 +229,7 @@ describe('webfunc', () =>
 					'Access-Control-Max-Age': '1296000'
 				}
 			}
-			return handleHttpRequest(req, res, webconfig).then(() => {
+			return handleHttpRequest(req, res, appconfig).then(() => {
 				assert.equal(1,1)
 			})
 		})))
@@ -247,8 +247,8 @@ describe('webfunc', () =>
 				}
 			})
 			const res = httpMocks.createResponse()
-			const webconfig = {}
-			return handleHttpRequest(req, res, webconfig).then(() => {
+			const appconfig = {}
+			return handleHttpRequest(req, res, appconfig).then(() => {
 				assert.equal(1,2)
 			})
 				.catch(err => assert.equal(err.message, 'Forbidden - CORS issue. Method \'PUT\' is not allowed.'))
@@ -267,11 +267,11 @@ describe('webfunc', () =>
 				}
 			})
 			const res = httpMocks.createResponse()
-			const webconfig = {}
+			const appconfig = {}
 			const fn = serveHttp((req, res) => {
 				res.status(200).send('Hello World')
 				return res
-			}, webconfig)
+			}, appconfig)
 			return fn(req, res).then(res => {
 				assert.equal(res._getData(),'Hello World')
 			})
@@ -290,11 +290,11 @@ describe('webfunc', () =>
 				}
 			})
 			const res = httpMocks.createResponse()
-			const webconfig = {}
+			const appconfig = {}
 			const fn = serveHttp((req, res) => {
 				res.status(200).send('Hello World')
 				return res
-			}, webconfig)
+			}, appconfig)
 			return fn(req, res)
 				.then(() => {
 					assert.equal(1,2)
@@ -317,7 +317,7 @@ describe('webfunc', () =>
 				}
 			})
 			const res = httpMocks.createResponse()
-			const webconfig = {
+			const appconfig = {
 				headers: {
 					'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS, POST',
 					'Access-Control-Allow-Headers': 'Authorization, Content-Type, Origin',
@@ -328,7 +328,7 @@ describe('webfunc', () =>
 			const fn = serveHttp((req, res) => {
 				res.status(200).send('Hello World')
 				return res
-			}, webconfig)
+			}, appconfig)
 			return fn(req, res).then(res => {
 				assert.equal(res._getData(),'Hello World')
 			})
@@ -347,7 +347,7 @@ describe('webfunc', () =>
 				}
 			})
 			const res = httpMocks.createResponse()
-			const webconfig = {
+			const appconfig = {
 				headers: {
 					'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS, POST',
 					'Access-Control-Allow-Headers': 'Authorization, Content-Type, Origin',
@@ -358,7 +358,7 @@ describe('webfunc', () =>
 			const fn = serveHttp((req, res) => {
 				res.status(200).send('Hello World')
 				return res
-			}, webconfig)
+			}, appconfig)
 			return fn(req, res).then(res => {
 				assert.equal(res._getData(),'Hello World')
 			})
@@ -377,7 +377,7 @@ describe('webfunc', () =>
 				}
 			})
 			const res = httpMocks.createResponse()
-			const webconfig = {
+			const appconfig = {
 				headers: {
 					'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS, POST',
 					'Access-Control-Allow-Headers': 'Authorization, Content-Type, Origin',
@@ -388,7 +388,7 @@ describe('webfunc', () =>
 			const fn = serveHttp((req, res) => {
 				res.status(200).send('Hello World')
 				return res
-			}, webconfig)
+			}, appconfig)
 			return fn(req, res).then(() => {
 				assert.equal(1,2)
 			}).catch(err => {
@@ -409,7 +409,7 @@ describe('webfunc', () =>
 				}
 			})
 			const res = httpMocks.createResponse()
-			const webconfig = {
+			const appconfig = {
 				headers: {
 					'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS, POST',
 					'Access-Control-Allow-Headers': 'Authorization, Content-Type, Origin',
@@ -420,7 +420,7 @@ describe('webfunc', () =>
 			const fn = serveHttp((req, res) => {
 				res.status(200).send('Hello World')
 				return res
-			}, webconfig)
+			}, appconfig)
 			return fn(req, res).then(res => {
 				assert.equal(res._getData(),'Hello World')
 			})
@@ -439,7 +439,7 @@ describe('webfunc', () =>
 				}
 			})
 			const res = httpMocks.createResponse()
-			const webconfig = {
+			const appconfig = {
 				headers: {
 					'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
 					'Access-Control-Allow-Headers': 'Authorization, Content-Type, Origin',
@@ -450,7 +450,7 @@ describe('webfunc', () =>
 			const fn = serveHttp((req, res) => {
 				res.status(200).send('Hello World')
 				return res
-			}, webconfig)
+			}, appconfig)
 			return fn(req, res).then(() => {
 				assert.equal(1,2)
 			}).catch((err) => {
@@ -471,7 +471,7 @@ describe('webfunc', () =>
 				}
 			})
 			const res = httpMocks.createResponse()
-			const webconfig = {
+			const appconfig = {
 				headers: {
 					'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS, POST, PUT',
 					'Access-Control-Allow-Headers': 'Authorization, Content-Type, Origin',
@@ -482,7 +482,7 @@ describe('webfunc', () =>
 			const fn = serveHttp((req, res) => {
 				res.status(200).send('Hello World')
 				return res
-			}, webconfig)
+			}, appconfig)
 			return fn(req, res).then(res => {
 				assert.equal(res._getData(),'Hello World')
 			})
@@ -501,11 +501,11 @@ describe('webfunc', () =>
 				}
 			})
 			const res = httpMocks.createResponse()
-			const webconfig = {}
+			const appconfig = {}
 			const fn = serveHttp((req, res) => {
 				res.status(200).send('Hello World')
 				return res
-			}, webconfig)
+			}, appconfig)
 			return fn(req, res).then(() => {
 				assert.equal(1,2)
 			})
@@ -525,7 +525,7 @@ describe('webfunc', () =>
 				}
 			})
 			const res = httpMocks.createResponse()
-			const webconfig = {
+			const appconfig = {
 				headers: {
 					'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS, POST',
 					'Access-Control-Allow-Headers': 'Authorization, Content-Type, Origin',
@@ -536,7 +536,7 @@ describe('webfunc', () =>
 			const fn = serveHttp((req, res) => {
 				res.status(200).send('Hello World')
 				return res
-			}, webconfig)
+			}, appconfig)
 			return fn(req, res).then(res => {
 				assert.equal(res._getData(),'Hello World')
 				const headers = res._getHeaders()

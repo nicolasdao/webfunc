@@ -1,6 +1,6 @@
 <a href="https://neap.co" target="_blank"><img src="https://neap.co/img/neap_black_small_logo.png" alt="Neap Pty Ltd logo" title="Neap" align="right" height="50" width="120"/></a>
 
-# WebFunc - Lightweight HTTP Handler & Project Builder For Google Cloud Functions
+# WebFunc - Lightweight HTTP Handler & Project Configuration For Google Cloud Functions
 [![NPM][1]][2] [![Tests][3]][4]
 
 [1]: https://img.shields.io/npm/v/webfunc.svg?style=flat
@@ -8,69 +8,18 @@
 [3]: https://travis-ci.org/nicolasdao/webfunc.svg?branch=master
 [4]: https://travis-ci.org/nicolasdao/webfunc
 ## Intro
-Add easy CORS support with a _**webconfig.json**_ file and simplify creation & deployment of Google Cloud Functions projects.
+Add easy CORS support to Google Cloud Functions projects.
 
 ## Install
-#### Creating A New Project From Scratch
-```
-npm install webfunc -g
-```
-#### Using it inside a Google Cloud Functions project to add support for CORS and ease deployment. 
 ```
 npm install webfunc --save
 ```
 
 ## Features Set
-- [Project builder through a console app](#creating-a-new-project-from-scratch)
 - [Adding an HTTP handler into an existing Google Cloud Functions project](#adding-an-http-handler-into-an-existing-google-cloud-functions-project)
-- [One command to deploy your Google Cloud Functions project to any environment](#adding-multiple-deployment-environments)
 - [Adding environment variables](#configuring-custom-environment-variables)
 
 ## How To Use It
-#### Creating a new project from scratch
-webfunc currently support 2 types of new projects:
-
-1. _**Basic HTTP**_ - This is a simple Hello World app.
-2. _**GraphQL**_ - This template is built using the [google-graphql-functions](https://github.com/nicolasdao/google-graphql-functions) package which hosts a GraphQL API.
-
-All those projects come with a basic pre-configuration in their _webconfig.json_ file which makes it trivial to configure CORS as well as multiple depoyments in various environments.
-
-```
-webfunc init your-web-app
-cd your-web-app
-npm install
-```
-This will ask some basic questions and will initialize a HelloWorld Web App ready to be hosted on Google Cloud.
-
-To deploy it locally (using [@google-cloud/functions-emulator](https://github.com/GoogleCloudPlatform/cloud-functions-emulator/))
-```
-webfunc deploy
-```
-
-To deploy it to a Google Cloud Account (that you must have presumably configured during the ```webfunc init``` step)
-```
-webfunc deploy build
-```
-
-Alternatively, you can also run those 2 commands through npm:
-```
-npm run deploy
-```
-
-```
-npm run deploy -- build
-```
-
-In case you simply want to initialize a new _webconfig.json_ inside an existing Google Cloud Functions project, simply run the following command:
-```
-webfunc init
-```
-#### Adding an HTTP Handler Into An Existing Google Cloud Functions Project
-
-First, install webfunc.js in your project
-```
-npm install webfunc --save
-``` 
 
 In its simplest form, a Google Cloud Functions project looks like this:
 ```js
@@ -90,11 +39,11 @@ exports.yourapp = serveHttp((req, res) => {
 
 Easy isn't it!?
 
-To configure the HTTP handler, simply configure the _**webconfig.json**_ file as explained in the next section.
+To configure the HTTP handler, add a new _**appconfig.json**_ file and configure it as explained in the next section.
 
-## Configuring The HTTP Handler - webconfig.json
+## Configuring The HTTP Handler & Multiple Environment Variables - appconfig.json
 #### CORS
-This is the main 'raison d'être' of this project. Out-of-the box, Google Cloud Functions does not support easy configuration for CORS when triggered through HTTP (at least as of July 2017). Webfunc provides an easy to configure CORS through its _**webconfig.json**_ file. 
+This is the main 'raison d'être' of this project. Out-of-the box, Google Cloud Functions does not support easy configuration for CORS when triggered through HTTP (at least as of July 2017). Webfunc fills that gap using configurations defined in a _**appconfig.json**_ file. 
 
 ```js
 {
@@ -111,7 +60,7 @@ More details about those headers in the [Annexes](#annexes) section under [A.1. 
 > CORS is a classic source of headache. Though webfunc allows to easily configure any Google Cloud Functions project, it will not prevent anybody to badly configure a project, and therefore loose a huge amount of time. For that reason, a series of common mistakes have been documented in the [Annexes](#annexes) section under [A.2. CORS Basic Errors](#a2-cors-basic-errors).
 
 #### Adding Multiple Deployment Environments
-Let's imagine that 3 different environments have been setup on a Google Cloud Account, the webfunc can easily deploy to any of those environment if they have been configured in the project's _**webconfig.json**_ file:
+Let's imagine that 3 different environments have been setup on a Google Cloud Account. Obvioulsy, all of those environments have probably different configurations. As of today (July 2017), Google Cloud Functions does not support environment variables. WebFunc allows you to deal with the issue by supporting an _**env**_ property in the _**appconfig.json**_ file:
 
 ```js
 {
@@ -149,20 +98,15 @@ Let's imagine that 3 different environments have been setup on a Google Cloud Ac
 }
 ```
 
-To deploy to a specific environment(prod for example):
-```
-webfunc deploy prod
-```
-> TIPS: The above command will not only deploy the project to "prod" (whatever _prod_ means depending on the configuration defined under the prod property above), but prior to that, it will update the _**active**_ property from "default" to "prod". The sole purpose of the _**active**_ property is to behave as a sort of environment variable that lets your code figure out which environment is currently active. More details about this in the next section.
+As you can see, the example above demonstrates 4 different types of enviornment setups: _default_, _build_, _staging_, _prod_. You can obviouly define as many as you want, and add whatever you need under those environments. 
 
-#### Configuring Custom Environment Variables
-The previous _webconfig.json_ file example highlighted the _**active**_ property. As mentioned before, it's sole purpose is to behave as a sort of environment variable that let's your code figure out which environment is currently active. The code below demonstrates how to programmatically access the current environment:
+Also, notice the _**active**_ property. It's purpose is to behave as a sort of environment variable that let's your code figure out which environment is currently active. The code below demonstrates how to programmatically access the current environment:
 
 ```js
 const { getActiveEnv } = require('webfunc')
 const activeEnv = getActiveEnv()
 ```
-Using the previous _webconfig.json_, if the _active_ property is set to "default", then the value of _activeEnv_ will be the following JSON object:
+Using the previous _appconfig.json_, if the _active_ property is set to _default_, then the value of _getActiveEnv_ will be the following JSON object:
 ```js
 {
   "functionName": "helloneap",
@@ -173,7 +117,7 @@ Using the previous _webconfig.json_, if the _active_ property is set to "default
 }
 ```
 
-But after deployment to prod, its value will be:
+If you change the value of the _**active**_ property to _prod_, then the _getActiveEnv_ method will return:
 
 ```js
 {

@@ -9,23 +9,23 @@ const path = require('path')
 const fs = require('fs')
 const httpError = require('http-errors')
 
-let _webconfig = null
-const getWebConfig = memoize => {
+let _appconfig = null
+const getAppConfig = memoize => {
 	const skipMemoization = memoize == undefined ? false : !memoize
-	if (!skipMemoization || _webconfig == null) {
+	if (!skipMemoization || _appconfig == null) {
 		/*eslint-disable */
-		const webconfigPath = path.join(process.cwd(), 'webconfig.json')
+		const appconfigPath = path.join(process.cwd(), 'appconfig.json')
 		/*eslint-enable */
-		_webconfig = fs.existsSync(webconfigPath) ? require(webconfigPath) : undefined
+		_appconfig = fs.existsSync(appconfigPath) ? require(appconfigPath) : undefined
 	}
-	return _webconfig
+	return _appconfig
 }
 
 const getActiveEnv = memoize => {
-	const webconfig = getWebConfig(memoize)
-	const activeEnv = ((webconfig || {}).env || {}).active
+	const appconfig = getAppConfig(memoize)
+	const activeEnv = ((appconfig || {}).env || {}).active
 	if (activeEnv) 
-		return Object.assign((webconfig.env[activeEnv] || {}), { _name: activeEnv })
+		return Object.assign((appconfig.env[activeEnv] || {}), { _name: activeEnv })
 	else
 		return null
 }
@@ -66,14 +66,14 @@ const getAllowedMethods = (headers = {}, memoize) => {
 	return allowedMethods
 }  
 
-const setResponseHeaders = (res, webconfig) => Promise.resolve((webconfig || getWebConfig() || {}).headers)
-	.then(headers => getHeadersCollection(headers, !webconfig).reduce((response, header) => res.set(header.key, header.value), res))
+const setResponseHeaders = (res, appconfig) => Promise.resolve((appconfig || getAppConfig() || {}).headers)
+	.then(headers => getHeadersCollection(headers, !appconfig).reduce((response, header) => res.set(header.key, header.value), res))
 
-const handleHttpRequest = (req, res, webconfig) => Promise.resolve(webconfig || getWebConfig() || {})
-	.then(webConfig => {
-		const headers = webConfig.headers
-		const noConfig = !webConfig.headers && !webConfig.env
-		const memoize = !webconfig
+const handleHttpRequest = (req, res, appconfig) => Promise.resolve(appconfig || getAppConfig() || {})
+	.then(appConfig => {
+		const headers = appConfig.headers
+		const noConfig = !appConfig.headers && !appConfig.env
+		const memoize = !appconfig
 		const origins = getAllowedOrigins(headers, memoize)
 		const methods = getAllowedMethods(headers, memoize)
 		const origin = new String(req.headers.origin).toLowerCase()
@@ -83,38 +83,38 @@ const handleHttpRequest = (req, res, webconfig) => Promise.resolve(webconfig || 
 
 		if (noConfig) {
 			if (!sameOrigin) {
-				setResponseHeaders(res, webConfig)
+				setResponseHeaders(res, appConfig)
 				throw httpError(403, `Forbidden - CORS issue. Origin '${origin}' is not allowed.`)
 			}
 			if (method != 'head' && method != 'get' && method != 'options' && method != 'post') {
-				setResponseHeaders(res, webConfig)
+				setResponseHeaders(res, appConfig)
 				throw httpError(403, `Forbidden - CORS issue. Method '${method.toUpperCase()}' is not allowed.`)
 			}
 		}
 		// Check CORS
 		
 		if (!origins['*'] && Object.keys(origins).length != 0 && !(origin in origins)) {
-			setResponseHeaders(res, webConfig)
+			setResponseHeaders(res, appConfig)
 			throw httpError(403, `Forbidden - CORS issue. Origin '${origin}' is not allowed.`)
 		}
 		if (Object.keys(methods).length != 0 && method != 'get' && method != 'head' && !(method in methods)) {
-			setResponseHeaders(res, webConfig)
+			setResponseHeaders(res, appConfig)
 			throw httpError(403, `Forbidden - CORS issue. Method '${method.toUpperCase()}' is not allowed.`)
 		}
 
 		if (method == 'head' || method == 'options')
-			return setResponseHeaders(res, webConfig).then(res => res.status(200).send())
+			return setResponseHeaders(res, appConfig).then(res => res.status(200).send())
 	})
 
-const serveHttp = (processHttpRequest, webconfig) => (req, res) => handleHttpRequest(req, res, webconfig)
+const serveHttp = (processHttpRequest, appconfig) => (req, res) => handleHttpRequest(req, res, appconfig)
 	.then(() => !res.headersSent 
-		? setResponseHeaders(res, webconfig).then(res => processHttpRequest(req, res)) 
+		? setResponseHeaders(res, appconfig).then(res => processHttpRequest(req, res)) 
 		: res)
 
 module.exports = {
 	setResponseHeaders,
 	handleHttpRequest,
 	serveHttp,
-	getWebConfig,
+	getAppConfig,
 	getActiveEnv
 }

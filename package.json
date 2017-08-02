@@ -5,13 +5,10 @@
   "contributors": [
     "Nicolas Dao <nic@neap.co> (https://neap.co/)"
   ],
-  "bin": {
-    "webfunc": "./index.js"
-  },
   "main": "src/webfunc.js",
   "scripts": {
     "test": "mocha",
-    "eslint": "eslint index.js src/ test/ templates/",
+    "eslint": "eslint src/ test/",
     "release": "standard-version --prerelease alpha"
   },
   "repository": {
@@ -33,19 +30,13 @@
   },
   "homepage": "https://github.com/nicolasdao/webfunc#readme",
   "dependencies": {
-    "colors": "^1.1.2",
-    "commander": "^2.11.0",
-    "http-errors": "^1.6.1",
-    "lodash": "^4.17.4",
-    "ncp": "^2.0.0",
-    "replace": "^0.3.0",
-    "shelljs": "^0.7.8",
-    "standard-version": "^4.2.0"
+    "http-errors": "^1.6.1"
   },
   "devDependencies": {
     "chai": "^4.1.0",
     "eslint": "^4.1.1",
     "mocha": "^3.4.2",
-    "node-mocks-http": "^1.6.4"
+    "node-mocks-http": "^1.6.4",
+    "standard-version": "^4.2.0"
   }
 }
