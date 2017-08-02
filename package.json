@@ -1,6 +1,6 @@
 {
   "name": "webfunc",
-  "version": "0.1.0-alpha.15",
+  "version": "0.1.0",
   "description": "Lightweight HTTP handler for Google Cloud Functions. It supports CORS and also assists in initialization of web app projects hosted on Google Cloud Functions.",
   "contributors": [
     "Nicolas Dao <nic@neap.co> (https://neap.co/)"
@@ -9,7 +9,9 @@
   "scripts": {
     "test": "mocha",
     "eslint": "eslint src/ test/",
-    "release": "standard-version --prerelease alpha"
+    "release:alpha": "standard-version --prerelease alpha",
+    "release:minor": "standard-version --release-as minor",
+    "release": "standard-version"
   },
   "repository": {
     "type": "git",
