@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.3.0"></a>
+# [0.3.0](https://github.com/nicolasdao/webfunc/compare/v0.2.1-alpha.0...v0.3.0) (2017-08-04)
+
+
+### Bug Fixes
+
+* Clean project ([8945a18](https://github.com/nicolasdao/webfunc/commit/8945a18))
+
+
+### Features
+
+* Add new routing feature ([bc01602](https://github.com/nicolasdao/webfunc/commit/bc01602))
+
+
+
 <a name="0.2.1-alpha.0"></a>
 ## [0.2.1-alpha.0](https://github.com/nicolasdao/webfunc/compare/v0.2.0...v0.2.1-alpha.0) (2017-08-02)
 
