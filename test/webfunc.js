@@ -575,7 +575,7 @@ describe('webfunc', () =>
 
 			const fn = serveHttp(app.get('/users', (req, res) => { res.status(200).send('Hello User'); return res }), appconfig)
 
-			const result_01 = fn(req_01, res_01).then(res => {
+			const result_01 = fn(req_01, res_01).then(() => {
 				assert.equal(res_01._getData(),'Hello User')
 				const headers = res_01._getHeaders()
 				assert.isOk(headers)
@@ -633,7 +633,7 @@ describe('webfunc', () =>
 
 			const fn = serveHttp(endpoints, appconfig)
 
-			const result_01 = fn(req_01, res_01).then(res => {
+			const result_01 = fn(req_01, res_01).then(() => {
 				assert.equal(res_01._getData(),'Hello User')
 				const headers = res_01._getHeaders()
 				assert.isOk(headers)
@@ -642,7 +642,7 @@ describe('webfunc', () =>
 				assert.equal(headers['Access-Control-Allow-Origin'], 'http://boris.com, http://localhost:8080')
 				assert.equal(headers['Access-Control-Max-Age'], '1296000')
 			})
-			const result_02 = fn(req_02, res_02).then(res => {
+			const result_02 = fn(req_02, res_02).then(() => {
 				assert.equal(res_02._getData(),'Hello Companies')
 				const headers = res_02._getHeaders()
 				assert.isOk(headers)
@@ -707,7 +707,7 @@ describe('webfunc', () =>
 
 			const fn = serveHttp(endpoints, appconfig)
 
-			const result_01 = fn(req_01, res_01).then(res => {
+			const result_01 = fn(req_01, res_01).then(() => {
 				assert.equal(res_01._getData(),'Hello nicolas (account: 1234)')
 				const headers = res_01._getHeaders()
 				assert.isOk(headers)
@@ -716,7 +716,7 @@ describe('webfunc', () =>
 				assert.equal(headers['Access-Control-Allow-Origin'], 'http://boris.com, http://localhost:8080')
 				assert.equal(headers['Access-Control-Max-Age'], '1296000')
 			})
-			const result_02 = fn(req_02, res_02).then(res => {
+			const result_02 = fn(req_02, res_02).then(() => {
 				assert.equal(res_02._getData(),'Hello neap (Hello: world)')
 				const headers = res_02._getHeaders()
 				assert.isOk(headers)

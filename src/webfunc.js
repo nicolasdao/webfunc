@@ -126,15 +126,15 @@ const serveHttp = (arg1, appconfig) => {
 		else if (typeOfArg1 == 'object')
 			return serveHttpEndpoints([arg1], appconfig)
 		else
-			throw new httpError(500, `Wrong argument exception. The first argument of method 'serveHttp' must either be a function or an array of endpoints.`)
+			throw new httpError(500, 'Wrong argument exception. The first argument of method \'serveHttp\' must either be a function or an array of endpoints.')
 	}
 	else
-		throw new httpError(500, `Wrong argument exception. The first argument of method 'serveHttp' must either be a function or an array of endpoints.`)
+		throw new httpError(500, 'Wrong argument exception. The first argument of method \'serveHttp\' must either be a function or an array of endpoints.')
 
 	return (req, res) => handleHttpRequest(req, res, appconfig)
-	.then(() => !res.headersSent 
-		? setResponseHeaders(res, appconfig).then(res => processHttpRequest(req, res)) 
-		: res)
+		.then(() => !res.headersSent 
+			? setResponseHeaders(res, appconfig).then(res => processHttpRequest(req, res)) 
+			: res)
 }
 
 const getRouteDetails = route => {
@@ -153,7 +153,7 @@ const getRouteDetails = route => {
 	}
 }
 
-const matchRoute = (reqPath, { name, params, regex }) => {
+const matchRoute = (reqPath, { params, regex }) => {
 	if (!reqPath)
 		return null
 
@@ -192,7 +192,7 @@ const serveHttpEndpoints = (endpoints, appconfig) => (req, res) => handleHttpReq
 	.then(() => !res.headersSent 
 		? setResponseHeaders(res, appconfig).then(res => {
 			if (!endpoints || !endpoints.length)
-				throw new httpError(500, `No endpoints have been defined.`)
+				throw new httpError(500, 'No endpoints have been defined.')
 
 			const httpEndpoint = ((req._parsedUrl || {}).pathname || '/').toLowerCase()
 			const httpMethod = req.method 
