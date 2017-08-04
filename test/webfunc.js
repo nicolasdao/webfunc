@@ -7,7 +7,7 @@
 */
 const { assert } = require('chai')
 const httpMocks = require('node-mocks-http')
-const { setResponseHeaders, serveHttp, handleHttpRequest } = require('../src/webfunc')
+const { setResponseHeaders, serveHttp, handleHttpRequest, app } = require('../src/webfunc')
 
 const appconfig = {
 	headers: {
@@ -299,7 +299,6 @@ describe('webfunc', () =>
 				.then(() => {
 					assert.equal(1,2)
 				}).catch(err => {
-					console.log('CATCH')
 					assert.equal(err.message,'Forbidden - CORS issue. Origin \'http://localhost:8080\' is not allowed.')
 				})
 		})))
@@ -546,4 +545,186 @@ describe('webfunc', () =>
 				assert.equal(headers['Access-Control-Allow-Origin'], 'http://boris.com, http://localhost:8080')
 				assert.equal(headers['Access-Control-Max-Age'], '1296000')
 			})
+		})))
+
+/*eslint-disable */
+describe('webfunc', () => 
+	describe('#serveHttp: 11', () => 
+		it(`Should support one endpoint definition.`, () => {
+			/*eslint-enable */
+			const req_01 = httpMocks.createRequest({
+				method: 'GET',
+				headers: {
+					origin: 'http://localhost:8080',
+					referer: 'http://localhost:8080'
+				},
+				_parsedUrl: {
+					pathname: '/users'
+				}
+			})
+			const res_01 = httpMocks.createResponse()
+
+			const appconfig = {
+				headers: {
+					'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS, POST',
+					'Access-Control-Allow-Headers': 'Authorization, Content-Type, Origin',
+					'Access-Control-Allow-Origin': 'http://boris.com, http://localhost:8080',
+					'Access-Control-Max-Age': '1296000'
+				}
+			}
+
+			const fn = serveHttp(app.get('/users', (req, res) => { res.status(200).send('Hello User'); return res }), appconfig)
+
+			const result_01 = fn(req_01, res_01).then(res => {
+				assert.equal(res_01._getData(),'Hello User')
+				const headers = res_01._getHeaders()
+				assert.isOk(headers)
+				assert.equal(headers['Access-Control-Allow-Methods'], 'GET, HEAD, OPTIONS, POST')
+				assert.equal(headers['Access-Control-Allow-Headers'], 'Authorization, Content-Type, Origin')
+				assert.equal(headers['Access-Control-Allow-Origin'], 'http://boris.com, http://localhost:8080')
+				assert.equal(headers['Access-Control-Max-Age'], '1296000')
+			})
+
+			return Promise.all([result_01])
+		})))
+
+/*eslint-disable */
+describe('webfunc', () => 
+	describe('#serveHttp: 12', () => 
+		it(`Should support multiple endpoints definitions.`, () => {
+			/*eslint-enable */
+			const req_01 = httpMocks.createRequest({
+				method: 'GET',
+				headers: {
+					origin: 'http://localhost:8080',
+					referer: 'http://localhost:8080'
+				},
+				_parsedUrl: {
+					pathname: '/users'
+				}
+			})
+			const res_01 = httpMocks.createResponse()
+
+			const req_02 = httpMocks.createRequest({
+				method: 'GET',
+				headers: {
+					origin: 'http://localhost:8080',
+					referer: 'http://localhost:8080'
+				},
+				_parsedUrl: {
+					pathname: '/companies'
+				}
+			})
+			const res_02 = httpMocks.createResponse()
+
+			const appconfig = {
+				headers: {
+					'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS, POST',
+					'Access-Control-Allow-Headers': 'Authorization, Content-Type, Origin',
+					'Access-Control-Allow-Origin': 'http://boris.com, http://localhost:8080',
+					'Access-Control-Max-Age': '1296000'
+				}
+			}
+
+			const endpoints = [
+				app.get('/users', (req, res) => { res.status(200).send('Hello User'); return res }),
+				app.get('/companies', (req, res) => { res.status(200).send('Hello Companies'); return res })
+			]
+
+			const fn = serveHttp(endpoints, appconfig)
+
+			const result_01 = fn(req_01, res_01).then(res => {
+				assert.equal(res_01._getData(),'Hello User')
+				const headers = res_01._getHeaders()
+				assert.isOk(headers)
+				assert.equal(headers['Access-Control-Allow-Methods'], 'GET, HEAD, OPTIONS, POST')
+				assert.equal(headers['Access-Control-Allow-Headers'], 'Authorization, Content-Type, Origin')
+				assert.equal(headers['Access-Control-Allow-Origin'], 'http://boris.com, http://localhost:8080')
+				assert.equal(headers['Access-Control-Max-Age'], '1296000')
+			})
+			const result_02 = fn(req_02, res_02).then(res => {
+				assert.equal(res_02._getData(),'Hello Companies')
+				const headers = res_02._getHeaders()
+				assert.isOk(headers)
+				assert.equal(headers['Access-Control-Allow-Methods'], 'GET, HEAD, OPTIONS, POST')
+				assert.equal(headers['Access-Control-Allow-Headers'], 'Authorization, Content-Type, Origin')
+				assert.equal(headers['Access-Control-Allow-Origin'], 'http://boris.com, http://localhost:8080')
+				assert.equal(headers['Access-Control-Max-Age'], '1296000')
+			})
+
+			return Promise.all([result_01, result_02])
+		})))
+
+/*eslint-disable */
+describe('webfunc', () => 
+	describe('#serveHttp: 13', () => 
+		it(`Should support complex routing with parameters and querystring.`, () => {
+			/*eslint-enable */
+			const req_01 = httpMocks.createRequest({
+				method: 'GET',
+				headers: {
+					origin: 'http://localhost:8080',
+					referer: 'http://localhost:8080'
+				},
+				_parsedUrl: {
+					pathname: '/users/nicolas/account/1234'
+				}
+			})
+			const res_01 = httpMocks.createResponse()
+
+			const req_02 = httpMocks.createRequest({
+				method: 'GET',
+				headers: {
+					origin: 'http://localhost:8080',
+					referer: 'http://localhost:8080'
+				},
+				_parsedUrl: {
+					pathname: '/company/neap'
+				},
+				query: { hello: 'world' }
+			})
+			const res_02 = httpMocks.createResponse()
+
+			const appconfig = {
+				headers: {
+					'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS, POST',
+					'Access-Control-Allow-Headers': 'Authorization, Content-Type, Origin',
+					'Access-Control-Allow-Origin': 'http://boris.com, http://localhost:8080',
+					'Access-Control-Max-Age': '1296000'
+				}
+			}
+
+			const endpoints = [
+				app.get('/users/{username}/account/{accountId}', (req, res, params) => { 
+					res.status(200).send(`Hello ${params.username} (account: ${params.accountId})`)
+					return res 
+				}),
+				app.get('/company/{name}', (req, res, params) => { 
+					res.status(200).send(`Hello ${params.name} (Hello: ${params.hello})`)
+					return res 
+				})
+			]
+
+			const fn = serveHttp(endpoints, appconfig)
+
+			const result_01 = fn(req_01, res_01).then(res => {
+				assert.equal(res_01._getData(),'Hello nicolas (account: 1234)')
+				const headers = res_01._getHeaders()
+				assert.isOk(headers)
+				assert.equal(headers['Access-Control-Allow-Methods'], 'GET, HEAD, OPTIONS, POST')
+				assert.equal(headers['Access-Control-Allow-Headers'], 'Authorization, Content-Type, Origin')
+				assert.equal(headers['Access-Control-Allow-Origin'], 'http://boris.com, http://localhost:8080')
+				assert.equal(headers['Access-Control-Max-Age'], '1296000')
+			})
+			const result_02 = fn(req_02, res_02).then(res => {
+				assert.equal(res_02._getData(),'Hello neap (Hello: world)')
+				const headers = res_02._getHeaders()
+				assert.isOk(headers)
+				assert.equal(headers['Access-Control-Allow-Methods'], 'GET, HEAD, OPTIONS, POST')
+				assert.equal(headers['Access-Control-Allow-Headers'], 'Authorization, Content-Type, Origin')
+				assert.equal(headers['Access-Control-Allow-Origin'], 'http://boris.com, http://localhost:8080')
+				assert.equal(headers['Access-Control-Max-Age'], '1296000')
+			})
+
+			return Promise.all([result_01, result_02])
 		})))

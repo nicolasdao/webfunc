@@ -106,15 +106,131 @@ const handleHttpRequest = (req, res, appconfig) => Promise.resolve(appconfig || 
 			return setResponseHeaders(res, appConfig).then(res => res.status(200).send())
 	})
 
-const serveHttp = (processHttpRequest, appconfig) => (req, res) => handleHttpRequest(req, res, appconfig)
+/**
+ * Returns a function (req, res) => ... that the Google Cloud Function expects.
+ * 
+ * @param  {function} processHttpRequest 	Callback function (req, res) => ... This gets executed after all the headers checks.
+ * @param  {object} appconfig         		Optional configuration file. If it exists, it will override the appconfig.json file.
+ * @return {function}                    	(req, res) => ...
+ */
+//const serveHttp = (processHttpRequest, appconfig) => (req, res) => {
+const serveHttp = (arg1, appconfig) => {
+	let processHttpRequest = null
+	const typeOfArg1 = typeof(arg1)
+	
+	if (arg1) { 
+		if (typeOfArg1 == 'function')
+			processHttpRequest = arg1
+		else if (arg1.length != undefined)
+			return serveHttpEndpoints(arg1, appconfig)
+		else if (typeOfArg1 == 'object')
+			return serveHttpEndpoints([arg1], appconfig)
+		else
+			throw new httpError(500, `Wrong argument exception. The first argument of method 'serveHttp' must either be a function or an array of endpoints.`)
+	}
+	else
+		throw new httpError(500, `Wrong argument exception. The first argument of method 'serveHttp' must either be a function or an array of endpoints.`)
+
+	return (req, res) => handleHttpRequest(req, res, appconfig)
 	.then(() => !res.headersSent 
 		? setResponseHeaders(res, appconfig).then(res => processHttpRequest(req, res)) 
 		: res)
+}
+
+const getRouteDetails = route => {
+	let wellFormattedRoute = (route.trim().match(/\/$/) ? route.trim() : route.trim() + '/')
+	wellFormattedRoute = wellFormattedRoute.match(/^\//) ? wellFormattedRoute : '/' + wellFormattedRoute
+
+	const variables = wellFormattedRoute.match(/{(.*?)}/g) || []
+	const variableNames = variables.map(x => x.replace(/^{/, '').replace(/}$/, ''))
+	const routeRegex = variables.reduce((a, v) => a.replace(v, '(.*?)'), wellFormattedRoute)
+	const rx = new RegExp(routeRegex)
+
+	return {
+		name: wellFormattedRoute,
+		params: variableNames,
+		regex: rx
+	}
+}
+
+const matchRoute = (reqPath, { name, params, regex }) => {
+	if (!reqPath)
+		return null
+
+	let wellFormattedReqPath = (reqPath.trim().match(/\/$/) ? reqPath.trim() : reqPath.trim() + '/').toLowerCase()
+	wellFormattedReqPath = wellFormattedReqPath.match(/^\//) ? wellFormattedReqPath : '/' + wellFormattedReqPath
+
+	const match = wellFormattedReqPath.match(regex)
+
+	if (!match)
+		return null
+	else {
+		const beginningBit = match[0]
+		if (wellFormattedReqPath.indexOf(beginningBit) != 0)
+			return null
+		else {
+			const parameters = (params || []).reduce((a, p, idx) => {
+				a[p] = match[idx + 1]
+				return a
+			}, {})
+			return {
+				route: reqPath,
+				parameters
+			}
+		}
+	}
+}
+
+/**
+ * Returns a function (req, res) => ... that the Google Cloud Function expects.
+ * 
+ * @param  {array} endpoints  	e.g. [{ route: { name: '/user', params: ..., regex: ... }, method: 'GET', processHttp: (req, res, params) => ... }, ...]
+ * @param  {object} appconfig 	Optional configuration file. If it exists, it will override the appconfig.json file.
+ * @return {function}           (req, res) => ...
+ */
+const serveHttpEndpoints = (endpoints, appconfig) => (req, res) => handleHttpRequest(req, res, appconfig)
+	.then(() => !res.headersSent 
+		? setResponseHeaders(res, appconfig).then(res => {
+			if (!endpoints || !endpoints.length)
+				throw new httpError(500, `No endpoints have been defined.`)
+
+			const httpEndpoint = ((req._parsedUrl || {}).pathname || '/').toLowerCase()
+			const httpMethod = req.method 
+			const endpoint = httpEndpoint == '/' 
+				? endpoints.filter(e => e.route.name == '/' && e.method == httpMethod)[0]
+				: endpoints.filter(e => matchRoute(httpEndpoint, e.route) && e.method == httpMethod)[0]
+
+			if (!endpoint)
+				throw new httpError(404, `Endpoint '${httpEndpoint}' for method ${httpMethod} not found.`)
+
+			if (!endpoint.processHttp || typeof(endpoint.processHttp) != 'function')
+				throw new httpError(500, `Endpoint '${httpEndpoint}' for method ${httpMethod} does not define any 'processHttp(req, res)' function.`) 
+
+			const parameters = req.query || {}
+			const requestParameters = matchRoute(httpEndpoint, endpoint.route).parameters
+
+			return endpoint.processHttp(req, res, Object.assign(parameters, requestParameters))
+		}) 
+		: res)
+
+const app = {
+	get: (route, processHttp) => ({ route: getRouteDetails(route), method: 'GET', processHttp }),
+	post: (route, processHttp) => ({ route: getRouteDetails(route), method: 'POST', processHttp }),
+	put: (route, processHttp) => ({ route: getRouteDetails(route), method: 'PUT', processHttp }),
+	delete: (route, processHttp) => ({ route: getRouteDetails(route), method: 'DELETE', processHttp }),
+	head: (route, processHttp) => ({ route: getRouteDetails(route), method: 'HEAD', processHttp }),
+	options: (route, processHttp) => ({ route: getRouteDetails(route), method: 'OPTIONS', processHttp })
+}
 
 module.exports = {
 	setResponseHeaders,
 	handleHttpRequest,
 	serveHttp,
 	getAppConfig,
-	getActiveEnv
+	getActiveEnv,
+	app,
+	routing: { 
+		getRouteDetails,
+		matchRoute
+	}
 }

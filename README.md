@@ -1,6 +1,6 @@
 <a href="https://neap.co" target="_blank"><img src="https://neap.co/img/neap_black_small_logo.png" alt="Neap Pty Ltd logo" title="Neap" align="right" height="50" width="120"/></a>
 
-# WebFunc - Lightweight HTTP Handler & Project Configuration For Google Cloud Functions
+# WebFunc - Lightweight HTTP Server & Project Configuration For Google Cloud Functions
 [![NPM][1]][2] [![Tests][3]][4]
 
 [1]: https://img.shields.io/npm/v/webfunc.svg?style=flat
@@ -8,16 +8,12 @@
 [3]: https://travis-ci.org/nicolasdao/webfunc.svg?branch=master
 [4]: https://travis-ci.org/nicolasdao/webfunc
 ## Intro
-Add easy CORS support to Google Cloud Functions projects.
+Add CORS support and routing to Google Cloud Functions projects.
 
 ## Install
 ```
 npm install webfunc --save
 ```
-
-## Features Set
-- [Adding an HTTP handler into an existing Google Cloud Functions project](#adding-an-http-handler-into-an-existing-google-cloud-functions-project)
-- [Adding environment variables](#configuring-custom-environment-variables)
 
 ## How To Use It
 
@@ -37,11 +33,32 @@ exports.yourapp = serveHttp((req, res) => {
 })
 ```
 
+And if you want to add more routes:
+
+```js
+const { serveHttp, app } = require('webfunc')
+
+exports.yourapp = serveHttp([
+  app.get('/', (req, res) => res.status(200).send('Hello World')),
+  app.get('/users/{userId}', (req, res, params) => res.status(200).send(`Hello user ${params.userId}`)),
+  app.get('/users/{userId}/document/{docName}', (req, res, params) => res.status(200).send(`Hello user ${params.userId}. I like your document ${params.docName}`)),
+])
+```
+
 Easy isn't it!?
 
-To configure the HTTP handler, add a new _**appconfig.json**_ file and configure it as explained in the next section.
+To configure CORS, add a new _**appconfig.json**_ file and configure it as explained in the next section.
 
-## Configuring The HTTP Handler & Multiple Environment Variables - appconfig.json
+The fastest way to get started with webfunc is to use [_**gimpy**_](https://github.com/nicolasdao/gimpy). Gimpy can create Google Cloud Functions projects and deploy them both locally and on your Google Cloud Account (providing that you have already installed the gcloud SDK, the gcloud beta component, and Google Function Emulator). Example:
+
+```
+gimp new basicwebapp-gcf helloWorld
+cd helloWorld
+npm install
+gimp deploy
+```
+
+## Configuring CORS as well as Multiple Environment Variables - appconfig.json
 #### CORS
 This is the main 'raison d'être' of this project. Out-of-the box, Google Cloud Functions does not support easy configuration for CORS when triggered through HTTP (at least as of July 2017). Webfunc fills that gap using configurations defined in a _**appconfig.json**_ file. 
 
@@ -175,6 +192,11 @@ If you do need to allow access to anybody, then do not allow requests to send co
 }
 ```
 If you do need to pass authentication token, you will have to pass it using a special header(e.g. Authorization), or pass it in the query string if you want to avoid preflight queries (preflight queries happens in cross-origin requests when special headers are being used). However, passing credentials in the query string are considered a bad practice. 
+
+## Contributing
+```
+npm test
+```
 
 ## This Is What We re Up To
 We are Neap, an Australian Technology consultancy powering the startup ecosystem in Sydney. We simply love building Tech and also meeting new people, so don't hesitate to connect with us at [https://neap.co](https://neap.co).
