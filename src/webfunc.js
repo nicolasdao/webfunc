@@ -126,10 +126,10 @@ const serveHttp = (arg1, appconfig) => {
 		else if (typeOfArg1 == 'object')
 			return serveHttpEndpoints([arg1], appconfig)
 		else
-			throw new httpError(500, 'Wrong argument exception. The first argument of method \'serveHttp\' must either be a function or an array of endpoints.')
+			throw httpError(500, 'Wrong argument exception. The first argument of method \'serveHttp\' must either be a function or an array of endpoints.')
 	}
 	else
-		throw new httpError(500, 'Wrong argument exception. The first argument of method \'serveHttp\' must either be a function or an array of endpoints.')
+		throw httpError(500, 'Wrong argument exception. The first argument of method \'serveHttp\' must either be a function or an array of endpoints.')
 
 	return (req, res) => handleHttpRequest(req, res, appconfig)
 		.then(() => !res.headersSent 
@@ -174,6 +174,7 @@ const matchRoute = (reqPath, { params, regex }) => {
 				return a
 			}, {})
 			return {
+				match: beginningBit,
 				route: reqPath,
 				parameters
 			}
@@ -198,13 +199,15 @@ const serveHttpEndpoints = (endpoints, appconfig) => (req, res) => handleHttpReq
 			const httpMethod = req.method 
 			const endpoint = httpEndpoint == '/' 
 				? endpoints.filter(e => e.route.name == '/' && e.method == httpMethod)[0]
-				: endpoints.filter(e => matchRoute(httpEndpoint, e.route) && e.method == httpMethod)[0]
+				: (endpoints.map(e => ({ endpoint: e, route: matchRoute(httpEndpoint, e.route) }))
+					.filter(e => e.endpoint.route.name != '/' && e.route && e.endpoint.method == httpMethod)
+					.sort((a, b) => b.route.match.length - a.route.match.length)[0] || {}).endpoint
 
 			if (!endpoint)
-				throw new httpError(404, `Endpoint '${httpEndpoint}' for method ${httpMethod} not found.`)
+				return res.send(404, `Endpoint '${httpEndpoint}' for method ${httpMethod} not found.`)
 
-			if (!endpoint.processHttp || typeof(endpoint.processHttp) != 'function')
-				throw new httpError(500, `Endpoint '${httpEndpoint}' for method ${httpMethod} does not define any 'processHttp(req, res)' function.`) 
+			if (!endpoint.processHttp || typeof(endpoint.processHttp) != 'function') 
+				return res.send(500, `Endpoint '${httpEndpoint}' for method ${httpMethod} does not define any 'processHttp(req, res)' function.`) 
 
 			const parameters = req.query || {}
 			const requestParameters = matchRoute(httpEndpoint, endpoint.route).parameters
