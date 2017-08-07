@@ -133,7 +133,7 @@ const serveHttp = (arg1, appconfig) => {
 
 	return (req, res) => handleHttpRequest(req, res, appconfig)
 		.then(() => !res.headersSent 
-			? setResponseHeaders(res, appconfig).then(res => processHttpRequest(req, res)) 
+			? setResponseHeaders(res, appconfig).then(res => processHttpRequest(req, res, getRequestParameters(req))) 
 			: res)
 }
 
@@ -182,6 +182,27 @@ const matchRoute = (reqPath, { params, regex }) => {
 	}
 }
 
+const getRequestParameters = req => {
+	let bodyParameters = {}
+	if (req.body) {
+		const bodyType = typeof(req.body)
+		if (bodyType == 'object')
+			bodyParameters = req.body
+		else if (bodyType == 'string') {
+			try {
+				bodyParameters = JSON.parse(req.body)
+			}
+			catch(err) {
+				bodyParameters = {}
+				console.log(err)
+			}
+		}
+	}
+	const parameters = Object.assign((bodyParameters || {}), req.query || {})
+
+	return parameters
+}
+
 /**
  * Returns a function (req, res) => ... that the Google Cloud Function expects.
  * 
@@ -209,7 +230,7 @@ const serveHttpEndpoints = (endpoints, appconfig) => (req, res) => handleHttpReq
 			if (!endpoint.processHttp || typeof(endpoint.processHttp) != 'function') 
 				return res.send(500, `Endpoint '${httpEndpoint}' for method ${httpMethod} does not define any 'processHttp(req, res)' function.`) 
 
-			const parameters = req.query || {}
+			const parameters = getRequestParameters(req)
 			const requestParameters = matchRoute(httpEndpoint, endpoint.route).parameters
 
 			return endpoint.processHttp(req, res, Object.assign(parameters, requestParameters))
