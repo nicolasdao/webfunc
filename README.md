@@ -148,7 +148,7 @@ If you change the value of the _**active**_ property to _prod_, then the _getAct
 > NOTE: _**getActiveEnv**_ accepts one optional boolean called 'memoize'. By default it is set to true. That means that calling it multiple times will not incure more read resources. 
 
 ## Authentication 
-Authentication using webfunc is left to you. That being said, here is a quick example on how that could work using the awesome [passport](http://passportjs.org/) package. The following piece of code for Google Cloud Functions exposes a _signin_ POST endpoint that expects an email and a password and that returns a JWT token. Passing that JWT token in the _Authorization_ header using the _bearer_ scheme will allow access to the _/_ enpoint.
+Authentication using webfunc is left to you. That being said, here is a quick example on how that could work using the awesome [passport](http://passportjs.org/) package. The following piece of code for Google Cloud Functions exposes a _signin_ POST endpoint that expects an email and a password and that returns a JWT token. Passing that JWT token in the _Authorization_ header using the _bearer_ scheme will allow access to the _/_ endpoint.
 
 ```js
 const { serveHttp, app } = require('webfunc')
@@ -213,7 +213,7 @@ gimp deploy
 To test that piece of code:
 Login:
 ```
-
+curl -X POST -H 'Content-Type: application/json' -d '{"email":"hello@webfunc.co","password":"supersecuredpassword"}' http://localhost:8010/your-google-project/us-central1/jwtTest/signin
 ```
 Access the secured _/_ endpoint:
 ```
