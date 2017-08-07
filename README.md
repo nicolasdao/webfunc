@@ -211,10 +211,13 @@ gimp deploy
 ```
 
 To test that piece of code:
+
 Login:
 ```
 curl -X POST -H 'Content-Type: application/json' -d '{"email":"hello@webfunc.co","password":"supersecuredpassword"}' http://localhost:8010/your-google-project/us-central1/jwtTest/signin
 ```
+Extract the token received from this POST request and use it in the following GET request's header:
+
 Access the secured _/_ endpoint:
 ```
 curl -v -H "Authorization: Bearer your-jwt-token" http://localhost:8010/your-google-project/us-central1/jwtTest
