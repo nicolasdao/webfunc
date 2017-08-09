@@ -8,6 +8,7 @@
 const path = require('path')
 const fs = require('fs')
 const httpError = require('http-errors')
+const functions = require('firebase-functions')
 
 let _appconfig = null
 const getAppConfig = memoize => {
@@ -131,10 +132,13 @@ const serveHttp = (arg1, appconfig) => {
 	else
 		throw httpError(500, 'Wrong argument exception. The first argument of method \'serveHttp\' must either be a function or an array of endpoints.')
 
-	return (req, res) => handleHttpRequest(req, res, appconfig)
+	const cloudFunction = (req, res) => handleHttpRequest(req, res, appconfig)
 		.then(() => !res.headersSent 
 			? setResponseHeaders(res, appconfig).then(res => processHttpRequest(req, res, getRequestParameters(req))) 
 			: res)
+		
+	const firebaseHosting = (appconfig || getAppConfig() || {}).hosting == 'firebase'
+	return firebaseHosting ? functions.https.onRequest(cloudFunction) : cloudFunction
 }
 
 const getRouteDetails = route => {
@@ -210,7 +214,8 @@ const getRequestParameters = req => {
  * @param  {object} appconfig 	Optional configuration file. If it exists, it will override the appconfig.json file.
  * @return {function}           (req, res) => ...
  */
-const serveHttpEndpoints = (endpoints, appconfig) => (req, res) => handleHttpRequest(req, res, appconfig)
+const serveHttpEndpoints = (endpoints, appconfig) => {
+	const cloudFunction = (req, res) => handleHttpRequest(req, res, appconfig)
 	.then(() => !res.headersSent 
 		? setResponseHeaders(res, appconfig).then(res => {
 			if (!endpoints || !endpoints.length)
@@ -236,6 +241,10 @@ const serveHttpEndpoints = (endpoints, appconfig) => (req, res) => handleHttpReq
 			return endpoint.processHttp(req, res, Object.assign(parameters, requestParameters))
 		}) 
 		: res)
+		
+	const firebaseHosting = (appconfig || getAppConfig() || {}).hosting == 'firebase'
+	return firebaseHosting ? functions.https.onRequest(cloudFunction) : cloudFunction
+}
 
 const app = {
 	get: (route, processHttp) => ({ route: getRouteDetails(route), method: 'GET', processHttp }),

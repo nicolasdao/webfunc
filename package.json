@@ -32,7 +32,9 @@
   },
   "homepage": "https://github.com/nicolasdao/webfunc#readme",
   "dependencies": {
-    "http-errors": "^1.6.1"
+    "http-errors": "^1.6.1",
+    "firebase-admin": "~4.2.1",
+    "firebase-functions": "^0.5.7"
   },
   "devDependencies": {
     "chai": "^4.1.0",
