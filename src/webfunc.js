@@ -216,31 +216,31 @@ const getRequestParameters = req => {
  */
 const serveHttpEndpoints = (endpoints, appconfig) => {
 	const cloudFunction = (req, res) => handleHttpRequest(req, res, appconfig)
-	.then(() => !res.headersSent 
-		? setResponseHeaders(res, appconfig).then(res => {
-			if (!endpoints || !endpoints.length)
-				throw new httpError(500, 'No endpoints have been defined.')
+		.then(() => !res.headersSent 
+			? setResponseHeaders(res, appconfig).then(res => {
+				if (!endpoints || !endpoints.length)
+					throw new httpError(500, 'No endpoints have been defined.')
 
-			const httpEndpoint = ((req._parsedUrl || {}).pathname || '/').toLowerCase()
-			const httpMethod = req.method 
-			const endpoint = httpEndpoint == '/' 
-				? endpoints.filter(e => e.route.name == '/' && e.method == httpMethod)[0]
-				: (endpoints.map(e => ({ endpoint: e, route: matchRoute(httpEndpoint, e.route) }))
-					.filter(e => e.endpoint.route.name != '/' && e.route && e.endpoint.method == httpMethod)
-					.sort((a, b) => b.route.match.length - a.route.match.length)[0] || {}).endpoint
+				const httpEndpoint = ((req._parsedUrl || {}).pathname || '/').toLowerCase()
+				const httpMethod = req.method 
+				const endpoint = httpEndpoint == '/' 
+					? endpoints.filter(e => e.route.name == '/' && e.method == httpMethod)[0]
+					: (endpoints.map(e => ({ endpoint: e, route: matchRoute(httpEndpoint, e.route) }))
+						.filter(e => e.endpoint.route.name != '/' && e.route && e.endpoint.method == httpMethod)
+						.sort((a, b) => b.route.match.length - a.route.match.length)[0] || {}).endpoint
 
-			if (!endpoint)
-				return res.send(404, `Endpoint '${httpEndpoint}' for method ${httpMethod} not found.`)
+				if (!endpoint)
+					return res.send(404, `Endpoint '${httpEndpoint}' for method ${httpMethod} not found.`)
 
-			if (!endpoint.processHttp || typeof(endpoint.processHttp) != 'function') 
-				return res.send(500, `Endpoint '${httpEndpoint}' for method ${httpMethod} does not define any 'processHttp(req, res)' function.`) 
+				if (!endpoint.processHttp || typeof(endpoint.processHttp) != 'function') 
+					return res.send(500, `Endpoint '${httpEndpoint}' for method ${httpMethod} does not define any 'processHttp(req, res)' function.`) 
 
-			const parameters = getRequestParameters(req)
-			const requestParameters = matchRoute(httpEndpoint, endpoint.route).parameters
+				const parameters = getRequestParameters(req)
+				const requestParameters = matchRoute(httpEndpoint, endpoint.route).parameters
 
-			return endpoint.processHttp(req, res, Object.assign(parameters, requestParameters))
-		}) 
-		: res)
+				return endpoint.processHttp(req, res, Object.assign(parameters, requestParameters))
+			}) 
+			: res)
 		
 	const firebaseHosting = (appconfig || getAppConfig() || {}).hosting == 'firebase'
 	return firebaseHosting ? functions.https.onRequest(cloudFunction) : cloudFunction
