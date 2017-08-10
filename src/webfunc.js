@@ -116,6 +116,7 @@ const handleHttpRequest = (req, res, appconfig) => Promise.resolve(appconfig || 
  */
 //const serveHttp = (processHttpRequest, appconfig) => (req, res) => {
 const serveHttp = (arg1, appconfig) => {
+	const _appconfig = Object.assign(getAppConfig() || {}, appconfig || {})
 	let processHttpRequest = null
 	const typeOfArg1 = typeof(arg1)
 	
@@ -123,21 +124,21 @@ const serveHttp = (arg1, appconfig) => {
 		if (typeOfArg1 == 'function')
 			processHttpRequest = arg1
 		else if (arg1.length != undefined)
-			return serveHttpEndpoints(arg1, appconfig)
+			return serveHttpEndpoints(arg1, _appconfig)
 		else if (typeOfArg1 == 'object')
-			return serveHttpEndpoints([arg1], appconfig)
+			return serveHttpEndpoints([arg1], _appconfig)
 		else
 			throw httpError(500, 'Wrong argument exception. The first argument of method \'serveHttp\' must either be a function or an array of endpoints.')
 	}
 	else
 		throw httpError(500, 'Wrong argument exception. The first argument of method \'serveHttp\' must either be a function or an array of endpoints.')
 
-	const cloudFunction = (req, res) => handleHttpRequest(req, res, appconfig)
+	const cloudFunction = (req, res) => handleHttpRequest(req, res, _appconfig)
 		.then(() => !res.headersSent 
-			? setResponseHeaders(res, appconfig).then(res => processHttpRequest(req, res, getRequestParameters(req))) 
+			? setResponseHeaders(res, _appconfig).then(res => processHttpRequest(req, res, getRequestParameters(req))) 
 			: res)
 		
-	const firebaseHosting = (appconfig || getAppConfig() || {}).hosting == 'firebase'
+	const firebaseHosting = _appconfig.hosting == 'firebase'
 	return firebaseHosting ? functions.https.onRequest(cloudFunction) : cloudFunction
 }
 
@@ -215,9 +216,10 @@ const getRequestParameters = req => {
  * @return {function}           (req, res) => ...
  */
 const serveHttpEndpoints = (endpoints, appconfig) => {
-	const cloudFunction = (req, res) => handleHttpRequest(req, res, appconfig)
+	const _appconfig = Object.assign(getAppConfig() || {}, appconfig || {})
+	const cloudFunction = (req, res) => handleHttpRequest(req, res, _appconfig)
 		.then(() => !res.headersSent 
-			? setResponseHeaders(res, appconfig).then(res => {
+			? setResponseHeaders(res, _appconfig).then(res => {
 				if (!endpoints || !endpoints.length)
 					throw new httpError(500, 'No endpoints have been defined.')
 
@@ -242,7 +244,7 @@ const serveHttpEndpoints = (endpoints, appconfig) => {
 			}) 
 			: res)
 		
-	const firebaseHosting = (appconfig || getAppConfig() || {}).hosting == 'firebase'
+	const firebaseHosting = _appconfig.hosting == 'firebase'
 	return firebaseHosting ? functions.https.onRequest(cloudFunction) : cloudFunction
 }
 
