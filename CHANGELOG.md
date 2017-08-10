@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.4.0-alpha.5"></a>
+# [0.4.0-alpha.5](https://github.com/nicolasdao/webfunc/compare/v0.4.0-alpha.4...v0.4.0-alpha.5) (2017-08-10)
+
+
+### Features
+
+* Add support for custom route on the default 'serveHttp' signature + add tests ([0aa8609](https://github.com/nicolasdao/webfunc/commit/0aa8609))
+
+
+
 <a name="0.4.0-alpha.4"></a>
 # [0.4.0-alpha.4](https://github.com/nicolasdao/webfunc/compare/v0.4.0-alpha.3...v0.4.0-alpha.4) (2017-08-10)
 
