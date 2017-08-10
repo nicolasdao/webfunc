@@ -52,7 +52,7 @@ To configure CORS, add a new _**appconfig.json**_ file and configure it as expla
 The fastest way to get started with webfunc is to use [_**gimpy**_](https://github.com/nicolasdao/gimpy). Gimpy can create Google Cloud Functions projects and deploy them both locally and on your Google Cloud Account (providing that you have already installed the gcloud SDK, the gcloud beta component, and Google Function Emulator). Example:
 
 ```
-gimp new basicwebapp-gcf helloWorld
+gimp new webapp-serverless helloWorld
 cd helloWorld
 npm install
 gimp deploy
