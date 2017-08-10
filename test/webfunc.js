@@ -658,6 +658,85 @@ describe('webfunc', () =>
 /*eslint-disable */
 describe('webfunc', () => 
 	describe('#serveHttp: 13', () => 
+		it(`Should support simple single routing with parameters and querystring.`, () => {
+			/*eslint-enable */
+			const req_01 = httpMocks.createRequest({
+				method: 'GET',
+				headers: {
+					origin: 'http://localhost:8080',
+					referer: 'http://localhost:8080'
+				},
+				_parsedUrl: {
+					pathname: '/users/nicolas'
+				}
+			})
+			const res_01 = httpMocks.createResponse()
+
+			const req_02 = httpMocks.createRequest({
+				method: 'GET',
+				headers: {
+					origin: 'http://localhost:8080',
+					referer: 'http://localhost:8080'
+				},
+				_parsedUrl: {
+					pathname: '/users/nicolas'
+				},
+				query: { lastname: 'dao' }
+			})
+			const res_02 = httpMocks.createResponse()
+
+			const req_03 = httpMocks.createRequest({
+				method: 'GET',
+				headers: {
+					origin: 'http://localhost:8080',
+					referer: 'http://localhost:8080'
+				},
+				_parsedUrl: {
+					pathname: '/'
+				}
+			})
+			const res_03 = httpMocks.createResponse()
+
+			const appconfig = {
+				headers: {
+					'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS, POST',
+					'Access-Control-Allow-Headers': 'Authorization, Content-Type, Origin',
+					'Access-Control-Allow-Origin': 'http://boris.com, http://localhost:8080',
+					'Access-Control-Max-Age': '1296000'
+				}
+			}
+
+			const fn = serveHttp('/users/{username}', (req, res, params) => res.status(200).send(`Hello ${params.username}${params.lastname ? ` ${params.lastname}` : ''}`), appconfig)
+
+			const result_01 = fn(req_01, res_01).then(() => {
+				assert.equal(res_01._getData(),'Hello nicolas')
+				const headers = res_01._getHeaders()
+				assert.isOk(headers)
+				assert.equal(headers['Access-Control-Allow-Methods'], 'GET, HEAD, OPTIONS, POST')
+				assert.equal(headers['Access-Control-Allow-Headers'], 'Authorization, Content-Type, Origin')
+				assert.equal(headers['Access-Control-Allow-Origin'], 'http://boris.com, http://localhost:8080')
+				assert.equal(headers['Access-Control-Max-Age'], '1296000')
+			})
+			const result_02 = fn(req_02, res_02).then(() => {
+				assert.equal(res_02._getData(),'Hello nicolas dao')
+				const headers = res_02._getHeaders()
+				assert.isOk(headers)
+				assert.equal(headers['Access-Control-Allow-Methods'], 'GET, HEAD, OPTIONS, POST')
+				assert.equal(headers['Access-Control-Allow-Headers'], 'Authorization, Content-Type, Origin')
+				assert.equal(headers['Access-Control-Allow-Origin'], 'http://boris.com, http://localhost:8080')
+				assert.equal(headers['Access-Control-Max-Age'], '1296000')
+			})
+			const result_03 = fn(req_03, res_03).then(() => {
+				assert.equal(1,2, 'Requests with the wrong route should failed with a \'not found\' error.')
+			})
+				.catch(err => assert.equal(err.message, 'Endpoint \'/\' not found.'))
+
+			return Promise.all([result_01, result_02, result_03])
+		})))
+
+/*eslint-disable */
+describe('webfunc', () => 
+	describe('#serveHttp: 14', () => 
 		it(`Should support complex routing with parameters and querystring.`, () => {
 			/*eslint-enable */
 			const req_01 = httpMocks.createRequest({
@@ -727,4 +806,34 @@ describe('webfunc', () =>
 			})
 
 			return Promise.all([result_01, result_02])
+		})))
+
+/*eslint-disable */
+describe('webfunc', () => 
+	describe('#serveHttp: 15', () => 
+		it(`Should fail at build time if bad arguments are passed to the 'serveHttp' method.`, () => {
+			/*eslint-enable */
+			const appconfig = {
+				headers: {
+					'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS, POST',
+					'Access-Control-Allow-Headers': 'Authorization, Content-Type, Origin',
+					'Access-Control-Allow-Origin': 'http://boris.com, http://localhost:8080',
+					'Access-Control-Max-Age': '1296000'
+				}
+			}
+
+			const endpoints = [
+				app.get('/users/{username}/account/{accountId}', (req, res, params) => { 
+					res.status(200).send(`Hello ${params.username} (account: ${params.accountId})`)
+					return res 
+				}),
+				app.get('/company/{name}', (req, res, params) => { 
+					res.status(200).send(`Hello ${params.name} (Hello: ${params.hello})`)
+					return res 
+				})
+			]
+
+			assert.throws(() => serveHttp('/users/{username}', endpoints, appconfig), Error, 'Wrong argument exception. If the first argument of the \'serveHttp\' method is a route, then the second argument must be a function similar to (req, res, params) => ...')
+			assert.throws(() => serveHttp('/users/{username}', appconfig), Error, 'Wrong argument exception. If the first argument of the \'serveHttp\' method is a route, then the second argument must be a function similar to (req, res, params) => ...')
+			assert.throws(() => serveHttp(), Error, 'Wrong argument exception. The first argument of the \'serveHttp\' method must either be a route, a function similar to (req, res, params) => ... or an array of endpoints.')
 		})))

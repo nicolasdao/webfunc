@@ -84,23 +84,27 @@ const handleHttpRequest = (req, res, appconfig) => Promise.resolve(appconfig || 
 
 		if (noConfig) {
 			if (!sameOrigin) {
-				setResponseHeaders(res, appConfig)
-				throw httpError(403, `Forbidden - CORS issue. Origin '${origin}' is not allowed.`)
+				return setResponseHeaders(res, appConfig).then(() => {
+					throw httpError(403, `Forbidden - CORS issue. Origin '${origin}' is not allowed.`)
+				})
 			}
 			if (method != 'head' && method != 'get' && method != 'options' && method != 'post') {
-				setResponseHeaders(res, appConfig)
-				throw httpError(403, `Forbidden - CORS issue. Method '${method.toUpperCase()}' is not allowed.`)
+				return setResponseHeaders(res, appConfig).then(() => {
+					throw httpError(403, `Forbidden - CORS issue. Method '${method.toUpperCase()}' is not allowed.`)
+				})
 			}
 		}
 		// Check CORS
 		
 		if (!origins['*'] && Object.keys(origins).length != 0 && !(origin in origins)) {
-			setResponseHeaders(res, appConfig)
-			throw httpError(403, `Forbidden - CORS issue. Origin '${origin}' is not allowed.`)
+			return setResponseHeaders(res, appConfig).then(() => {
+				throw httpError(403, `Forbidden - CORS issue. Origin '${origin}' is not allowed.`)
+			})
 		}
 		if (Object.keys(methods).length != 0 && method != 'get' && method != 'head' && !(method in methods)) {
-			setResponseHeaders(res, appConfig)
-			throw httpError(403, `Forbidden - CORS issue. Method '${method.toUpperCase()}' is not allowed.`)
+			return setResponseHeaders(res, appConfig).then(() => {
+				throw httpError(403, `Forbidden - CORS issue. Method '${method.toUpperCase()}' is not allowed.`)
+			})
 		}
 
 		if (method == 'head' || method == 'options')
@@ -115,28 +119,57 @@ const handleHttpRequest = (req, res, appconfig) => Promise.resolve(appconfig || 
  * @return {function}                    	(req, res) => ...
  */
 //const serveHttp = (processHttpRequest, appconfig) => (req, res) => {
-const serveHttp = (arg1, appconfig) => {
-	const _appconfig = Object.assign(getAppConfig() || {}, appconfig || {})
+const serveHttp = (arg1, arg2, appconfig) => {
+	const appConfigFile = getAppConfig() || {}
+	const appConfigArg = appconfig || {}
+	let _appconfig = null
+	let route = null
 	let processHttpRequest = null
-	const typeOfArg1 = typeof(arg1)
+	const typeOfArg1 = typeof(arg1 || undefined)
+	const typeOfArg2 = typeof(arg2 || undefined)
 	
 	if (arg1) { 
-		if (typeOfArg1 == 'function')
-			processHttpRequest = arg1
-		else if (arg1.length != undefined)
-			return serveHttpEndpoints(arg1, _appconfig)
-		else if (typeOfArg1 == 'object')
-			return serveHttpEndpoints([arg1], _appconfig)
-		else
-			throw httpError(500, 'Wrong argument exception. The first argument of method \'serveHttp\' must either be a function or an array of endpoints.')
+		if (typeOfArg1 == 'string') {
+			route = getRouteDetails(arg1)
+			_appconfig = Object.assign(appConfigFile, appConfigArg)
+			if (typeOfArg2 == 'function')
+				processHttpRequest = arg2
+			else
+				throw new Error('Wrong argument exception. If the first argument of the \'serveHttp\' method is a route, then the second argument must be a function similar to (req, res, params) => ...')
+		}
+		else {
+			_appconfig = Object.assign(appConfigFile, arg2 || {})
+			if (typeOfArg1 == 'function') 
+				processHttpRequest = arg1
+			else if (arg1.length != undefined)
+				return serveHttpEndpoints(arg1, _appconfig)
+			else if (typeOfArg1 == 'object')
+				return serveHttpEndpoints([arg1], _appconfig)
+			else
+				throw new Error('Wrong argument exception. If the first argument of the \'serveHttp\' method is not a route, then it must either be a function similar to (req, res, params) => ... or an array of endpoints.')
+		}
 	}
 	else
-		throw httpError(500, 'Wrong argument exception. The first argument of method \'serveHttp\' must either be a function or an array of endpoints.')
+		throw new Error('Wrong argument exception. The first argument of the \'serveHttp\' method must either be a route, a function similar to (req, res, params) => ... or an array of endpoints.')
 
-	const cloudFunction = (req, res) => handleHttpRequest(req, res, _appconfig)
-		.then(() => !res.headersSent 
-			? setResponseHeaders(res, _appconfig).then(res => processHttpRequest(req, res, getRequestParameters(req))) 
-			: res)
+	const cloudFunction = (req, res) => {
+		let parameters = {}
+		if (route) {
+			const httpEndpoint = ((req._parsedUrl || {}).pathname || '/').toLowerCase()
+			const r = matchRoute(httpEndpoint, route)
+			if (!r)
+				return setResponseHeaders(res, _appconfig).then(() => { 
+					throw httpError(404, `Endpoint '${httpEndpoint}' not found.`)
+				})
+			else
+				parameters = r.parameters
+		}
+
+		return handleHttpRequest(req, res, _appconfig)
+			.then(() => !res.headersSent 
+				? setResponseHeaders(res, _appconfig).then(res => processHttpRequest(req, res, Object.assign(parameters, getRequestParameters(req)))) 
+				: res)
+	}
 		
 	const firebaseHosting = _appconfig.hosting == 'firebase'
 	return firebaseHosting ? functions.https.onRequest(cloudFunction) : cloudFunction
@@ -221,7 +254,7 @@ const serveHttpEndpoints = (endpoints, appconfig) => {
 		.then(() => !res.headersSent 
 			? setResponseHeaders(res, _appconfig).then(res => {
 				if (!endpoints || !endpoints.length)
-					throw new httpError(500, 'No endpoints have been defined.')
+					throw httpError(500, 'No endpoints have been defined.')
 
 				const httpEndpoint = ((req._parsedUrl || {}).pathname || '/').toLowerCase()
 				const httpMethod = req.method 
