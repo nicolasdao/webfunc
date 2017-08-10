@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.4.0-alpha.6"></a>
+# [0.4.0-alpha.6](https://github.com/nicolasdao/webfunc/compare/v0.4.0-alpha.5...v0.4.0-alpha.6) (2017-08-10)
+
+
+### Bug Fixes
+
+* Http errors that were crashing the server ([0d0015a](https://github.com/nicolasdao/webfunc/commit/0d0015a))
+
+
+
 <a name="0.4.0-alpha.5"></a>
 # [0.4.0-alpha.5](https://github.com/nicolasdao/webfunc/compare/v0.4.0-alpha.4...v0.4.0-alpha.5) (2017-08-10)
 
