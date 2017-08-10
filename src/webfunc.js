@@ -7,7 +7,6 @@
 */
 const path = require('path')
 const fs = require('fs')
-const httpError = require('http-errors')
 const functions = require('firebase-functions')
 
 let _appconfig = null
@@ -84,26 +83,30 @@ const handleHttpRequest = (req, res, appconfig) => Promise.resolve(appconfig || 
 
 		if (noConfig) {
 			if (!sameOrigin) {
-				return setResponseHeaders(res, appConfig).then(() => {
-					throw httpError(403, `Forbidden - CORS issue. Origin '${origin}' is not allowed.`)
+				return setResponseHeaders(res, appConfig).then(res => {
+					res.status(403).send(`Forbidden - CORS issue. Origin '${origin}' is not allowed.`)
+					return res
 				})
 			}
 			if (method != 'head' && method != 'get' && method != 'options' && method != 'post') {
-				return setResponseHeaders(res, appConfig).then(() => {
-					throw httpError(403, `Forbidden - CORS issue. Method '${method.toUpperCase()}' is not allowed.`)
+				return setResponseHeaders(res, appConfig).then(res => {
+					res.status(403).send(`Forbidden - CORS issue. Method '${method.toUpperCase()}' is not allowed.`)
+					return res
 				})
 			}
 		}
 		// Check CORS
 		
 		if (!origins['*'] && Object.keys(origins).length != 0 && !(origin in origins)) {
-			return setResponseHeaders(res, appConfig).then(() => {
-				throw httpError(403, `Forbidden - CORS issue. Origin '${origin}' is not allowed.`)
+			return setResponseHeaders(res, appConfig).then(res => {
+				res.status(403).send(`Forbidden - CORS issue. Origin '${origin}' is not allowed.`)
+				return res
 			})
 		}
 		if (Object.keys(methods).length != 0 && method != 'get' && method != 'head' && !(method in methods)) {
-			return setResponseHeaders(res, appConfig).then(() => {
-				throw httpError(403, `Forbidden - CORS issue. Method '${method.toUpperCase()}' is not allowed.`)
+			return setResponseHeaders(res, appConfig).then(res => {
+				res.status(403).send(`Forbidden - CORS issue. Method '${method.toUpperCase()}' is not allowed.`)
+				return res
 			})
 		}
 
@@ -157,10 +160,12 @@ const serveHttp = (arg1, arg2, appconfig) => {
 		if (route) {
 			const httpEndpoint = ((req._parsedUrl || {}).pathname || '/').toLowerCase()
 			const r = matchRoute(httpEndpoint, route)
-			if (!r)
-				return setResponseHeaders(res, _appconfig).then(() => { 
-					throw httpError(404, `Endpoint '${httpEndpoint}' not found.`)
+			if (!r) {
+				return setResponseHeaders(res, _appconfig).then(res => {
+					res.status(404).send(`Endpoint '${httpEndpoint}' not found.`)
+					return res
 				})
+			}
 			else
 				parameters = r.parameters
 		}
@@ -249,13 +254,13 @@ const getRequestParameters = req => {
  * @return {function}           (req, res) => ...
  */
 const serveHttpEndpoints = (endpoints, appconfig) => {
+	if (!endpoints || !endpoints.length)
+		throw new Error('No endpoints have been defined.')
+
 	const _appconfig = Object.assign(getAppConfig() || {}, appconfig || {})
 	const cloudFunction = (req, res) => handleHttpRequest(req, res, _appconfig)
 		.then(() => !res.headersSent 
 			? setResponseHeaders(res, _appconfig).then(res => {
-				if (!endpoints || !endpoints.length)
-					throw httpError(500, 'No endpoints have been defined.')
-
 				const httpEndpoint = ((req._parsedUrl || {}).pathname || '/').toLowerCase()
 				const httpMethod = req.method 
 				const endpoint = httpEndpoint == '/' 

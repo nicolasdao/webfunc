@@ -67,10 +67,9 @@ describe('webfunc', () =>
 			})
 			const res = httpMocks.createResponse()
 			const appconfig = {}
-			return handleHttpRequest(req, res, appconfig).then(() => {
-				assert.equal(1,2)
-			}).catch(err => {
-				assert.equal(err.message,'Forbidden - CORS issue. Origin \'http://localhost:8080\' is not allowed.')
+			return handleHttpRequest(req, res, appconfig).then(res => {
+				assert.equal(res.statusCode, 403)
+				assert.equal(res._getData(), 'Forbidden - CORS issue. Origin \'http://localhost:8080\' is not allowed.')
 			})
 		})))
 
@@ -147,10 +146,9 @@ describe('webfunc', () =>
 					'Access-Control-Max-Age': '1296000'
 				}
 			}
-			return handleHttpRequest(req, res, appconfig).then(() => {
-				assert.equal(1,2)
-			}).catch(err => {
-				assert.equal(err.message,'Forbidden - CORS issue. Origin \'http://localhost:8080\' is not allowed.')
+			return handleHttpRequest(req, res, appconfig).then(res => {
+				assert.equal(res.statusCode, 403)
+				assert.equal(res._getData(), 'Forbidden - CORS issue. Origin \'http://localhost:8080\' is not allowed.')
 			})
 		})))
 
@@ -201,10 +199,9 @@ describe('webfunc', () =>
 					'Access-Control-Max-Age': '1296000'
 				}
 			}
-			return handleHttpRequest(req, res, appconfig).then(() => {
-				assert.equal(1,2)
-			}).catch((err) => {
-				assert.equal(err.message, 'Forbidden - CORS issue. Method \'POST\' is not allowed.')
+			return handleHttpRequest(req, res, appconfig).then(res => {
+				assert.equal(res.statusCode, 403)
+				assert.equal(res._getData(), 'Forbidden - CORS issue. Method \'POST\' is not allowed.')
 			})
 		})))
 
@@ -248,10 +245,10 @@ describe('webfunc', () =>
 			})
 			const res = httpMocks.createResponse()
 			const appconfig = {}
-			return handleHttpRequest(req, res, appconfig).then(() => {
-				assert.equal(1,2)
+			return handleHttpRequest(req, res, appconfig).then(res => {
+				assert.equal(res.statusCode, 403)
+				assert.equal(res._getData(), 'Forbidden - CORS issue. Method \'PUT\' is not allowed.')
 			})
-				.catch(err => assert.equal(err.message, 'Forbidden - CORS issue. Method \'PUT\' is not allowed.'))
 		})))
 
 /*eslint-disable */
@@ -295,12 +292,10 @@ describe('webfunc', () =>
 				res.status(200).send('Hello World')
 				return res
 			}, appconfig)
-			return fn(req, res)
-				.then(() => {
-					assert.equal(1,2)
-				}).catch(err => {
-					assert.equal(err.message,'Forbidden - CORS issue. Origin \'http://localhost:8080\' is not allowed.')
-				})
+			return fn(req, res).then(res => {
+				assert.equal(res.statusCode, 403)
+				assert.equal(res._getData(), 'Forbidden - CORS issue. Origin \'http://localhost:8080\' is not allowed.')
+			})
 		})))
 
 /*eslint-disable */
@@ -388,10 +383,9 @@ describe('webfunc', () =>
 				res.status(200).send('Hello World')
 				return res
 			}, appconfig)
-			return fn(req, res).then(() => {
-				assert.equal(1,2)
-			}).catch(err => {
-				assert.equal(err.message,'Forbidden - CORS issue. Origin \'http://localhost:8080\' is not allowed.')
+			return fn(req, res).then(res => {
+				assert.equal(res.statusCode, 403)
+				assert.equal(res._getData(), 'Forbidden - CORS issue. Origin \'http://localhost:8080\' is not allowed.')
 			})
 		})))
 
@@ -450,10 +444,9 @@ describe('webfunc', () =>
 				res.status(200).send('Hello World')
 				return res
 			}, appconfig)
-			return fn(req, res).then(() => {
-				assert.equal(1,2)
-			}).catch((err) => {
-				assert.equal(err.message, 'Forbidden - CORS issue. Method \'POST\' is not allowed.')
+			return fn(req, res).then(res => {
+				assert.equal(res.statusCode, 403)
+				assert.equal(res._getData(), 'Forbidden - CORS issue. Method \'POST\' is not allowed.')
 			})
 		})))
 
@@ -505,10 +498,10 @@ describe('webfunc', () =>
 				res.status(200).send('Hello World')
 				return res
 			}, appconfig)
-			return fn(req, res).then(() => {
-				assert.equal(1,2)
+			return fn(req, res).then(res => {
+				assert.equal(res.statusCode, 403)
+				assert.equal(res._getData(), 'Forbidden - CORS issue. Method \'PUT\' is not allowed.')
 			})
-				.catch(err => assert.equal(err.message, 'Forbidden - CORS issue. Method \'PUT\' is not allowed.'))
 		})))
 
 /*eslint-disable */
@@ -726,10 +719,10 @@ describe('webfunc', () =>
 				assert.equal(headers['Access-Control-Allow-Origin'], 'http://boris.com, http://localhost:8080')
 				assert.equal(headers['Access-Control-Max-Age'], '1296000')
 			})
-			const result_03 = fn(req_03, res_03).then(() => {
-				assert.equal(1,2, 'Requests with the wrong route should failed with a \'not found\' error.')
+			const result_03 = fn(req_03, res_03).then(res => {
+				assert.equal(res.statusCode, 404)
+				assert.equal(res._getData(), 'Endpoint \'/\' not found.')
 			})
-				.catch(err => assert.equal(err.message, 'Endpoint \'/\' not found.'))
 
 			return Promise.all([result_01, result_02, result_03])
 		})))
