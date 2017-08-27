@@ -8,6 +8,8 @@
 const path = require('path')
 const fs = require('fs')
 const functions = require('firebase-functions')
+const { getRouteDetails, matchRoute } = require('./routing')
+const { app, HttpHandler } = require('./handler')
 
 let _appconfig = null
 const getAppConfig = memoize => {
@@ -117,17 +119,17 @@ const handleHttpRequest = (req, res, appconfig) => Promise.resolve(appconfig || 
 /**
  * Returns a function (req, res) => ... that the Google Cloud Function expects.
  * 
- * @param  {function} processHttpRequest 	Callback function (req, res) => ... This gets executed after all the headers checks.
+ * @param  {function} httpNextRequest 	Callback function (req, res) => ... This gets executed after all the headers checks.
  * @param  {object} appconfig         		Optional configuration file. If it exists, it will override the appconfig.json file.
  * @return {function}                    	(req, res) => ...
  */
-//const serveHttp = (processHttpRequest, appconfig) => (req, res) => {
+//const serveHttp = (httpNextRequest, appconfig) => (req, res) => {
 const serveHttp = (arg1, arg2, appconfig) => {
 	const appConfigFile = getAppConfig() || {}
 	const appConfigArg = appconfig || {}
 	let _appconfig = null
 	let route = null
-	let processHttpRequest = null
+	let httpNextRequest = null
 	const typeOfArg1 = typeof(arg1 || undefined)
 	const typeOfArg2 = typeof(arg2 || undefined)
 	
@@ -136,14 +138,14 @@ const serveHttp = (arg1, arg2, appconfig) => {
 			route = getRouteDetails(arg1)
 			_appconfig = Object.assign(appConfigFile, appConfigArg)
 			if (typeOfArg2 == 'function')
-				processHttpRequest = arg2
+				httpNextRequest = arg2
 			else
 				throw new Error('Wrong argument exception. If the first argument of the \'serveHttp\' method is a route, then the second argument must be a function similar to (req, res, params) => ...')
 		}
 		else {
 			_appconfig = Object.assign(appConfigFile, arg2 || {})
 			if (typeOfArg1 == 'function') 
-				processHttpRequest = arg1
+				httpNextRequest = arg1
 			else if (arg1.length != undefined)
 				return serveHttpEndpoints(arg1, _appconfig)
 			else if (typeOfArg1 == 'object')
@@ -172,7 +174,7 @@ const serveHttp = (arg1, arg2, appconfig) => {
 
 		return handleHttpRequest(req, res, _appconfig)
 			.then(() => !res.headersSent 
-				? setResponseHeaders(res, _appconfig).then(res => processHttpRequest(req, res, Object.assign(parameters, getRequestParameters(req)))) 
+				? setResponseHeaders(res, _appconfig).then(res => httpNextRequest(req, res, Object.assign(parameters, getRequestParameters(req)))) 
 				: res)
 	}
 		
@@ -180,50 +182,7 @@ const serveHttp = (arg1, arg2, appconfig) => {
 	return firebaseHosting ? functions.https.onRequest(cloudFunction) : cloudFunction
 }
 
-const getRouteDetails = route => {
-	let wellFormattedRoute = (route.trim().match(/\/$/) ? route.trim() : route.trim() + '/')
-	wellFormattedRoute = wellFormattedRoute.match(/^\//) ? wellFormattedRoute : '/' + wellFormattedRoute
 
-	const variables = wellFormattedRoute.match(/{(.*?)}/g) || []
-	const variableNames = variables.map(x => x.replace(/^{/, '').replace(/}$/, ''))
-	const routeRegex = variables.reduce((a, v) => a.replace(v, '(.*?)'), wellFormattedRoute)
-	const rx = new RegExp(routeRegex)
-
-	return {
-		name: wellFormattedRoute,
-		params: variableNames,
-		regex: rx
-	}
-}
-
-const matchRoute = (reqPath, { params, regex }) => {
-	if (!reqPath)
-		return null
-
-	let wellFormattedReqPath = (reqPath.trim().match(/\/$/) ? reqPath.trim() : reqPath.trim() + '/').toLowerCase()
-	wellFormattedReqPath = wellFormattedReqPath.match(/^\//) ? wellFormattedReqPath : '/' + wellFormattedReqPath
-
-	const match = wellFormattedReqPath.match(regex)
-
-	if (!match)
-		return null
-	else {
-		const beginningBit = match[0]
-		if (wellFormattedReqPath.indexOf(beginningBit) != 0)
-			return null
-		else {
-			const parameters = (params || []).reduce((a, p, idx) => {
-				a[p] = match[idx + 1]
-				return a
-			}, {})
-			return {
-				match: beginningBit,
-				route: reqPath,
-				parameters
-			}
-		}
-	}
-}
 
 const getRequestParameters = req => {
 	let bodyParameters = {}
@@ -249,7 +208,7 @@ const getRequestParameters = req => {
 /**
  * Returns a function (req, res) => ... that the Google Cloud Function expects.
  * 
- * @param  {array} endpoints  	e.g. [{ route: { name: '/user', params: ..., regex: ... }, method: 'GET', processHttp: (req, res, params) => ... }, ...]
+ * @param  {array} endpoints  	e.g. [{ route: { name: '/user', params: ..., regex: ... }, method: 'GET', httpNext: (req, res, params) => ... }, ...]
  * @param  {object} appconfig 	Optional configuration file. If it exists, it will override the appconfig.json file.
  * @return {function}           (req, res) => ...
  */
@@ -262,37 +221,29 @@ const serveHttpEndpoints = (endpoints, appconfig) => {
 		.then(() => !res.headersSent 
 			? setResponseHeaders(res, _appconfig).then(res => {
 				const httpEndpoint = ((req._parsedUrl || {}).pathname || '/').toLowerCase()
-				const httpMethod = req.method 
+				const httpMethod = (req.method || '').toUpperCase()
 				const endpoint = httpEndpoint == '/' 
-					? endpoints.filter(e => e.route.name == '/' && e.method == httpMethod)[0]
+					? endpoints.filter(e => e.route.name == '/' && (e.method == httpMethod || !e.method))[0]
 					: (endpoints.map(e => ({ endpoint: e, route: matchRoute(httpEndpoint, e.route) }))
-						.filter(e => e.endpoint.route.name != '/' && e.route && e.endpoint.method == httpMethod)
+						.filter(e => e.endpoint.route.name != '/' && e.route && (e.endpoint.method == httpMethod || !e.endpoint.method))
 						.sort((a, b) => b.route.match.length - a.route.match.length)[0] || {}).endpoint
 
 				if (!endpoint)
 					return res.send(404, `Endpoint '${httpEndpoint}' for method ${httpMethod} not found.`)
 
-				if (!endpoint.processHttp || typeof(endpoint.processHttp) != 'function') 
-					return res.send(500, `Endpoint '${httpEndpoint}' for method ${httpMethod} does not define any 'processHttp(req, res)' function.`) 
+				const httpNext = endpoint.httpNext || (() => Promise.resolve(null))
+				if (typeof(httpNext) != 'function') 
+					return res.send(500, `Wrong argument exception. Endpoint '${httpEndpoint}' for method ${httpMethod} defines a 'httpNext' argument that is not a function similar to '(req, res, params) => ...'.`) 
 
 				const parameters = getRequestParameters(req)
 				const requestParameters = matchRoute(httpEndpoint, endpoint.route).parameters
 
-				return endpoint.processHttp(req, res, Object.assign(parameters, requestParameters))
+				return httpNext(req, res, Object.assign(parameters, requestParameters))
 			}) 
 			: res)
 		
 	const firebaseHosting = _appconfig.hosting == 'firebase'
 	return firebaseHosting ? functions.https.onRequest(cloudFunction) : cloudFunction
-}
-
-const app = {
-	get: (route, processHttp) => ({ route: getRouteDetails(route), method: 'GET', processHttp }),
-	post: (route, processHttp) => ({ route: getRouteDetails(route), method: 'POST', processHttp }),
-	put: (route, processHttp) => ({ route: getRouteDetails(route), method: 'PUT', processHttp }),
-	delete: (route, processHttp) => ({ route: getRouteDetails(route), method: 'DELETE', processHttp }),
-	head: (route, processHttp) => ({ route: getRouteDetails(route), method: 'HEAD', processHttp }),
-	options: (route, processHttp) => ({ route: getRouteDetails(route), method: 'OPTIONS', processHttp })
 }
 
 module.exports = {
@@ -301,7 +252,8 @@ module.exports = {
 	serveHttp,
 	getAppConfig,
 	getActiveEnv,
-	app,
+	app: app(),
+	HttpHandler,
 	routing: { 
 		getRouteDetails,
 		matchRoute
