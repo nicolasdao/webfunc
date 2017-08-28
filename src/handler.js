@@ -11,6 +11,13 @@ let _options = new WeakMap()
 let _httpNext = new WeakMap()
 let _optionsObjectFlag = new WeakMap()
 class HttpHandler {
+	/**
+	 * Create a new HttpHandler based on custom options, and http process
+	 * 
+	 * @param  {Object} 	options  [description]
+	 * @param  {Function} 	httpNext signature: (req, res, data) => ... 
+	 *                      where data is optional, and expect this schema: { request: <Object>, err: <Object>, options: <Object> }
+	 */
 	constructor(options, httpNext) {
 		if (httpNext && typeof(httpNext) != 'function')
 			throw new Error('Wrong argument exception. Argument \'httpNext\' must be a function.')
@@ -29,9 +36,11 @@ class HttpHandler {
 	}
 
 	httpNext(req, res, params) {
-		const httpHandle = this.getHttpNext() || (() => null)
+		const httpNext = this.getHttpNext()
+		const httpHandle = httpNext || (() => null)
 		const err = null
-		return Promise.resolve(httpHandle(req, res, params, err))
+		const data = httpNext ? { request: params, err, options: this.getOptions() } : { request: null, err: null, options: null }
+		return Promise.resolve(httpHandle(req, res, data))
 			.then(() => ({ req, res, params }))
 	}
 }

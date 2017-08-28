@@ -1092,7 +1092,7 @@ describe('webfunc', () =>
 				}
 				httpNext(req, res, params) {
 					res.status(200).send(`Hello ${params.username} (account: ${params.accountId})`)
-					return super.httpNext(req, res, params, null)
+					return super.httpNext(req, res, params)
 				}
 			}
 
@@ -1103,16 +1103,28 @@ describe('webfunc', () =>
 				}
 				httpNext(req, res, params) {
 					res.status(200).send(`Bye Bye ${params.username} (account: ${params.accountId})`)
-					return super.httpNext(req, res, params, null)
+					return super.httpNext(req, res, params)
 				}
 			}
 
 			app.reset()
 			/*eslint-disable */
-			app.use(new HttpTest(null, (req, res, params) => {
+			app.use(new HttpTest({ hello: 'world' }, (req, res, { request, err, options }) => {
+				assert.isOk(request, 'request should be defined in HttpTest')
+				assert.isOk(!err, 'err should not be defined in HttpTest')
+				assert.isOk(options, 'options should be defined in HttpTest')
+				assert.equal(request.username, 'nicolas')
+				assert.equal(request.accountId, '1234')
+				assert.equal(options.hello, 'world')
 				assert.equal(res._getData(),'Hello nicolas (account: 1234)')
 			}))
-			app.use(new HttpTest2(null, (req, res, params) => {
+			app.use(new HttpTest2(null, (req, res, { request, err, options }) => {
+				assert.isOk(request, 'request should be defined in HttpTest2')
+				assert.isOk(!err, 'err should not be defined in HttpTest2')
+				assert.isOk(options, 'options should be defined in HttpTest2')
+				assert.equal(request.username, 'nicolas')
+				assert.equal(request.accountId, '5678')
+				assert.equal(options.hello, undefined)
 				assert.equal(res._getData(),'Bye Bye nicolas (account: 5678)')
 			}))
 			/*eslint-enable */
