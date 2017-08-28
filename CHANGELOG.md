@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.4.0-alpha.11"></a>
+# [0.4.0-alpha.11](https://github.com/nicolasdao/webfunc/compare/v0.4.0-alpha.10...v0.4.0-alpha.11) (2017-08-28)
+
+
+### Bug Fixes
+
+* Bad signature style in the httpNext function argument of the HttpHandler class ([0a5cefd](https://github.com/nicolasdao/webfunc/commit/0a5cefd))
+
+
+
 <a name="0.4.0-alpha.10"></a>
 # [0.4.0-alpha.10](https://github.com/nicolasdao/webfunc/compare/v0.4.0-alpha.9...v0.4.0-alpha.10) (2017-08-27)
 
