@@ -90,9 +90,7 @@ const app = () => {
 		route: (routeDetails) => {
 			if (!routeDetails)
 				throw new Error('Missing arg. \'routeDetails\' must be defined in function \'route\'.')
-			if (!routeDetails.next)
-				throw new Error('Missing \'next\' function. \'routeDetails.next\' must be defined in function \'route\'.')
-			if (typeof(routeDetails.next) != 'function')
+			if (routeDetails.next && typeof(routeDetails.next) != 'function')
 				throw new Error('\'next\' must be a function.')
 
 			const method = routeDetails.method ? routeDetails.method.trim().toUpperCase() : null

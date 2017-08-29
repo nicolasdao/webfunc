@@ -119,14 +119,20 @@ const handleHttpRequest = (req, res, appconfig) => Promise.resolve(appconfig || 
 /**
  * Returns a function (req, res) => ... that the Google Cloud Function expects.
  * 
- * @param  {function} httpNextRequest 	Callback function (req, res) => ... This gets executed after all the headers checks.
- * @param  {object} appconfig         		Optional configuration file. If it exists, it will override the appconfig.json file.
+ * @param  {String|Function|Array|Object} 	arg1 	Here what it means based on its type:
+ *                                               	- String: Route path (e.g. '/users/{userId}/account')
+ *                                               	- Function: Callback function (req, res) => ... This gets executed after all the headers checks.
+ *                                               	- Array: Array of endpoints (e.g. [app.get('/users', (req, res, params) => ...), app.post('/stories', (req, res, params) => ...)])
+ *                                               	- Object: Endpoint (e.g. app.get('/users', (req, res, params) => ...))
+ * @param  {Function|Object} 				arg2 	Here what it means based on its type:
+ *                                     				- Function: Callback function (req, res) => ... This gets executed after all the headers checks.
+ *                                     				- Object: appconfig. If it exists, it will override the appconfig.json file.
+ * @param  {object} 						arg3 	appconfig. If it exists, it will override the appconfig.json file.
  * @return {function}                    	(req, res) => ...
  */
-//const serveHttp = (httpNextRequest, appconfig) => (req, res) => {
-const serveHttp = (arg1, arg2, appconfig) => {
+const serveHttp = (arg1, arg2, arg3) => {
 	const appConfigFile = getAppConfig() || {}
-	const appConfigArg = appconfig || {}
+	const appConfigArg = arg3 || {}
 	let _appconfig = null
 	let route = null
 	let httpNextRequest = null
