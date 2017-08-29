@@ -25,9 +25,9 @@ describe('webfunc', () =>
 			/*eslint-enable */
 			class HttpTest extends HttpHandler {
 				constructor(options, httpNext) { super(options, httpNext) }
-				httpNext(req, res, params) {
+				process(req, res, params) {
 					res.status(200).send('Hello mate')
-					return super.httpNext(req, res, params, null)
+					return super.process(req, res, params, null)
 				}
 			}
 
@@ -47,9 +47,9 @@ describe('webfunc', () =>
 				get id() {
 					return 'testHandler'
 				}
-				httpNext(req, res, params) {
+				process(req, res, params) {
 					res.status(200).send(`Hello ${params.username} (account: ${params.accountId})`)
-					return super.httpNext(req, res, params, null)
+					return super.process(req, res, params, null)
 				}
 			}
 
@@ -58,9 +58,9 @@ describe('webfunc', () =>
 				get id() {
 					return 'testHandler2'
 				}
-				httpNext(req, res, params) {
+				process(req, res, params) {
 					res.status(200).send(`Bye Bye ${params.username} (account: ${params.accountId})`)
-					return super.httpNext(req, res, params, null)
+					return super.process(req, res, params, null)
 				}
 			}
 
@@ -76,7 +76,7 @@ describe('webfunc', () =>
 				path: '/users/{username}/account/{accountId}',
 				method: null,
 				/*eslint-disable */
-				httpNext: (req, res, params) => { return res },
+				next: (req, res, params) => { return res },
 				/*eslint-enable */
 				handlerId: 'testHandler'
 			}), 'Should create an object.')
@@ -85,7 +85,7 @@ describe('webfunc', () =>
 				path: '/users/{username}/account/{accountId}',
 				method: null,
 				/*eslint-disable */
-				httpNext: (req, res, params) => { return res },
+				next: (req, res, params) => { return res },
 				/*eslint-enable */
 				handlerId: 'testHandler3'
 			}), Error, 'Cannot found routing method. Routing with http handler id \'testhandler3\' cannot be found. Use \'app.use(new SomeHttpHandler())\' to set up your http handler, or double-check there is no typos in the http handler id.')
@@ -1016,7 +1016,7 @@ describe('webfunc', () =>
 				app.route({
 					path: '/users/{username}/account/{accountId}',
 					method: null,
-					httpNext: (req, res, params) => { 
+					next: (req, res, params) => { 
 						res.status(200).send(`Hello ${params.username} (account: ${params.accountId})`)
 						return res
 					}
@@ -1090,9 +1090,9 @@ describe('webfunc', () =>
 				get id() {
 					return 'testHandler'
 				}
-				httpNext(req, res, params) {
+				process(req, res, params) {
 					res.status(200).send(`Hello ${params.username} (account: ${params.accountId})`)
-					return super.httpNext(req, res, params)
+					return super.process(req, res, params)
 				}
 			}
 
@@ -1101,9 +1101,9 @@ describe('webfunc', () =>
 				get id() {
 					return 'testHandler2'
 				}
-				httpNext(req, res, params) {
+				process(req, res, params) {
 					res.status(200).send(`Bye Bye ${params.username} (account: ${params.accountId})`)
-					return super.httpNext(req, res, params)
+					return super.process(req, res, params)
 				}
 			}
 
@@ -1134,7 +1134,7 @@ describe('webfunc', () =>
 					path: '/users/{username}/account/{accountId}',
 					method: null,
 					/*eslint-disable */
-					httpNext: (req, res, params) => { return res },
+					next: (req, res, params) => { return res },
 					/*eslint-enable */
 					handlerId: 'testHandler'
 				}),
@@ -1142,7 +1142,7 @@ describe('webfunc', () =>
 					path: '/users/{username}/byebye/{accountId}',
 					method: null,
 					/*eslint-disable */
-					httpNext: (req, res, params) => { return res },
+					next: (req, res, params) => { return res },
 					/*eslint-enable */
 					handlerId: 'testHandler2'
 				})

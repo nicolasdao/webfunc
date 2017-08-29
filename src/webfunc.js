@@ -231,14 +231,14 @@ const serveHttpEndpoints = (endpoints, appconfig) => {
 				if (!endpoint)
 					return res.send(404, `Endpoint '${httpEndpoint}' for method ${httpMethod} not found.`)
 
-				const httpNext = endpoint.httpNext || (() => Promise.resolve(null))
-				if (typeof(httpNext) != 'function') 
-					return res.send(500, `Wrong argument exception. Endpoint '${httpEndpoint}' for method ${httpMethod} defines a 'httpNext' argument that is not a function similar to '(req, res, params) => ...'.`) 
+				const next = endpoint.next || (() => Promise.resolve(null))
+				if (typeof(next) != 'function') 
+					return res.send(500, `Wrong argument exception. Endpoint '${httpEndpoint}' for method ${httpMethod} defines a 'next' argument that is not a function similar to '(req, res, params) => ...'.`) 
 
 				const parameters = getRequestParameters(req)
 				const requestParameters = matchRoute(httpEndpoint, endpoint.route).parameters
 
-				return httpNext(req, res, Object.assign(parameters, requestParameters))
+				return next(req, res, Object.assign(parameters, requestParameters))
 			}) 
 			: res)
 		
