@@ -1233,8 +1233,8 @@ describe('webfunc', () =>
 
 			const h1 = new HttpTest()
 			h1
-			.setNextHandler(new HttpTest2())
-			.setNextHandler(new HttpTest3())
+				.setNextHandler(new HttpTest2())
+				.setNextHandler(new HttpTest3())
 
 			app.reset()
 			app.use(h1)

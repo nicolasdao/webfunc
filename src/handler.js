@@ -112,7 +112,7 @@ const app = () => {
 					route: route, 
 					method: method, 
 					next: (req, res, params) => processHandlers(req, res, params, httpHandler, route)
-							.then(() => next(req, res, params))
+						.then(() => next(req, res, params))
 				}
 			}
 		}
@@ -121,11 +121,11 @@ const app = () => {
 
 const processHandlers = (req, res, params, httpHandler, route) => {
 	return Promise.resolve(httpHandler.process(req, res, params, route))
-	.then(() => {
-		const nextHandler = httpHandler.getNextHandler()
-		if (nextHandler)
-			return processHandlers(req, res, params, nextHandler, route)
-	})
+		.then(() => {
+			const nextHandler = httpHandler.getNextHandler()
+			if (nextHandler)
+				return processHandlers(req, res, params, nextHandler, route)
+		})
 }
 
 module.exports = {
