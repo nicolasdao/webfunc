@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.4.0"></a>
+# [0.4.0](https://github.com/nicolasdao/webfunc/compare/v0.4.0-alpha.11...v0.4.0) (2017-08-29)
+
+
+### Bug Fixes
+
+* API syntax ([ba089c4](https://github.com/nicolasdao/webfunc/commit/ba089c4))
+
+
+
 <a name="0.4.0-alpha.11"></a>
 # [0.4.0-alpha.11](https://github.com/nicolasdao/webfunc/compare/v0.4.0-alpha.10...v0.4.0-alpha.11) (2017-08-28)
 
