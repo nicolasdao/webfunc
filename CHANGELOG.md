@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.6.0-alpha.0"></a>
+# [0.6.0-alpha.0](https://github.com/nicolasdao/webfunc/compare/v0.5.1-alpha.0...v0.6.0-alpha.0) (2017-08-29)
+
+
+### Bug Fixes
+
+* linting issue ([bd098a9](https://github.com/nicolasdao/webfunc/commit/bd098a9))
+
+
+### Features
+
+* Add additinal 'route' argument in the 'process' method the HttpHandler class ([2d95799](https://github.com/nicolasdao/webfunc/commit/2d95799))
+
+
+
 <a name="0.5.1-alpha.0"></a>
 ## [0.5.1-alpha.0](https://github.com/nicolasdao/webfunc/compare/v0.4.0...v0.5.1-alpha.0) (2017-08-29)
 
