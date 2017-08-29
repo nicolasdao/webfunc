@@ -10,13 +10,15 @@ const { getRouteDetails } = require('./routing')
 let _options = new WeakMap()
 let _control = new WeakMap()
 let _optionsObjectFlag = new WeakMap()
+let _nextHandler = new WeakMap()
 class HttpHandler {
 	/**
 	 * Create a new HttpHandler based on custom options, and http process
 	 * 
 	 * @param  {Object} 	options  
 	 * @param  {Function} 	control 	Optional way to dynamically control the handler. Signature: (req, res, data) => ... 
-	 *                              	where data is optional, and expect this schema: { request: <Object>, err: <Object>, options: <Object> }
+	 *                              	where data is optional, and expect this schema: 
+	 *                              	{ request: <Object>, err: <Object>, options: <Object>, route: <Object> }
 	 */
 	constructor(options, control) {
 		if (control && typeof(control) != 'function')
@@ -28,19 +30,30 @@ class HttpHandler {
 		_control.set(this, (req, res, data) => Promise.resolve(controlFunc(req, res, data)))
 	}
 
-	getOptions() {
+	get options() {
 		return _optionsObjectFlag.get(this) ? Object.assign({}, _options.get(this)) : _options.get(this)
 	} 
 
-	getControl() {
+	get control() {
 		return _control.get(this)
 	}
 
-	process(req, res, params) {
-		const control = this.getControl()
+	getNextHandler() {
+		return _nextHandler.get(this)
+	}
+
+	setNextHandler(handler) {
+		if (handler instanceof HttpHandler) 
+			_nextHandler.set(this, handler)
+		else
+			throw Error('Wrong argument exception. The \'handler\' argument of the \'nextHandler\' method is not an instance of HttpHandler.')
+		return handler
+	}
+
+	process(req, res, params, route) {
 		const err = null
-		const data = control ? { request: params, err, options: this.getOptions() } : { request: null, err: null, options: null }
-		return control(req, res, data)
+		const data = { request: params, err, options: this.options, route }
+		return this.control(req, res, data)
 			.then(() => ({ req, res, params }))
 	}
 }
@@ -98,13 +111,21 @@ const app = () => {
 				return { 
 					route: route, 
 					method: method, 
-					next: (req, res, params) => 
-						Promise.resolve(httpHandler.process(req, res, params))
-							.then((req, res, params) => next(req, res, params))
+					next: (req, res, params) => processHandlers(req, res, params, httpHandler, route)
+							.then(() => next(req, res, params))
 				}
 			}
 		}
 	}
+}
+
+const processHandlers = (req, res, params, httpHandler, route) => {
+	return Promise.resolve(httpHandler.process(req, res, params, route))
+	.then(() => {
+		const nextHandler = httpHandler.getNextHandler()
+		if (nextHandler)
+			return processHandlers(req, res, params, nextHandler, route)
+	})
 }
 
 module.exports = {

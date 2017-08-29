@@ -1171,3 +1171,98 @@ describe('webfunc', () =>
 
 			return Promise.all([result_01, result_02])
 		})))
+
+/*eslint-disable */
+describe('webfunc', () => 
+	describe('#serveHttp: 19', () => 
+		it(`Should support chain of HttpHandlers.`, () => {
+			/*eslint-enable */
+			const req_01 = httpMocks.createRequest({
+				method: 'GET',
+				headers: {
+					origin: 'http://localhost:8080',
+					referer: 'http://localhost:8080'
+				},
+				_parsedUrl: {
+					pathname: '/users/nicolas/account/1234'
+				}
+			})
+			const res_01 = httpMocks.createResponse()
+
+			const appconfig = {
+				headers: {
+					'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS, POST',
+					'Access-Control-Allow-Headers': 'Authorization, Content-Type, Origin',
+					'Access-Control-Allow-Origin': 'http://boris.com, http://localhost:8080',
+					'Access-Control-Max-Age': '1296000'
+				}
+			}
+
+			class HttpTest extends HttpHandler {
+				constructor(options, httpNext) { super(options, httpNext) }
+				get id() {
+					return 'testHandler'
+				}
+				process(req, res, params) {
+					res.set('Hello', 'World')
+					return super.process(req, res, params)
+				}
+			}
+
+			class HttpTest2 extends HttpHandler {
+				constructor(options, httpNext) { super(options, httpNext) }
+				get id() {
+					return 'testHandler2'
+				}
+				process(req, res, params) {
+					res.set('Firstname', 'Gimpy')
+					return super.process(req, res, params)
+				}
+			}
+
+			class HttpTest3 extends HttpHandler {
+				constructor(options, httpNext) { super(options, httpNext) }
+				get id() {
+					return 'testHandler3'
+				}
+				process(req, res, params) {
+					res.set('Lastname', 'Cool')
+					return super.process(req, res, params)
+				}
+			}
+
+			const h1 = new HttpTest()
+			h1
+			.setNextHandler(new HttpTest2())
+			.setNextHandler(new HttpTest3())
+
+			app.reset()
+			app.use(h1)
+
+			const endpoints = [
+				app.route({
+					path: '/users/{username}/account/{accountId}',
+					method: null,
+					/*eslint-disable */
+					next: (req, res, params) => { return res },
+					/*eslint-enable */
+					handlerId: 'testHandler'
+				})
+			]
+
+			const fn = serveHttp(endpoints, appconfig)
+
+			const result_01 = fn(req_01, res_01).then(() => {
+				const headers = res_01._getHeaders()
+				assert.isOk(headers)
+				assert.equal(headers['Firstname'], 'Gimpy')
+				assert.equal(headers['Lastname'], 'Cool')
+				assert.equal(headers['Hello'], 'World')
+				assert.equal(headers['Access-Control-Allow-Methods'], 'GET, HEAD, OPTIONS, POST')
+				assert.equal(headers['Access-Control-Allow-Headers'], 'Authorization, Content-Type, Origin')
+				assert.equal(headers['Access-Control-Allow-Origin'], 'http://boris.com, http://localhost:8080')
+				assert.equal(headers['Access-Control-Max-Age'], '1296000')
+			})
+
+			return Promise.all([result_01])
+		})))

@@ -6,6 +6,11 @@
  * LICENSE file in the root directory of this source tree.
 */
 
+/**
+ * From 'users/{username}/account/{id}' to { "name": "/users/{username}/account/{id}/", "params": [ "username", "id"], "regex": {} }
+ * @param  {String} route Uri path
+ * @return {Object}       e.g. { "name": "/users/{username}/account/{id}/", "params": [ "username", "id"], "regex": {} }
+ */
 const getRouteDetails = route => {
 	let wellFormattedRoute = (route.trim().match(/\/$/) ? route.trim() : route.trim() + '/')
 	wellFormattedRoute = wellFormattedRoute.match(/^\//) ? wellFormattedRoute : '/' + wellFormattedRoute
