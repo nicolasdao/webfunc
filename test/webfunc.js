@@ -141,7 +141,7 @@ describe('webfunc', () =>
 			})
 			const res = httpMocks.createResponse()
 			const appconfig = {}
-			return handleHttpRequest(req, res, appconfig).then(({req, res}) => {
+			return handleHttpRequest(req, res, appconfig).then(() => {
 				assert.isOk(req)
 				assert.equal(res.statusCode, 403)
 				assert.equal(res._getData(), 'Forbidden - CORS issue. Origin \'http://localhost:8080\' is not allowed.')
@@ -221,7 +221,7 @@ describe('webfunc', () =>
 					'Access-Control-Max-Age': '1296000'
 				}
 			}
-			return handleHttpRequest(req, res, appconfig).then(({req, res}) => {
+			return handleHttpRequest(req, res, appconfig).then(() => {
 				assert.isOk(req)
 				assert.equal(res.statusCode, 403)
 				assert.equal(res._getData(), 'Forbidden - CORS issue. Origin \'http://localhost:8080\' is not allowed.')
@@ -275,7 +275,7 @@ describe('webfunc', () =>
 					'Access-Control-Max-Age': '1296000'
 				}
 			}
-			return handleHttpRequest(req, res, appconfig).then(({req, res}) => {
+			return handleHttpRequest(req, res, appconfig).then(() => {
 				assert.isOk(req)
 				assert.equal(res.statusCode, 403)
 				assert.equal(res._getData(), 'Forbidden - CORS issue. Method \'POST\' is not allowed.')
@@ -322,7 +322,7 @@ describe('webfunc', () =>
 			})
 			const res = httpMocks.createResponse()
 			const appconfig = {}
-			return handleHttpRequest(req, res, appconfig).then(({req, res}) => {
+			return handleHttpRequest(req, res, appconfig).then(() => {
 				assert.isOk(req)
 				assert.equal(res.statusCode, 403)
 				assert.equal(res._getData(), 'Forbidden - CORS issue. Method \'PUT\' is not allowed.')
@@ -347,7 +347,7 @@ describe('webfunc', () =>
 				res.status(200).send('Hello World')
 				return res
 			}, appconfig)
-			return fn(req, res).then(({req, res}) => {
+			return fn(req, res).then(() => {
 				assert.isOk(req)
 				assert.equal(res._getData(),'Hello World')
 			})
@@ -371,7 +371,7 @@ describe('webfunc', () =>
 				res.status(200).send('Hello World')
 				return res
 			}, appconfig)
-			return fn(req, res).then(({req, res}) => {
+			return fn(req, res).then(() => {
 				assert.isOk(req)
 				assert.equal(res.statusCode, 403)
 				assert.equal(res._getData(), 'Forbidden - CORS issue. Origin \'http://localhost:8080\' is not allowed.')
@@ -403,7 +403,7 @@ describe('webfunc', () =>
 				res.status(200).send('Hello World')
 				return res
 			}, appconfig)
-			return fn(req, res).then(({req, res}) => {
+			return fn(req, res).then(() => {
 				assert.isOk(req)
 				assert.equal(res._getData(),'Hello World')
 			})
@@ -434,7 +434,7 @@ describe('webfunc', () =>
 				res.status(200).send('Hello World')
 				return res
 			}, appconfig)
-			return fn(req, res).then(({req, res}) => {
+			return fn(req, res).then(() => {
 				assert.isOk(req)
 				assert.equal(res._getData(),'Hello World')
 			})
@@ -465,7 +465,7 @@ describe('webfunc', () =>
 				res.status(200).send('Hello World')
 				return res
 			}, appconfig)
-			return fn(req, res).then(({req, res}) => {
+			return fn(req, res).then(() => {
 				assert.isOk(req)
 				assert.equal(res.statusCode, 403)
 				assert.equal(res._getData(), 'Forbidden - CORS issue. Origin \'http://localhost:8080\' is not allowed.')
@@ -497,7 +497,7 @@ describe('webfunc', () =>
 				res.status(200).send('Hello World')
 				return res
 			}, appconfig)
-			return fn(req, res).then(({req, res}) => {
+			return fn(req, res).then(() => {
 				assert.isOk(req)
 				assert.equal(res._getData(),'Hello World')
 			})
@@ -528,7 +528,7 @@ describe('webfunc', () =>
 				res.status(200).send('Hello World')
 				return res
 			}, appconfig)
-			return fn(req, res).then(({req, res}) => {
+			return fn(req, res).then(() => {
 				assert.isOk(req)
 				assert.equal(res.statusCode, 403)
 				assert.equal(res._getData(), 'Forbidden - CORS issue. Method \'POST\' is not allowed.')
@@ -560,7 +560,7 @@ describe('webfunc', () =>
 				res.status(200).send('Hello World')
 				return res
 			}, appconfig)
-			return fn(req, res).then(({req, res}) => {
+			return fn(req, res).then(() => {
 				assert.isOk(req)
 				assert.equal(res._getData(),'Hello World')
 			})
@@ -584,7 +584,7 @@ describe('webfunc', () =>
 				res.status(200).send('Hello World')
 				return res
 			}, appconfig)
-			return fn(req, res).then(({req, res}) => {
+			return fn(req, res).then(() => {
 				assert.isOk(req)
 				assert.equal(res.statusCode, 403)
 				assert.equal(res._getData(), 'Forbidden - CORS issue. Method \'PUT\' is not allowed.')
@@ -616,7 +616,7 @@ describe('webfunc', () =>
 				res.status(200).send('Hello World')
 				return res
 			}, appconfig)
-			return fn(req, res).then(({req, res}) => {
+			return fn(req, res).then(() => {
 				assert.isOk(req)
 				assert.equal(res._getData(),'Hello World')
 				const headers = res._getHeaders()
@@ -807,10 +807,9 @@ describe('webfunc', () =>
 				assert.equal(headers['Access-Control-Allow-Origin'], 'http://boris.com, http://localhost:8080')
 				assert.equal(headers['Access-Control-Max-Age'], '1296000')
 			})
-			const result_03 = fn(req_03, res_03).then(({req, res}) => {
-				assert.isOk(req)
-				assert.equal(res.statusCode, 404)
-				assert.equal(res._getData(), 'Endpoint \'/\' not found.')
+			const result_03 = fn(req_03, res_03).then(() => {
+				assert.equal(res_03.statusCode, 404)
+				assert.equal(res_03._getData(), 'Endpoint \'/\' not found.')
 			})
 
 			return Promise.all([result_01, result_02, result_03])
@@ -1281,3 +1280,74 @@ describe('webfunc', () =>
 
 			return Promise.all([result_01])
 		})))
+
+/*eslint-disable */
+describe('webfunc', () => 
+	describe('#serveHttp: 20', () => 
+		it(`Should support any path if no path have been defined in any route.`, () => {
+			/*eslint-enable */
+			const req_01 = httpMocks.createRequest({
+				method: 'GET',
+				headers: {
+					origin: 'http://localhost:8080',
+					referer: 'http://localhost:8080'
+				},
+				_parsedUrl: {
+					pathname: '/users'
+				}
+			})
+			const res_01 = httpMocks.createResponse()
+
+			const req_02 = httpMocks.createRequest({
+				method: 'GET',
+				headers: {
+					origin: 'http://localhost:8080',
+					referer: 'http://localhost:8080'
+				},
+				_parsedUrl: {
+					pathname: '/companies'
+				}
+			})
+			const res_02 = httpMocks.createResponse()
+
+			const appconfig = {
+				headers: {
+					'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS, POST',
+					'Access-Control-Allow-Headers': 'Authorization, Content-Type, Origin',
+					'Access-Control-Allow-Origin': 'http://boris.com, http://localhost:8080',
+					'Access-Control-Max-Age': '1296000'
+				}
+			}
+
+			const endpoints = [
+				app.get('/', (req, res) => { res.status(200).send('Hello User'); return res })
+			]
+
+			const fn = serveHttp(endpoints, appconfig)
+
+			const result_01 = fn(req_01, res_01).then(() => {
+				assert.equal(res_01._getData(),'Hello User')
+				const headers = res_01._getHeaders()
+				assert.isOk(headers)
+				assert.equal(headers['Access-Control-Allow-Methods'], 'GET, HEAD, OPTIONS, POST')
+				assert.equal(headers['Access-Control-Allow-Headers'], 'Authorization, Content-Type, Origin')
+				assert.equal(headers['Access-Control-Allow-Origin'], 'http://boris.com, http://localhost:8080')
+				assert.equal(headers['Access-Control-Max-Age'], '1296000')
+			})
+			const result_02 = fn(req_02, res_02).then(() => {
+				assert.equal(res_02._getData(),'Hello User')
+				const headers = res_02._getHeaders()
+				assert.isOk(headers)
+				assert.equal(headers['Access-Control-Allow-Methods'], 'GET, HEAD, OPTIONS, POST')
+				assert.equal(headers['Access-Control-Allow-Headers'], 'Authorization, Content-Type, Origin')
+				assert.equal(headers['Access-Control-Allow-Origin'], 'http://boris.com, http://localhost:8080')
+				assert.equal(headers['Access-Control-Max-Age'], '1296000')
+			})
+
+			return Promise.all([result_01, result_02])
+		})))
+
+
+
+
+

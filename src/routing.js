@@ -57,7 +57,6 @@ const matchRoute = (reqPath, { params, regex }) => {
 	wellFormattedReqPath = wellFormattedReqPath.match(/^\//) ? wellFormattedReqPath : '/' + wellFormattedReqPath
 
 	const match = wellFormattedReqPath.match(regex)
-
 	if (!match)
 		return null
 	else {

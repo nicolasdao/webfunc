@@ -219,7 +219,7 @@ const serveHttpEndpoints = (endpoints, appconfig) => {
 				const endpoint = httpEndpoint == '/' 
 					? endpoints.filter(e => e.route.name == '/' && (e.method == httpMethod || !e.method))[0]
 					: (endpoints.map(e => ({ endpoint: e, route: matchRoute(httpEndpoint, e.route) }))
-						.filter(e => e.endpoint.route.name != '/' && e.route && (e.endpoint.method == httpMethod || !e.endpoint.method))
+						.filter(e => e.route && (e.endpoint.method == httpMethod || !e.endpoint.method))
 						.sort((a, b) => b.route.match.length - a.route.match.length)[0] || {}).endpoint
 
 				if (!endpoint) 
