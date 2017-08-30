@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.6.0-alpha.3"></a>
+# [0.6.0-alpha.3](https://github.com/nicolasdao/webfunc/compare/v0.6.0-alpha.2...v0.6.0-alpha.3) (2017-08-30)
+
+
+### Bug Fixes
+
+* fail to return upon 404 error in the webfunc.js file ([0b6d8ba](https://github.com/nicolasdao/webfunc/commit/0b6d8ba))
+
+
+
 <a name="0.6.0-alpha.2"></a>
 # [0.6.0-alpha.2](https://github.com/nicolasdao/webfunc/compare/v0.6.0-alpha.1...v0.6.0-alpha.2) (2017-08-30)
 
