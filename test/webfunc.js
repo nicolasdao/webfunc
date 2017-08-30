@@ -141,7 +141,8 @@ describe('webfunc', () =>
 			})
 			const res = httpMocks.createResponse()
 			const appconfig = {}
-			return handleHttpRequest(req, res, appconfig).then(res => {
+			return handleHttpRequest(req, res, appconfig).then(({req, res}) => {
+				assert.isOk(req)
 				assert.equal(res.statusCode, 403)
 				assert.equal(res._getData(), 'Forbidden - CORS issue. Origin \'http://localhost:8080\' is not allowed.')
 			})
@@ -220,7 +221,8 @@ describe('webfunc', () =>
 					'Access-Control-Max-Age': '1296000'
 				}
 			}
-			return handleHttpRequest(req, res, appconfig).then(res => {
+			return handleHttpRequest(req, res, appconfig).then(({req, res}) => {
+				assert.isOk(req)
 				assert.equal(res.statusCode, 403)
 				assert.equal(res._getData(), 'Forbidden - CORS issue. Origin \'http://localhost:8080\' is not allowed.')
 			})
@@ -273,7 +275,8 @@ describe('webfunc', () =>
 					'Access-Control-Max-Age': '1296000'
 				}
 			}
-			return handleHttpRequest(req, res, appconfig).then(res => {
+			return handleHttpRequest(req, res, appconfig).then(({req, res}) => {
+				assert.isOk(req)
 				assert.equal(res.statusCode, 403)
 				assert.equal(res._getData(), 'Forbidden - CORS issue. Method \'POST\' is not allowed.')
 			})
@@ -319,7 +322,8 @@ describe('webfunc', () =>
 			})
 			const res = httpMocks.createResponse()
 			const appconfig = {}
-			return handleHttpRequest(req, res, appconfig).then(res => {
+			return handleHttpRequest(req, res, appconfig).then(({req, res}) => {
+				assert.isOk(req)
 				assert.equal(res.statusCode, 403)
 				assert.equal(res._getData(), 'Forbidden - CORS issue. Method \'PUT\' is not allowed.')
 			})
@@ -343,7 +347,8 @@ describe('webfunc', () =>
 				res.status(200).send('Hello World')
 				return res
 			}, appconfig)
-			return fn(req, res).then(res => {
+			return fn(req, res).then(({req, res}) => {
+				assert.isOk(req)
 				assert.equal(res._getData(),'Hello World')
 			})
 		})))
@@ -366,7 +371,8 @@ describe('webfunc', () =>
 				res.status(200).send('Hello World')
 				return res
 			}, appconfig)
-			return fn(req, res).then(res => {
+			return fn(req, res).then(({req, res}) => {
+				assert.isOk(req)
 				assert.equal(res.statusCode, 403)
 				assert.equal(res._getData(), 'Forbidden - CORS issue. Origin \'http://localhost:8080\' is not allowed.')
 			})
@@ -397,7 +403,8 @@ describe('webfunc', () =>
 				res.status(200).send('Hello World')
 				return res
 			}, appconfig)
-			return fn(req, res).then(res => {
+			return fn(req, res).then(({req, res}) => {
+				assert.isOk(req)
 				assert.equal(res._getData(),'Hello World')
 			})
 		})))
@@ -427,7 +434,8 @@ describe('webfunc', () =>
 				res.status(200).send('Hello World')
 				return res
 			}, appconfig)
-			return fn(req, res).then(res => {
+			return fn(req, res).then(({req, res}) => {
+				assert.isOk(req)
 				assert.equal(res._getData(),'Hello World')
 			})
 		})))
@@ -457,7 +465,8 @@ describe('webfunc', () =>
 				res.status(200).send('Hello World')
 				return res
 			}, appconfig)
-			return fn(req, res).then(res => {
+			return fn(req, res).then(({req, res}) => {
+				assert.isOk(req)
 				assert.equal(res.statusCode, 403)
 				assert.equal(res._getData(), 'Forbidden - CORS issue. Origin \'http://localhost:8080\' is not allowed.')
 			})
@@ -488,7 +497,8 @@ describe('webfunc', () =>
 				res.status(200).send('Hello World')
 				return res
 			}, appconfig)
-			return fn(req, res).then(res => {
+			return fn(req, res).then(({req, res}) => {
+				assert.isOk(req)
 				assert.equal(res._getData(),'Hello World')
 			})
 		})))
@@ -518,7 +528,8 @@ describe('webfunc', () =>
 				res.status(200).send('Hello World')
 				return res
 			}, appconfig)
-			return fn(req, res).then(res => {
+			return fn(req, res).then(({req, res}) => {
+				assert.isOk(req)
 				assert.equal(res.statusCode, 403)
 				assert.equal(res._getData(), 'Forbidden - CORS issue. Method \'POST\' is not allowed.')
 			})
@@ -549,7 +560,8 @@ describe('webfunc', () =>
 				res.status(200).send('Hello World')
 				return res
 			}, appconfig)
-			return fn(req, res).then(res => {
+			return fn(req, res).then(({req, res}) => {
+				assert.isOk(req)
 				assert.equal(res._getData(),'Hello World')
 			})
 		})))
@@ -572,7 +584,8 @@ describe('webfunc', () =>
 				res.status(200).send('Hello World')
 				return res
 			}, appconfig)
-			return fn(req, res).then(res => {
+			return fn(req, res).then(({req, res}) => {
+				assert.isOk(req)
 				assert.equal(res.statusCode, 403)
 				assert.equal(res._getData(), 'Forbidden - CORS issue. Method \'PUT\' is not allowed.')
 			})
@@ -603,7 +616,8 @@ describe('webfunc', () =>
 				res.status(200).send('Hello World')
 				return res
 			}, appconfig)
-			return fn(req, res).then(res => {
+			return fn(req, res).then(({req, res}) => {
+				assert.isOk(req)
 				assert.equal(res._getData(),'Hello World')
 				const headers = res._getHeaders()
 				assert.isOk(headers)
@@ -793,7 +807,8 @@ describe('webfunc', () =>
 				assert.equal(headers['Access-Control-Allow-Origin'], 'http://boris.com, http://localhost:8080')
 				assert.equal(headers['Access-Control-Max-Age'], '1296000')
 			})
-			const result_03 = fn(req_03, res_03).then(res => {
+			const result_03 = fn(req_03, res_03).then(({req, res}) => {
+				assert.isOk(req)
 				assert.equal(res.statusCode, 404)
 				assert.equal(res._getData(), 'Endpoint \'/\' not found.')
 			})

@@ -84,37 +84,24 @@ const handleHttpRequest = (req, res, appconfig) => Promise.resolve(appconfig || 
 		const sameOrigin = referer.indexOf(origin) == 0
 
 		if (noConfig) {
-			if (!sameOrigin) {
-				return setResponseHeaders(res, appConfig).then(res => {
-					res.status(403).send(`Forbidden - CORS issue. Origin '${origin}' is not allowed.`)
-					return res
-				})
-			}
-			if (method != 'head' && method != 'get' && method != 'options' && method != 'post') {
-				return setResponseHeaders(res, appConfig).then(res => {
-					res.status(403).send(`Forbidden - CORS issue. Method '${method.toUpperCase()}' is not allowed.`)
-					return res
-				})
-			}
+			if (!sameOrigin)
+				return setResponseHeaders(res, appConfig).then(res => res.status(403).send(`Forbidden - CORS issue. Origin '${origin}' is not allowed.`))
+
+			if (method != 'head' && method != 'get' && method != 'options' && method != 'post') 
+				return setResponseHeaders(res, appConfig).then(res => res.status(403).send(`Forbidden - CORS issue. Method '${method.toUpperCase()}' is not allowed.`))
 		}
 		// Check CORS
 		
-		if (!origins['*'] && Object.keys(origins).length != 0 && !(origin in origins)) {
-			return setResponseHeaders(res, appConfig).then(res => {
-				res.status(403).send(`Forbidden - CORS issue. Origin '${origin}' is not allowed.`)
-				return res
-			})
-		}
-		if (Object.keys(methods).length != 0 && method != 'get' && method != 'head' && !(method in methods)) {
-			return setResponseHeaders(res, appConfig).then(res => {
-				res.status(403).send(`Forbidden - CORS issue. Method '${method.toUpperCase()}' is not allowed.`)
-				return res
-			})
-		}
+		if (!origins['*'] && Object.keys(origins).length != 0 && !(origin in origins)) 
+			return setResponseHeaders(res, appConfig).then(res => res.status(403).send(`Forbidden - CORS issue. Origin '${origin}' is not allowed.`))
+
+		if (Object.keys(methods).length != 0 && method != 'get' && method != 'head' && !(method in methods)) 
+			return setResponseHeaders(res, appConfig).then(res => res.status(403).send(`Forbidden - CORS issue. Method '${method.toUpperCase()}' is not allowed.`))
 
 		if (method == 'head' || method == 'options')
 			return setResponseHeaders(res, appConfig).then(res => res.status(200).send())
 	})
+	.then(() => ({ req, res }))
 
 /**
  * Returns a function (req, res) => ... that the Google Cloud Function expects.
@@ -171,7 +158,7 @@ const serveHttp = (arg1, arg2, arg3) => {
 			if (!r) {
 				return setResponseHeaders(res, _appconfig).then(res => {
 					res.status(404).send(`Endpoint '${httpEndpoint}' not found.`)
-					return res
+					return { req, res }
 				})
 			}
 			else
@@ -182,6 +169,7 @@ const serveHttp = (arg1, arg2, arg3) => {
 			.then(() => !res.headersSent 
 				? setResponseHeaders(res, _appconfig).then(res => httpNextRequest(req, res, Object.assign(parameters, getRequestParameters(req)))) 
 				: res)
+			.then(() => ({ req, res }))
 	}
 		
 	const firebaseHosting = _appconfig.hosting == 'firebase'
@@ -234,12 +222,12 @@ const serveHttpEndpoints = (endpoints, appconfig) => {
 						.filter(e => e.endpoint.route.name != '/' && e.route && (e.endpoint.method == httpMethod || !e.endpoint.method))
 						.sort((a, b) => b.route.match.length - a.route.match.length)[0] || {}).endpoint
 
-				if (!endpoint)
-					return res.send(404, `Endpoint '${httpEndpoint}' for method ${httpMethod} not found.`)
+				if (!endpoint) 
+					res.send(404, `Endpoint '${httpEndpoint}' for method ${httpMethod} not found.`)
 
 				const next = endpoint.next || (() => Promise.resolve(null))
 				if (typeof(next) != 'function') 
-					return res.send(500, `Wrong argument exception. Endpoint '${httpEndpoint}' for method ${httpMethod} defines a 'next' argument that is not a function similar to '(req, res, params) => ...'.`) 
+					res.send(500, `Wrong argument exception. Endpoint '${httpEndpoint}' for method ${httpMethod} defines a 'next' argument that is not a function similar to '(req, res, params) => ...'.`) 
 
 				const parameters = getRequestParameters(req)
 				const requestParameters = matchRoute(httpEndpoint, endpoint.route).parameters
@@ -247,6 +235,7 @@ const serveHttpEndpoints = (endpoints, appconfig) => {
 				return next(req, res, Object.assign(parameters, requestParameters))
 			}) 
 			: res)
+		.then(() => ({ req, res }))
 		
 	const firebaseHosting = _appconfig.hosting == 'firebase'
 	return firebaseHosting ? functions.https.onRequest(cloudFunction) : cloudFunction
