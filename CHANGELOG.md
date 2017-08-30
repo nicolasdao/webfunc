@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.6.0-alpha.4"></a>
+# [0.6.0-alpha.4](https://github.com/nicolasdao/webfunc/compare/v0.6.0-alpha.3...v0.6.0-alpha.4) (2017-08-30)
+
+
+### Bug Fixes
+
+* support for undefined routing path. This should allow any query to any path ([c5bc21d](https://github.com/nicolasdao/webfunc/commit/c5bc21d))
+
+
+
 <a name="0.6.0-alpha.3"></a>
 # [0.6.0-alpha.3](https://github.com/nicolasdao/webfunc/compare/v0.6.0-alpha.2...v0.6.0-alpha.3) (2017-08-30)
 
