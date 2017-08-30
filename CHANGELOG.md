@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.6.0-alpha.2"></a>
+# [0.6.0-alpha.2](https://github.com/nicolasdao/webfunc/compare/v0.6.0-alpha.1...v0.6.0-alpha.2) (2017-08-30)
+
+
+### Bug Fixes
+
+* consistent and more intuitive response for the serveHttp function ([80e6d8d](https://github.com/nicolasdao/webfunc/commit/80e6d8d))
+
+
+
 <a name="0.6.0-alpha.1"></a>
 # [0.6.0-alpha.1](https://github.com/nicolasdao/webfunc/compare/v0.6.0-alpha.0...v0.6.0-alpha.1) (2017-08-29)
 
