@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.6.0-alpha.6"></a>
+# [0.6.0-alpha.6](https://github.com/nicolasdao/webfunc/compare/v0.6.0-alpha.5...v0.6.0-alpha.6) (2017-08-31)
+
+
+
 <a name="0.6.0-alpha.5"></a>
 # [0.6.0-alpha.5](https://github.com/nicolasdao/webfunc/compare/v0.6.0-alpha.4...v0.6.0-alpha.5) (2017-08-31)
 
