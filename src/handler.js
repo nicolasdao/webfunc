@@ -87,7 +87,7 @@ const app = () => {
 		 * @param  {Function} 	routeDetails.next 	Optional. What to do with the request after it has potentially gone through the HttpHandler.
 		 * @return {Object}              
 		 */
-		route: (routeDetails) => {
+		resolve: (routeDetails) => {
 			if (!routeDetails)
 				throw new Error('Missing arg. \'routeDetails\' must be defined in function \'route\'.')
 			if (routeDetails.next && typeof(routeDetails.next) != 'function')

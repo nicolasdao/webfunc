@@ -72,7 +72,7 @@ describe('webfunc', () =>
 				assert.equal(res._getData(),'Bye Bye nicolas (account: 1234)')
 			}))
 
-			assert.isOk(app.route({
+			assert.isOk(app.resolve({
 				path: '/users/{username}/account/{accountId}',
 				method: null,
 				/*eslint-disable */
@@ -81,7 +81,7 @@ describe('webfunc', () =>
 				handlerId: 'testHandler'
 			}), 'Should create an object.')
 
-			assert.throw(() => app.route({
+			assert.throw(() => app.resolve({
 				path: '/users/{username}/account/{accountId}',
 				method: null,
 				/*eslint-disable */
@@ -1027,7 +1027,7 @@ describe('webfunc', () =>
 			}
 
 			const endpoints = [
-				app.route({
+				app.resolve({
 					path: '/users/{username}/account/{accountId}',
 					method: null,
 					next: (req, res, params) => { 
@@ -1144,7 +1144,7 @@ describe('webfunc', () =>
 			/*eslint-enable */
 
 			const endpoints = [
-				app.route({
+				app.resolve({
 					path: '/users/{username}/account/{accountId}',
 					method: null,
 					/*eslint-disable */
@@ -1152,7 +1152,7 @@ describe('webfunc', () =>
 					/*eslint-enable */
 					handlerId: 'testHandler'
 				}),
-				app.route({
+				app.resolve({
 					path: '/users/{username}/byebye/{accountId}',
 					method: null,
 					/*eslint-disable */
@@ -1254,7 +1254,7 @@ describe('webfunc', () =>
 			app.use(h1)
 
 			const endpoints = [
-				app.route({
+				app.resolve({
 					path: '/users/{username}/account/{accountId}',
 					method: null,
 					/*eslint-disable */
