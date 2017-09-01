@@ -7,8 +7,8 @@
 [2]: https://www.npmjs.com/package/webfunc
 [3]: https://travis-ci.org/nicolasdao/webfunc.svg?branch=master
 [4]: https://travis-ci.org/nicolasdao/webfunc
-## Intro
-Add CORS support and routing to Google Cloud Functions projects.
+
+Add CORS support and routing to Google Cloud Functions & Firebase Functions projects (AWS Lambdas coming soon).
 
 ## Install
 ```
@@ -55,7 +55,7 @@ The fastest way to get started with webfunc is to use [_**gimpy**_](https://gith
 gimp new webapp-serverless helloWorld
 cd helloWorld
 npm install
-gimp deploy
+npm start
 ```
 
 ## Configuring CORS as well as Multiple Environment Variables - appconfig.json
@@ -207,7 +207,7 @@ This piece of code is also accessible via the _**jwt-passport-example**_ gimpy t
 gimp new jwt-passport-example jwtTest
 cd jwtTest
 npm install
-gimp deploy
+npm start
 ```
 
 To test that piece of code:
