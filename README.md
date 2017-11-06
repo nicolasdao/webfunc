@@ -7,8 +7,11 @@
 [2]: https://www.npmjs.com/package/webfunc
 [3]: https://travis-ci.org/nicolasdao/webfunc.svg?branch=master
 [4]: https://travis-ci.org/nicolasdao/webfunc
-## Intro
-Add CORS support and routing to Google Cloud Functions projects.
+
+Add CORS support and routing to Google Cloud Functions & Firebase Functions projects (AWS Lambdas coming soon).
+- [Routing](#how-to-use-it)
+- [CORS Support](#cors)
+- [Environment Variables](#adding-multiple-deployment-environments)
 
 ## Install
 ```
@@ -55,7 +58,7 @@ The fastest way to get started with webfunc is to use [_**gimpy**_](https://gith
 gimp new webapp-serverless helloWorld
 cd helloWorld
 npm install
-gimp deploy
+npm start
 ```
 
 ## Configuring CORS as well as Multiple Environment Variables - appconfig.json
@@ -77,7 +80,14 @@ More details about those headers in the [Annexes](#annexes) section under [A.1. 
 > CORS is a classic source of headache. Though webfunc allows to easily configure any Google Cloud Functions project, it will not prevent anybody to badly configure a project, and therefore loose a huge amount of time. For that reason, a series of common mistakes have been documented in the [Annexes](#annexes) section under [A.2. CORS Basic Errors](#a2-cors-basic-errors).
 
 #### Adding Multiple Deployment Environments
-Let's imagine that 3 different environments have been setup on a Google Cloud Account. Obvioulsy, all of those environments have probably different configurations. As of today (July 2017), Google Cloud Functions does not support environment variables. WebFunc allows you to deal with the issue by supporting an _**env**_ property in the _**appconfig.json**_ file:
+The following code allows to access the current active environment's variables:
+
+```js
+const { getActiveEnv } = require('webfunc')
+const activeEnv = getActiveEnv()
+console.log(activeEnv.myCustomVar) // > "Hello Default"
+```
+The _**getActiveEnv**_ function looks for an _**env**_ property inside the _**appconfig.json**_ file. Then, it looks for the current active environment (i.e. the value of the _**active**_ property), and extract the JSON object associated to that value. Here is an example of a typical _appconfig.json_ file:
 
 ```js
 {
@@ -88,28 +98,32 @@ Let's imagine that 3 different environments have been setup on a Google Cloud Ac
       "trigger": "--trigger-http",
       "entryPoint": "helloNeap",
       "googleProject": "DevEnv",
-      "bucket": "devenvbucket"
+      "bucket": "devenvbucket",
+      "myCustomVar": "Hello Default"
     },
     "build": {
       "functionName": "helloneap",
       "trigger": "--trigger-http",
       "entryPoint": "helloNeap",
       "googleProject": "DevEnv",
-      "bucket": "devenvbucket"
+      "bucket": "devenvbucket",
+      "myCustomVar": "Hello Build"
     },
     "staging": {
       "functionName": "helloneap",
       "trigger": "--trigger-http",
       "entryPoint": "helloNeap",
       "googleProject": "StagingEnv",
-      "bucket": "stagingenvbucket"
+      "bucket": "stagingenvbucket",
+      "myCustomVar": "Hello Staging"
     },
     "prod": {
       "functionName": "helloneap",
       "trigger": "--trigger-http",
       "entryPoint": "helloNeap",
       "googleProject": "ProdEnv",
-      "bucket": "prodenvbucket"
+      "bucket": "prodenvbucket",
+      "myCustomVar": "Hello Prod"
     }
   }
 }
@@ -117,34 +131,6 @@ Let's imagine that 3 different environments have been setup on a Google Cloud Ac
 
 As you can see, the example above demonstrates 4 different types of enviornment setups: _default_, _build_, _staging_, _prod_. You can obviouly define as many as you want, and add whatever you need under those environments. 
 
-Also, notice the _**active**_ property. It's purpose is to behave as a sort of environment variable that let's your code figure out which environment is currently active. The code below demonstrates how to programmatically access the current environment:
-
-```js
-const { getActiveEnv } = require('webfunc')
-const activeEnv = getActiveEnv()
-```
-Using the previous _appconfig.json_, if the _active_ property is set to _default_, then the value of _getActiveEnv_ will be the following JSON object:
-```js
-{
-  "functionName": "helloneap",
-  "trigger": "--trigger-http",
-  "entryPoint": "helloNeap",
-  "googleProject": "DevEnv",
-  "bucket": "devenvbucket"
-}
-```
-
-If you change the value of the _**active**_ property to _prod_, then the _getActiveEnv_ method will return:
-
-```js
-{
-  "functionName": "helloneap",
-  "trigger": "--trigger-http",
-  "entryPoint": "helloNeap",
-  "googleProject": "ProdEnv",
-  "bucket": "prodenvbucket"
-}
-```
 > NOTE: _**getActiveEnv**_ accepts one optional boolean called 'memoize'. By default it is set to true. That means that calling it multiple times will not incure more read resources. 
 
 ## Authentication 
@@ -207,7 +193,7 @@ This piece of code is also accessible via the _**jwt-passport-example**_ gimpy t
 gimp new jwt-passport-example jwtTest
 cd jwtTest
 npm install
-gimp deploy
+npm start
 ```
 
 To test that piece of code:
