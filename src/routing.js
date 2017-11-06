@@ -19,7 +19,7 @@ const getRouteDetails = route => {
 
 	const variables = wellFormattedRoute.match(/{(.*?)}/g) || []
 	const variableNames = variables.map(x => x.replace(/^{/, '').replace(/}$/, ''))
-	const routeRegex = variables.reduce((a, v) => a.replace(v, '(.*?)'), wellFormattedRoute)
+	const routeRegex = variables.reduce((a, v) => a.replace(v, '(.*?)'), wellFormattedRoute).toLowerCase()
 	const rx = new RegExp(routeRegex)
 
 	return {

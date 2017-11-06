@@ -709,7 +709,7 @@ describe('webfunc', () =>
 
 			const endpoints = [
 				app.get('/users', (req, res) => { res.status(200).send('Hello User'); return res }),
-				app.get('/companies', (req, res) => { res.status(200).send('Hello Companies'); return res })
+				app.get('/Companies', (req, res) => { res.status(200).send('Hello Companies'); return res })
 			]
 
 			const fn = serveHttp(endpoints, appconfig)
@@ -787,7 +787,7 @@ describe('webfunc', () =>
 				}
 			}
 
-			const fn = serveHttp('/users/{username}', (req, res, params) => res.status(200).send(`Hello ${params.username}${params.lastname ? ` ${params.lastname}` : ''}`), appconfig)
+			const fn = serveHttp('/Users/{username}', (req, res, params) => res.status(200).send(`Hello ${params.username}${params.lastname ? ` ${params.lastname}` : ''}`), appconfig)
 
 			const result_01 = fn(req_01, res_01).then(() => {
 				assert.equal(res_01._getData(),'Hello nicolas')
