@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.6.0-alpha.7"></a>
+# [0.6.0-alpha.7](https://github.com/nicolasdao/webfunc/compare/v0.6.0-alpha.6...v0.6.0-alpha.7) (2017-11-06)
+
+
+### Bug Fixes
+
+* bug related to case sensitive routing ([314659e](https://github.com/nicolasdao/webfunc/commit/314659e))
+
+
+
 <a name="0.6.0-alpha.6"></a>
 # [0.6.0-alpha.6](https://github.com/nicolasdao/webfunc/compare/v0.6.0-alpha.5...v0.6.0-alpha.6) (2017-08-31)
 
