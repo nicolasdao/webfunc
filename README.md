@@ -10,15 +10,11 @@
 
 # Table of Contents
 
-> [Install](#install)
-
-> [How To Use It](#how-to-use-it)
-
-> [CORS](#cors)
-
-> [Authentication](#authentication)
-
-> [Make It Work With Express](#make-it-work-with-express)
+> [Install](#install) 
+> [How To Use It](#how-to-use-it) 
+> [CORS](#cors) 
+> [Authentication](#authentication) 
+> [Make It Work With Express](#make-it-work-with-express) 
 
 Add CORS support and routing to Google Cloud Functions & Firebase Functions projects (AWS Lambdas coming soon).
 - [Routing](#how-to-use-it)
