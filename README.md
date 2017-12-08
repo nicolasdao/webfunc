@@ -9,6 +9,7 @@
 [4]: https://travis-ci.org/nicolasdao/webfunc
 
 # Table of Contents
+
 > [Install](#install)
 > [How To Use It](#how-to-use-it)
 > [CORS](#cors)
