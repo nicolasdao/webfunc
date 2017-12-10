@@ -8,17 +8,25 @@
 [3]: https://travis-ci.org/nicolasdao/webfunc.svg?branch=master
 [4]: https://travis-ci.org/nicolasdao/webfunc
 
+# Table of Contents
+
+> * [Install](#install) 
+> * [How To Use It](#how-to-use-it) 
+> * [CORS](#cors) 
+> * [Authentication](#authentication) 
+> * [Make It Work With Express](#make-it-work-with-express) 
+
 Add CORS support and routing to Google Cloud Functions & Firebase Functions projects (AWS Lambdas coming soon).
 - [Routing](#how-to-use-it)
 - [CORS Support](#cors)
 - [Environment Variables](#adding-multiple-deployment-environments)
 
-## Install
+# Install
 ```
 npm install webfunc --save
 ```
 
-## How To Use It
+# How To Use It
 
 In its simplest form, a Google Cloud Functions project looks like this:
 ```js
@@ -61,8 +69,8 @@ npm install
 npm start
 ```
 
-## Configuring CORS as well as Multiple Environment Variables - appconfig.json
-#### CORS
+# Configuring CORS as well as Multiple Environment Variables - appconfig.json
+## CORS
 This is the main 'raison d'être' of this project. Out-of-the box, Google Cloud Functions does not support easy configuration for CORS when triggered through HTTP (at least as of July 2017). Webfunc fills that gap using configurations defined in a _**appconfig.json**_ file. 
 
 ```js
@@ -79,7 +87,7 @@ More details about those headers in the [Annexes](#annexes) section under [A.1. 
 
 > CORS is a classic source of headache. Though webfunc allows to easily configure any Google Cloud Functions project, it will not prevent anybody to badly configure a project, and therefore loose a huge amount of time. For that reason, a series of common mistakes have been documented in the [Annexes](#annexes) section under [A.2. CORS Basic Errors](#a2-cors-basic-errors).
 
-#### Adding Multiple Deployment Environments
+## Adding Multiple Deployment Environments
 The following code allows to access the current active environment's variables:
 
 ```js
@@ -133,7 +141,7 @@ As you can see, the example above demonstrates 4 different types of enviornment 
 
 > NOTE: _**getActiveEnv**_ accepts one optional boolean called 'memoize'. By default it is set to true. That means that calling it multiple times will not incure more read resources. 
 
-## Authentication 
+# Authentication 
 Authentication using webfunc is left to you. That being said, here is a quick example on how that could work using the awesome [passport](http://passportjs.org/) package. The following piece of code for Google Cloud Functions exposes a _signin_ POST endpoint that expects an email and a password and that returns a JWT token. Passing that JWT token in the _Authorization_ header using the _bearer_ scheme will allow access to the _/_ endpoint.
 
 ```js
@@ -208,12 +216,31 @@ Access the secured _/_ endpoint:
 ```
 curl -v -H "Authorization: Bearer your-jwt-token" http://localhost:8010/your-google-project/us-central1/jwtTest
 ```
+# Make It Work With Express
+_index.js_
+```js
+const express = require('express')
+const server = express()
+const { serveHttp, app } = require('webfunc')
 
-## Annexes
-#### A.1. CORS Refresher
+server.all('*', serveHttp([
+  app.get('/', (req, res) => res.status(200).send('Hello World')),
+  app.get('/users/{userId}', (req, res, params) => res.status(200).send(`Hello user ${params.userId}`)),
+  app.get('/users/{userId}/document/{docName}', (req, res, params) => res.status(200).send(`Hello user ${params.userId}. I like your document ${params.docName}`)),
+]))
+
+server.listen(3000)
+```
+
+```
+node index.js
+```
+
+# Annexes
+## A.1. CORS Refresher
 _COMING SOON..._
 
-#### A.2. CORS Basic Errors
+## A.2. CORS Basic Errors
 _**WithCredentials & CORS**_
 The following configuration is forbidden:
 ```js
@@ -255,15 +282,15 @@ If you do need to allow access to anybody, then do not allow requests to send co
 ```
 If you do need to pass authentication token, you will have to pass it using a special header(e.g. Authorization), or pass it in the query string if you want to avoid preflight queries (preflight queries happens in cross-origin requests when special headers are being used). However, passing credentials in the query string are considered a bad practice. 
 
-## Contributing
+# Contributing
 ```
 npm test
 ```
 
-## This Is What We re Up To
+# This Is What We re Up To
 We are Neap, an Australian Technology consultancy powering the startup ecosystem in Sydney. We simply love building Tech and also meeting new people, so don't hesitate to connect with us at [https://neap.co](https://neap.co).
 
-## License
+# License
 Copyright (c) 2017, Neap Pty Ltd.
 All rights reserved.
 
