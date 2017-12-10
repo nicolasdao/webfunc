@@ -69,7 +69,18 @@ const getAllowedMethods = (headers = {}, memoize) => {
 }  
 
 const setResponseHeaders = (res, appconfig) => Promise.resolve((appconfig || getAppConfig() || {}).headers)
-	.then(headers => getHeadersCollection(headers, !appconfig).reduce((response, header) => res.set(header.key, header.value), res))
+	.then(headers => {
+		if (!res.set)
+			res.set = res.setHeader
+		if (!res.send)
+			res.send = res.end
+		if (!res.status)
+			res.status = code => { res.statusCode = code; return res }
+		return getHeadersCollection(headers, !appconfig).reduce((response, header) => {
+			res.set(header.key, header.value)
+			return res 
+		}, res)
+	})
 
 const handleHttpRequest = (req, res, appconfig) => Promise.resolve(appconfig || getAppConfig() || {})
 	.then(appConfig => {
