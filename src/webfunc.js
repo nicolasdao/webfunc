@@ -7,18 +7,27 @@
 */
 const path = require('path')
 const fs = require('fs')
-const functions = require('firebase-functions')
+const serialize = require('serialize-javascript')
 const { getRouteDetails, matchRoute } = require('./routing')
 const { app, HttpHandler } = require('./handler')
+require('colors')
+
+/*eslint-disable */
+const cwdPath = f => path.join(process.cwd(), f)
+const getProcess = () => process
+const getProcessEnv = () => process.env || {}
+/*eslint-enable */
 
 let _appconfig = null
 const getAppConfig = memoize => {
 	const skipMemoization = memoize == undefined ? false : !memoize
 	if (!skipMemoization || _appconfig == null) {
-		/*eslint-disable */
-		const appconfigPath = path.join(process.cwd(), 'appconfig.json')
-		/*eslint-enable */
+		const appconfigPath = cwdPath('appconfig.json')
 		_appconfig = fs.existsSync(appconfigPath) ? require(appconfigPath) : undefined
+		if (!_appconfig) {
+			const nowconfigPath = cwdPath('now.json')
+			_appconfig = fs.existsSync(nowconfigPath) ? require(nowconfigPath) : undefined
+		}
 	}
 	return _appconfig
 }
@@ -183,11 +192,52 @@ const serveHttp = (arg1, arg2, arg3) => {
 			.then(() => ({ req, res }))
 	}
 		
-	const firebaseHosting = _appconfig.hosting == 'firebase'
-	return firebaseHosting ? functions.https.onRequest(cloudFunction) : cloudFunction
+	return cloudFunction
 }
 
+const _supportedHostings = { 'now': true, 'sh': true, 'localhost': true, 'express': true, 'gcp': true, 'aws': true }
+const serveHttpUniversal = (arg1, arg2, arg3) => {
+	const appConfigFile = getAppConfig() || {}
+	const appConfigArg = arg3 || {}
+	let _appconfig = null
+	const typeOfArg1 = typeof(arg1 || undefined)
+	
+	if (arg1) { 
+		if (typeOfArg1 == 'string') 
+			_appconfig = Object.assign(appConfigFile, appConfigArg)
+		else 
+			_appconfig = Object.assign(appConfigFile, arg2 || {})
+	}
 
+	const envName = !_appconfig ? 'default' : ((_appconfig.env || {}).active || 'default')
+	const env = ((_appconfig || {}).env || {})[envName] || {}
+	const hostingType = env.hostingType || 'localhost'
+	if (!_supportedHostings[hostingType.toLowerCase()])
+		throw new Error(`Unsupported hosting type '${hostingType}'`)
+
+	const hostCategory = !hostingType || hostingType == 'localhost' || hostingType == 'now' ? 'express' : hostingType
+
+	switch(hostCategory) {
+	case 'express': {
+		const expressConfig = ((_appconfig || {}).localhost || {})
+		const explicitPort = (expressConfig.port || getProcessEnv().PORT) * 1
+		const port = explicitPort || 3000
+		const notLocal = hostingType != 'localhost'
+		const startMessage = notLocal
+			? `Ready to receive traffic${explicitPort ? ` on port ${explicitPort}` : ''}`
+			: `Ready to receive traffic on ${`http://localhost:${port}`.bold.italic}`.cyan
+		const secondMsg = notLocal ? '' : 'Press Ctrl+C to stop the server'.cyan
+		return `
+				const express = require('express')
+				const server = express()
+				server.all('*', serveHttp(${serialize(arg1)}, ${serialize(arg2)}, ${serialize(arg3)}))
+				server.listen(${port}, () => { console.log("${startMessage}"); ${secondMsg ? `console.log("${secondMsg}")` : ''}})
+				`
+	}
+	case 'gcp':
+		return `exports.handler = serveHttp(${serialize(arg1)}, ${serialize(arg2)}, ${serialize(arg3)})`
+	}
+}
 
 const getRequestParameters = req => {
 	let bodyParameters = {}
@@ -248,14 +298,16 @@ const serveHttpEndpoints = (endpoints, appconfig) => {
 			: res)
 		.then(() => ({ req, res }))
 		
-	const firebaseHosting = _appconfig.hosting == 'firebase'
-	return firebaseHosting ? functions.https.onRequest(cloudFunction) : cloudFunction
+	return cloudFunction
 }
+
+
 
 module.exports = {
 	setResponseHeaders,
 	handleHttpRequest,
 	serveHttp,
+	serveHttpUniversal,
 	getAppConfig,
 	getActiveEnv,
 	app: app(),

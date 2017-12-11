@@ -8,10 +8,8 @@
   "main": "src/webfunc.js",
   "scripts": {
     "test": "mocha",
-    "eslint": "eslint src/ test/",
-    "release:alpha": "standard-version --prerelease alpha",
-    "release:minor": "standard-version --release-as minor",
-    "release": "standard-version"
+    "eslint": "eslint src/ test/ --fix",
+    "release": "standard-version --prerelease alpha"
   },
   "repository": {
     "type": "git",
@@ -32,9 +30,10 @@
   },
   "homepage": "https://github.com/nicolasdao/webfunc#readme",
   "dependencies": {
+    "colors": "^1.1.2",
+    "express": "^4.16.2",
     "http-errors": "^1.6.1",
-    "firebase-admin": "~4.2.1",
-    "firebase-functions": "^0.5.7"
+    "serialize-javascript": "^1.4.0"
   },
   "devDependencies": {
     "chai": "^4.1.0",
