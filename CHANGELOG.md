@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.6.0-alpha.11"></a>
+# [0.6.0-alpha.11](https://github.com/nicolasdao/webfunc/compare/v0.6.0-alpha.10...v0.6.0-alpha.11) (2017-12-11)
+
+
+### Bug Fixes
+
+* Make sure the injected function name doesn't conflict with restricted function names ([4feb1eb](https://github.com/nicolasdao/webfunc/commit/4feb1eb))
+
+
+
 <a name="0.6.0-alpha.10"></a>
 # [0.6.0-alpha.10](https://github.com/nicolasdao/webfunc/compare/v0.6.0-alpha.9...v0.6.0-alpha.10) (2017-12-11)
 
