@@ -219,10 +219,10 @@ const listen = (functionName, port) => {
 			: `Ready to receive traffic on ${`http://localhost:${port}`.bold.italic}`.cyan
 		const secondMsg = notLocal ? '' : 'Press Ctrl+C to stop the server'.cyan
 		return `
-				const express = require('express')
-				const server = express()
-				server.all('*', ${functionName})
-				server.listen(${port}, () => { console.log("${startMessage}"); ${secondMsg ? `console.log("${secondMsg}")` : ''}})
+				const __express__ = require('express')
+				const __server__ = __express__()
+				__server__.all('*', ${functionName})
+				__server__.listen(${port}, () => { console.log("${startMessage}"); ${secondMsg ? `console.log("${secondMsg}")` : ''}})
 				`
 	}
 	case 'gcp':
