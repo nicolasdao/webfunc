@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.6.0-alpha.9"></a>
+# [0.6.0-alpha.9](https://github.com/nicolasdao/webfunc/compare/v0.6.0-alpha.8...v0.6.0-alpha.9) (2017-12-11)
+
+
+### Bug Fixes
+
+* Add support for previous version of express that do not support res.status. res.send and res.set ([58a0fa0](https://github.com/nicolasdao/webfunc/commit/58a0fa0))
+
+
+### Features
+
+* Make Zeit now the default way to deploy + add new method 'serveHttpUniversal' ([cda11ae](https://github.com/nicolasdao/webfunc/commit/cda11ae))
+
+
+
 <a name="0.6.0-alpha.8"></a>
 # [0.6.0-alpha.8](https://github.com/nicolasdao/webfunc/compare/v0.6.0-alpha.7...v0.6.0-alpha.8) (2017-11-06)
 
