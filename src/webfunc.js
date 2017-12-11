@@ -196,18 +196,8 @@ const serveHttp = (arg1, arg2, arg3) => {
 }
 
 const _supportedHostings = { 'now': true, 'sh': true, 'localhost': true, 'express': true, 'gcp': true, 'aws': true }
-const serveHttpUniversal = (arg1, arg2, arg3) => {
-	const appConfigFile = getAppConfig() || {}
-	const appConfigArg = arg3 || {}
-	let _appconfig = null
-	const typeOfArg1 = typeof(arg1 || undefined)
-	
-	if (arg1) { 
-		if (typeOfArg1 == 'string') 
-			_appconfig = Object.assign(appConfigFile, appConfigArg)
-		else 
-			_appconfig = Object.assign(appConfigFile, arg2 || {})
-	}
+const listen = (functionName, port) => {
+	const _appconfig = getAppConfig() || {}
 
 	const envName = !_appconfig ? 'default' : ((_appconfig.env || {}).active || 'default')
 	const env = ((_appconfig || {}).env || {})[envName] || {}
@@ -221,7 +211,8 @@ const serveHttpUniversal = (arg1, arg2, arg3) => {
 	case 'express': {
 		const expressConfig = ((_appconfig || {}).localhost || {})
 		const explicitPort = (expressConfig.port || getProcessEnv().PORT) * 1
-		const port = explicitPort || 3000
+		if (!port)
+			port = explicitPort || 3000
 		const notLocal = hostingType != 'localhost'
 		const startMessage = notLocal
 			? `Ready to receive traffic${explicitPort ? ` on port ${explicitPort}` : ''}`
@@ -230,12 +221,12 @@ const serveHttpUniversal = (arg1, arg2, arg3) => {
 		return `
 				const express = require('express')
 				const server = express()
-				server.all('*', serveHttp(${serialize(arg1)}, ${serialize(arg2)}, ${serialize(arg3)}))
+				server.all('*', ${functionName})
 				server.listen(${port}, () => { console.log("${startMessage}"); ${secondMsg ? `console.log("${secondMsg}")` : ''}})
 				`
 	}
 	case 'gcp':
-		return `exports.handler = serveHttp(${serialize(arg1)}, ${serialize(arg2)}, ${serialize(arg3)})`
+		return `exports.handler = ${functionName}`
 	}
 }
 
@@ -307,7 +298,7 @@ module.exports = {
 	setResponseHeaders,
 	handleHttpRequest,
 	serveHttp,
-	serveHttpUniversal,
+	listen,
 	getAppConfig,
 	getActiveEnv,
 	app: app(),
