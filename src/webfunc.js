@@ -7,7 +7,6 @@
 */
 const path = require('path')
 const fs = require('fs')
-const serialize = require('serialize-javascript')
 const { getRouteDetails, matchRoute } = require('./routing')
 const { app, HttpHandler } = require('./handler')
 require('colors')
