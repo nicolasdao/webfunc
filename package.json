@@ -1,6 +1,6 @@
 {
   "name": "webfunc",
-  "version": "0.6.0-alpha.11",
+  "version": "0.6.0-alpha.12",
   "description": "Lightweight HTTP handler for Google Cloud Functions. It supports CORS and also assists in initialization of web app projects hosted on Google Cloud Functions.",
   "contributors": [
     "Nicolas Dao <nic@neap.co> (https://neap.co/)"

@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.6.0-alpha.12"></a>
+# [0.6.0-alpha.12](https://github.com/nicolasdao/webfunc/compare/v0.6.0-alpha.11...v0.6.0-alpha.12) (2017-12-12)
+
+
+### Bug Fixes
+
+* Replace routing with the express standard ([f411e26](https://github.com/nicolasdao/webfunc/commit/f411e26))
+
+
+
 <a name="0.6.0-alpha.11"></a>
 # [0.6.0-alpha.11](https://github.com/nicolasdao/webfunc/compare/v0.6.0-alpha.10...v0.6.0-alpha.11) (2017-12-11)
 
