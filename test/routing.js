@@ -13,7 +13,9 @@ describe('routing', () =>
 	describe('#getRouteDetails', () => 
 		it(`Should support the express standard for routing variables, i.e. support for ':'.`, () => {
 			/*eslint-enable */
-			const route = getRouteDetails('users/:username/account/:id')
+			const routes = getRouteDetails('users/:username/account/:id')
+			assert.equal(routes.length, 1)
+			const route = routes[0]
 			assert.equal(route.name, '/users/:username/account/:id/')
 			assert.isOk(route.params)
 			assert.equal(route.params.length, 2)
@@ -26,12 +28,12 @@ describe('routing', () =>
 	describe('#matchRoute', () => 
 		it(`Should analyse a route and extract details from it.`, () => {
 			/*eslint-enable */
-			let routeDetails = getRouteDetails('users/:username/account/:id/(.*)')
-			let details = matchRoute('/users/nic/account/1/blabla', routeDetails)
+			const routes = getRouteDetails('users/:username/account/:id/(.*)')
+			let details = matchRoute('/users/nic/account/1/blabla', routes[0])
 			assert.isOk(details)
 			assert.isOk(details.parameters)
 			assert.equal(details.parameters.username, 'nic')
 			assert.equal(details.parameters.id, '1')
-			details = matchRoute('/user/nic/account/1/blabla', routeDetails)
+			details = matchRoute('/user/nic/account/1/blabla', routes[0])
 			assert.isOk(!details)
 		})))

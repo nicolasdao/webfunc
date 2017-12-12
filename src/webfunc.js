@@ -126,9 +126,11 @@ const handleHttpRequest = (req, res, appconfig) => Promise.resolve(appconfig || 
  * Returns a function (req, res) => ... that the Google Cloud Function expects.
  * 
  * @param  {String|Function|Array|Object} 	arg1 	Here what it means based on its type:
- *                                               	- String: Route path (e.g. '/users/{userId}/account')
+ *                                               	- String: Route path (e.g. '/users/:userId/account')
  *                                               	- Function: Callback function (req, res) => ... This gets executed after all the headers checks.
- *                                               	- Array: Array of endpoints (e.g. [app.get('/users', (req, res, params) => ...), app.post('/stories', (req, res, params) => ...)])
+ *                                               	- Array: 
+ *                                               		- Array of endpoints (e.g. [app.get('/users', (req, res, params) => ...), app.post('/stories', (req, res, params) => ...)])
+ *                                               		- Array of strings of routes (e.g. ['/users/:userId/account', '/users/:userId/portfolio'])
  *                                               	- Object: Endpoint (e.g. app.get('/users', (req, res, params) => ...))
  * @param  {Function|Object} 				arg2 	Here what it means based on its type:
  *                                     				- Function: Callback function (req, res) => ... This gets executed after all the headers checks.
@@ -140,40 +142,54 @@ const serveHttp = (arg1, arg2, arg3) => {
 	const appConfigFile = getAppConfig() || {}
 	const appConfigArg = arg3 || {}
 	let _appconfig = null
-	let route = null
+	let routes = null
 	let httpNextRequest = null
 	const typeOfArg1 = typeof(arg1 || undefined)
 	const typeOfArg2 = typeof(arg2 || undefined)
 	
 	if (arg1) { 
 		if (typeOfArg1 == 'string') {
-			route = getRouteDetails(arg1)
+			routes = getRouteDetails(arg1)
 			_appconfig = Object.assign(appConfigFile, appConfigArg)
 			if (typeOfArg2 == 'function')
 				httpNextRequest = arg2
 			else
-				throw new Error('Wrong argument exception. If the first argument of the \'serveHttp\' method is a route, then the second argument must be a function similar to (req, res, params) => ...')
+				throw new Error('Wrong argument exception. If the first argument of the \'serveHttp\' or \'serve\' method is a route, then the second argument must be a function similar to (req, res, params) => ...')
 		}
 		else {
 			_appconfig = Object.assign(appConfigFile, arg2 || {})
+			// 1. arg1 is a function (req, res) => ...
 			if (typeOfArg1 == 'function') 
 				httpNextRequest = arg1
-			else if (arg1.length != undefined)
-				return serveHttpEndpoints(arg1, _appconfig)
+			// 2. arg1 is an Array
+			else if (arg1.length != undefined && arg1.length > 0) {
+				// 2.1. arg1 is an array of routes
+				if (typeof(arg1[0]) == 'string') {
+					routes = getRouteDetails(arg1)
+					if (typeOfArg2 == 'function')
+						httpNextRequest = arg2
+					else
+						throw new Error('Wrong argument exception. If the first argument of the \'serveHttp\' or \'serve\' method is a route, then the second argument must be a function similar to (req, res, params) => ...')
+				}
+				// 2.2. arg1 is an array of endpoints
+				else
+					return serveHttpEndpoints(arg1, _appconfig)
+			}
+			// 3. arg1 is an endpoint object
 			else if (typeOfArg1 == 'object')
 				return serveHttpEndpoints([arg1], _appconfig)
 			else
-				throw new Error('Wrong argument exception. If the first argument of the \'serveHttp\' method is not a route, then it must either be a function similar to (req, res, params) => ... or an array of endpoints.')
+				throw new Error('Wrong argument exception. If the first argument of the \'serveHttp\' or \'serve\' method is not a route, then it must either be a function similar to (req, res, params) => ... or an array of endpoints.')
 		}
 	}
 	else
-		throw new Error('Wrong argument exception. The first argument of the \'serveHttp\' method must either be a route, a function similar to (req, res, params) => ... or an array of endpoints.')
+		throw new Error('Wrong argument exception. The first argument of the \'serveHttp\' or \'serve\' method must either be a route, a function similar to (req, res, params) => ... or an array of endpoints.')
 
 	const cloudFunction = (req, res) => {
 		let parameters = {}
-		if (route) {
+		if (routes) {
 			const httpEndpoint = ((req._parsedUrl || {}).pathname || '/').toLowerCase()
-			const r = matchRoute(httpEndpoint, route)
+			const r = (routes.map(route => matchRoute(httpEndpoint, route)).filter(route => route) || [])[0]
 			if (!r) {
 				return setResponseHeaders(res, _appconfig).then(res => {
 					res.status(404).send(`Endpoint '${httpEndpoint}' not found.`)
@@ -250,6 +266,8 @@ const getRequestParameters = req => {
 	return parameters
 }
 
+const getLongestRoute = (routes=[]) => routes.sort((a,b) => b.match.length - a.match.length)[0]
+
 /**
  * Returns a function (req, res) => ... that the Google Cloud Function expects.
  * 
@@ -268,22 +286,26 @@ const serveHttpEndpoints = (endpoints, appconfig) => {
 				const httpEndpoint = ((req._parsedUrl || {}).pathname || '/').toLowerCase()
 				const httpMethod = (req.method || '').toUpperCase()
 				const endpoint = httpEndpoint == '/' 
-					? endpoints.filter(e => e.route.name == '/' && (e.method == httpMethod || !e.method))[0]
-					: (endpoints.map(e => ({ endpoint: e, route: matchRoute(httpEndpoint, e.route) }))
-						.filter(e => e.route && (e.endpoint.method == httpMethod || !e.endpoint.method))
-						.sort((a, b) => b.route.match.length - a.route.match.length)[0] || {}).endpoint
+					? endpoints.filter(e => e.route.some(x => x.name == '/') && (e.method == httpMethod || !e.method))[0]
+					: (endpoints.map(e => ({ endpoint: e, route: e.route.map(r => matchRoute(httpEndpoint, r)).filter(r => r) }))
+						.filter(e => e.route.length > 0 && (e.endpoint.method == httpMethod || !e.endpoint.method))
+						.map(e => {
+							const winningRoute = getLongestRoute(e.route)
+							e.endpoint.winningRoute = winningRoute
+							return { endpoint: e.endpoint, winningRoute: winningRoute }
+						})
+						.sort((a, b) => b.winningRoute.match.length - a.winningRoute.match.length)[0] || {}).endpoint
 
 				if (!endpoint) 
 					return res.status(404).send(`Endpoint '${httpEndpoint}' for method ${httpMethod} not found.`)
-
+				
 				const next = endpoint.next || (() => Promise.resolve(null))
 				if (typeof(next) != 'function') 
 					return res.status(500).send(`Wrong argument exception. Endpoint '${httpEndpoint}' for method ${httpMethod} defines a 'next' argument that is not a function similar to '(req, res, params) => ...'.`) 
 
 				const parameters = getRequestParameters(req)
-				const requestParameters = matchRoute(httpEndpoint, endpoint.route).parameters
 
-				return next(req, res, Object.assign(parameters, requestParameters))
+				return next(req, res, Object.assign(parameters, endpoint.winningRoute.parameters))
 			}) 
 			: res)
 		.then(() => ({ req, res }))

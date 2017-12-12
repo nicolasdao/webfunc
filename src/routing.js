@@ -8,27 +8,29 @@
 const pathToRegexp = require('path-to-regexp')
 
 /**
+ * Converts one or many route string templates to a route detail objects with specific info about that route.
+ * From 'users/{username}/account/{id}' to { "name": "/users/{username}/account/{id}/", "params": [ "username", "id"], "regex": {} }
+ * 
+ * @param  {String|[String]} route 	Uri paths
+ * @return {[Object]}       		e.g. [{ "name": "/users/{username}/account/{id}/", "params": [ "username", "id"], "regex": {} }]
+ */
+const getRouteDetails = (route='') => (typeof(route) == 'string' ? [route] : route).map(r => _getRouteDetails(r)) 
+
+/**
  * Converts a route string template to a route detail object with specific info about that route.
  * From 'users/{username}/account/{id}' to { "name": "/users/{username}/account/{id}/", "params": [ "username", "id"], "regex": {} }
  * 
  * @param  {String} route Uri path
  * @return {Object}       e.g. { "name": "/users/{username}/account/{id}/", "params": [ "username", "id"], "regex": {} }
  */
-const getRouteDetails = route => {
+const _getRouteDetails = route => {
 	let wellFormattedRoute = (route.trim().match(/\/$/) ? route.trim() : route.trim() + '/')
 	wellFormattedRoute = wellFormattedRoute.match(/^\//) ? wellFormattedRoute : '/' + wellFormattedRoute
 
 	const keys = []
 	const rx = pathToRegexp(wellFormattedRoute, keys)
 	const variableNames = keys.map(x => x.name)
-
-	// const variables = wellFormattedRoute.match(/{(.*?)}/g) || []
-	// variables.push(...(wellFormattedRoute.match(/:(.*?)\//g) || [])) // add support for standard express routing convention
-	// const variableNames = variables.map(x => x.replace(/^{|:/, '').replace(/}|\/$/, ''))
-
-	// const routeRegex = variables.reduce((a, v) => a.replace(v, '(.*?)'), wellFormattedRoute).toLowerCase()
-	// const rx = new RegExp(routeRegex)
-
+	
 	return {
 		name: wellFormattedRoute,
 		params: variableNames,

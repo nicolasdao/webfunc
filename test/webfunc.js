@@ -914,9 +914,9 @@ describe('webfunc', () =>
 				})
 			]
 
-			assert.throws(() => serveHttp('/users/:username', endpoints, appconfig), Error, 'Wrong argument exception. If the first argument of the \'serveHttp\' method is a route, then the second argument must be a function similar to (req, res, params) => ...')
-			assert.throws(() => serveHttp('/users/:username', appconfig), Error, 'Wrong argument exception. If the first argument of the \'serveHttp\' method is a route, then the second argument must be a function similar to (req, res, params) => ...')
-			assert.throws(() => serveHttp(), Error, 'Wrong argument exception. The first argument of the \'serveHttp\' method must either be a route, a function similar to (req, res, params) => ... or an array of endpoints.')
+			assert.throws(() => serveHttp('/users/:username', endpoints, appconfig), Error, 'Wrong argument exception. If the first argument of the \'serveHttp\' or \'serve\' method is a route, then the second argument must be a function similar to (req, res, params) => ...')
+			assert.throws(() => serveHttp('/users/:username', appconfig), Error, 'Wrong argument exception. If the first argument of the \'serveHttp\' or \'serve\' method is a route, then the second argument must be a function similar to (req, res, params) => ...')
+			assert.throws(() => serveHttp(), Error, 'Wrong argument exception. The first argument of the \'serveHttp\' or \'serve\' method must either be a route, a function similar to (req, res, params) => ... or an array of endpoints.')
 		})))
 
 /*eslint-disable */
@@ -1347,6 +1347,71 @@ describe('webfunc', () =>
 			return Promise.all([result_01, result_02])
 		})))
 
+/*eslint-disable */
+describe('webfunc', () => 
+	describe('#serveHttp: 21', () => 
+		it(`Should support collection of routes for a single response type.`, () => {
+			/*eslint-enable */
+			const req_01 = httpMocks.createRequest({
+				method: 'GET',
+				headers: {
+					origin: 'http://localhost:8080',
+					referer: 'http://localhost:8080'
+				},
+				_parsedUrl: {
+					pathname: '/users/1'
+				}
+			})
+			const res_01 = httpMocks.createResponse()
+
+			const req_02 = httpMocks.createRequest({
+				method: 'GET',
+				headers: {
+					origin: 'http://localhost:8080',
+					referer: 'http://localhost:8080'
+				},
+				_parsedUrl: {
+					pathname: '/companies/2'
+				}
+			})
+			const res_02 = httpMocks.createResponse()
+
+			const appconfig = {
+				headers: {
+					'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS, POST',
+					'Access-Control-Allow-Headers': 'Authorization, Content-Type, Origin',
+					'Access-Control-Allow-Origin': 'http://boris.com, http://localhost:8080',
+					'Access-Control-Max-Age': '1296000'
+				}
+			}
+
+			const endpoints = [
+				app.get(['/users/:userId', '/companies/:companyId'], (req, res, params) => { res.status(200).send(`Hello No. ${params.userId || params.companyId}`); return res })
+			]
+
+			const fn = serveHttp(endpoints, appconfig)
+
+			const result_01 = fn(req_01, res_01).then(() => {
+				assert.equal(res_01._getData(),'Hello No. 1')
+				const headers = res_01._getHeaders()
+				assert.isOk(headers)
+				assert.equal(headers['Access-Control-Allow-Methods'], 'GET, HEAD, OPTIONS, POST')
+				assert.equal(headers['Access-Control-Allow-Headers'], 'Authorization, Content-Type, Origin')
+				assert.equal(headers['Access-Control-Allow-Origin'], 'http://boris.com, http://localhost:8080')
+				assert.equal(headers['Access-Control-Max-Age'], '1296000')
+			})
+			const result_02 = fn(req_02, res_02).then(() => {
+				assert.equal(res_02._getData(),'Hello No. 2')
+				const headers = res_02._getHeaders()
+				assert.isOk(headers)
+				assert.equal(headers['Access-Control-Allow-Methods'], 'GET, HEAD, OPTIONS, POST')
+				assert.equal(headers['Access-Control-Allow-Headers'], 'Authorization, Content-Type, Origin')
+				assert.equal(headers['Access-Control-Allow-Origin'], 'http://boris.com, http://localhost:8080')
+				assert.equal(headers['Access-Control-Max-Age'], '1296000')
+			})
+
+			return Promise.all([result_01, result_02])
+		})))
 
 
 
