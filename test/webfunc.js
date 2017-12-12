@@ -73,7 +73,7 @@ describe('webfunc', () =>
 			}))
 
 			assert.isOk(app.resolve({
-				path: '/users/{username}/account/{accountId}',
+				path: '/users/:username/account/:accountId',
 				method: null,
 				/*eslint-disable */
 				next: (req, res, params) => { return res },
@@ -82,7 +82,7 @@ describe('webfunc', () =>
 			}), 'Should create an object.')
 
 			assert.throw(() => app.resolve({
-				path: '/users/{username}/account/{accountId}',
+				path: '/users/:username/account/:accountId',
 				method: null,
 				/*eslint-disable */
 				next: (req, res, params) => { return res },
@@ -787,7 +787,7 @@ describe('webfunc', () =>
 				}
 			}
 
-			const fn = serveHttp('/Users/{username}', (req, res, params) => res.status(200).send(`Hello ${params.username}${params.lastname ? ` ${params.lastname}` : ''}`), appconfig)
+			const fn = serveHttp('/Users/:username', (req, res, params) => res.status(200).send(`Hello ${params.username}${params.lastname ? ` ${params.lastname}` : ''}`), appconfig)
 
 			const result_01 = fn(req_01, res_01).then(() => {
 				assert.equal(res_01._getData(),'Hello nicolas')
@@ -855,11 +855,11 @@ describe('webfunc', () =>
 			}
 
 			const endpoints = [
-				app.get('/users/{username}/account/{accountId}', (req, res, params) => { 
+				app.get('/users/:username/account/:accountId', (req, res, params) => { 
 					res.status(200).send(`Hello ${params.username} (account: ${params.accountId})`)
 					return res 
 				}),
-				app.get('/company/{name}', (req, res, params) => { 
+				app.get('/company/:name', (req, res, params) => { 
 					res.status(200).send(`Hello ${params.name} (Hello: ${params.hello})`)
 					return res 
 				})
@@ -904,18 +904,18 @@ describe('webfunc', () =>
 			}
 
 			const endpoints = [
-				app.get('/users/{username}/account/{accountId}', (req, res, params) => { 
+				app.get('/users/:username/account/:accountId', (req, res, params) => { 
 					res.status(200).send(`Hello ${params.username} (account: ${params.accountId})`)
 					return res 
 				}),
-				app.get('/company/{name}', (req, res, params) => { 
+				app.get('/company/:name', (req, res, params) => { 
 					res.status(200).send(`Hello ${params.name} (Hello: ${params.hello})`)
 					return res 
 				})
 			]
 
-			assert.throws(() => serveHttp('/users/{username}', endpoints, appconfig), Error, 'Wrong argument exception. If the first argument of the \'serveHttp\' method is a route, then the second argument must be a function similar to (req, res, params) => ...')
-			assert.throws(() => serveHttp('/users/{username}', appconfig), Error, 'Wrong argument exception. If the first argument of the \'serveHttp\' method is a route, then the second argument must be a function similar to (req, res, params) => ...')
+			assert.throws(() => serveHttp('/users/:username', endpoints, appconfig), Error, 'Wrong argument exception. If the first argument of the \'serveHttp\' method is a route, then the second argument must be a function similar to (req, res, params) => ...')
+			assert.throws(() => serveHttp('/users/:username', appconfig), Error, 'Wrong argument exception. If the first argument of the \'serveHttp\' method is a route, then the second argument must be a function similar to (req, res, params) => ...')
 			assert.throws(() => serveHttp(), Error, 'Wrong argument exception. The first argument of the \'serveHttp\' method must either be a route, a function similar to (req, res, params) => ... or an array of endpoints.')
 		})))
 
@@ -958,7 +958,7 @@ describe('webfunc', () =>
 			}
 
 			const endpoints = [
-				app.any('/users/{username}/account/{accountId}', (req, res, params) => { 
+				app.any('/users/:username/account/:accountId', (req, res, params) => { 
 					res.status(200).send(`Hello ${params.username} (account: ${params.accountId})`)
 					return res 
 				})
@@ -1028,7 +1028,7 @@ describe('webfunc', () =>
 
 			const endpoints = [
 				app.resolve({
-					path: '/users/{username}/account/{accountId}',
+					path: '/users/:username/account/:accountId',
 					method: null,
 					next: (req, res, params) => { 
 						res.status(200).send(`Hello ${params.username} (account: ${params.accountId})`)
@@ -1145,7 +1145,7 @@ describe('webfunc', () =>
 
 			const endpoints = [
 				app.resolve({
-					path: '/users/{username}/account/{accountId}',
+					path: '/users/:username/account/:accountId',
 					method: null,
 					/*eslint-disable */
 					next: (req, res, params) => { return res },
@@ -1153,7 +1153,7 @@ describe('webfunc', () =>
 					handlerId: 'testHandler'
 				}),
 				app.resolve({
-					path: '/users/{username}/byebye/{accountId}',
+					path: '/users/:username/byebye/:accountId',
 					method: null,
 					/*eslint-disable */
 					next: (req, res, params) => { return res },
@@ -1255,7 +1255,7 @@ describe('webfunc', () =>
 
 			const endpoints = [
 				app.resolve({
-					path: '/users/{username}/account/{accountId}',
+					path: '/users/:username/account/:accountId',
 					method: null,
 					/*eslint-disable */
 					next: (req, res, params) => { return res },
@@ -1320,7 +1320,7 @@ describe('webfunc', () =>
 			}
 
 			const endpoints = [
-				app.get('/', (req, res) => { res.status(200).send('Hello User'); return res })
+				app.get('/(.*)', (req, res) => { res.status(200).send('Hello User'); return res })
 			]
 
 			const fn = serveHttp(endpoints, appconfig)

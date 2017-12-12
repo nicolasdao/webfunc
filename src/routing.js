@@ -5,6 +5,7 @@
  * This source code is licensed under the BSD-style license found in the
  * LICENSE file in the root directory of this source tree.
 */
+const pathToRegexp = require('path-to-regexp')
 
 /**
  * Converts a route string template to a route detail object with specific info about that route.
@@ -17,10 +18,16 @@ const getRouteDetails = route => {
 	let wellFormattedRoute = (route.trim().match(/\/$/) ? route.trim() : route.trim() + '/')
 	wellFormattedRoute = wellFormattedRoute.match(/^\//) ? wellFormattedRoute : '/' + wellFormattedRoute
 
-	const variables = wellFormattedRoute.match(/{(.*?)}/g) || []
-	const variableNames = variables.map(x => x.replace(/^{/, '').replace(/}$/, ''))
-	const routeRegex = variables.reduce((a, v) => a.replace(v, '(.*?)'), wellFormattedRoute).toLowerCase()
-	const rx = new RegExp(routeRegex)
+	const keys = []
+	const rx = pathToRegexp(wellFormattedRoute, keys)
+	const variableNames = keys.map(x => x.name)
+
+	// const variables = wellFormattedRoute.match(/{(.*?)}/g) || []
+	// variables.push(...(wellFormattedRoute.match(/:(.*?)\//g) || [])) // add support for standard express routing convention
+	// const variableNames = variables.map(x => x.replace(/^{|:/, '').replace(/}|\/$/, ''))
+
+	// const routeRegex = variables.reduce((a, v) => a.replace(v, '(.*?)'), wellFormattedRoute).toLowerCase()
+	// const rx = new RegExp(routeRegex)
 
 	return {
 		name: wellFormattedRoute,
