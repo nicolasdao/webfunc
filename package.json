@@ -9,7 +9,8 @@
   "scripts": {
     "test": "mocha",
     "eslint": "eslint src/ test/ --fix",
-    "release": "standard-version --prerelease alpha"
+    "release": "standard-version --prerelease alpha",
+    "release:minor": "standard-version --release-as minor"
   },
   "repository": {
     "type": "git",
