@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.6.0"></a>
+# [0.6.0](https://github.com/nicolasdao/webfunc/compare/v0.6.0-alpha.12...v0.6.0) (2017-12-12)
+
+
+### Bug Fixes
+
+* Remove useless dependencies ([9d91736](https://github.com/nicolasdao/webfunc/commit/9d91736))
+
+
+### Features
+
+* Add release minor in the scripts ([4f7a364](https://github.com/nicolasdao/webfunc/commit/4f7a364))
+
+
+
 <a name="0.6.0-alpha.12"></a>
 # [0.6.0-alpha.12](https://github.com/nicolasdao/webfunc/compare/v0.6.0-alpha.11...v0.6.0-alpha.12) (2017-12-12)
 
