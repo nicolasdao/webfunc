@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.8.0-alpha.0"></a>
+# [0.8.0-alpha.0](https://github.com/nicolasdao/webfunc/compare/v0.7.1-alpha.0...v0.8.0-alpha.0) (2017-12-12)
+
+
+### Bug Fixes
+
+* Clean code to comply to latest express convention to throw error + add new 'serve' api which is just the same as 'serveHttp'. We did that to make the API more agnostic to http requests ([da4a632](https://github.com/nicolasdao/webfunc/commit/da4a632))
+
+
+### Features
+
+* Add support for multiple route for same type of response ([1395c88](https://github.com/nicolasdao/webfunc/commit/1395c88))
+
+
+
 <a name="0.7.1-alpha.0"></a>
 ## [0.7.1-alpha.0](https://github.com/nicolasdao/webfunc/compare/v0.7.0...v0.7.1-alpha.0) (2017-12-12)
 
