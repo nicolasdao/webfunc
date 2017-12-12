@@ -64,7 +64,7 @@ const app = () => {
 		use: httpHandler => {
 			if (!httpHandler)
 				throw new Error('Missing required argument. The \'httpHandler\' argument must be specified in the \'use\' method.')
-			if (!(httpHandler instanceof HttpHandler))
+			if (typeof(httpHandler.getNextHandler) != 'function' || typeof(httpHandler.process) != 'function')
 				throw new Error('Wrong argument exception. Object \'httpHandler\' must be an instance of \'HttpHandler\'.')
 			
 			httpHandlers.push(httpHandler)
