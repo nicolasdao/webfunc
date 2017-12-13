@@ -286,7 +286,8 @@ const serveHttpEndpoints = (endpoints, appconfig) => {
 				const httpEndpoint = ((req._parsedUrl || {}).pathname || '/').toLowerCase()
 				const httpMethod = (req.method || '').toUpperCase()
 				const endpoint = httpEndpoint == '/' 
-					? endpoints.filter(e => e.route.some(x => x.name == '/') && (e.method == httpMethod || !e.method))[0]
+					? endpoints.filter(e => e.route.some(x => x.name == '/') && (e.method == httpMethod || !e.method))
+						.map(e => ({ route: e.route, winningRoute: e.route.filter(x => x.name == '/')[0], next: e.next, method: e.method }))[0]
 					: (endpoints.map(e => ({ endpoint: e, route: e.route.map(r => matchRoute(httpEndpoint, r)).filter(r => r) }))
 						.filter(e => e.route.length > 0 && (e.endpoint.method == httpMethod || !e.endpoint.method))
 						.map(e => {
