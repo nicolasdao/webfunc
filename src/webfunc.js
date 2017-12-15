@@ -122,6 +122,30 @@ const handleHttpRequest = (req, res, appconfig) => Promise.resolve(appconfig || 
 	})
 	.then(() => ({ req, res }))
 
+const getPreProcessFn = ({ preProcess }) => {
+	const fn = preProcess || (() => null)
+	return (req, res, ctx) => {
+		try {
+			return Promise.resolve(fn(req, res, ctx))
+		}
+		catch(err) {
+			return Promise.resolve(null).then(() => { throw err }) 
+		}
+	}
+}
+
+const getPostProcessFn = ({ postProcess }) => {
+	const fn = postProcess || (() => null)
+	return (req, res, ctx) => {
+		try {
+			return Promise.resolve(fn(req, res, ctx))
+		}
+		catch(err) {
+			return Promise.resolve(null).then(() => { throw err }) 
+		}
+	}
+}
+
 /**
  * Returns a function (req, res) => ... that the Google Cloud Function expects.
  * 
@@ -185,26 +209,87 @@ const serveHttp = (arg1, arg2, arg3) => {
 	else
 		throw new Error('Wrong argument exception. The first argument of the \'serveHttp\' or \'serve\' method must either be a route, a function similar to (req, res, params) => ... or an array of endpoints.')
 
-	const cloudFunction = (req, res) => {
-		let parameters = {}
-		if (routes) {
-			const httpEndpoint = ((req._parsedUrl || {}).pathname || '/').toLowerCase()
-			const r = (routes.map(route => matchRoute(httpEndpoint, route)).filter(route => route) || [])[0]
-			if (!r) {
-				return setResponseHeaders(res, _appconfig).then(res => {
-					res.status(404).send(`Endpoint '${httpEndpoint}' not found.`)
-					return { req, res }
-				})
-			}
-			else
-				parameters = r.parameters
-		}
+	const preProcess = getPreProcessFn(_appconfig || {})
+	const postProcess = getPostProcessFn(_appconfig || {})
 
-		return handleHttpRequest(req, res, _appconfig)
-			.then(() => !res.headersSent 
-				? setResponseHeaders(res, _appconfig).then(res => httpNextRequest(req, res, Object.assign(parameters, getRequestParameters(req)))) 
-				: res)
-			.then(() => ({ req, res }))
+	const cloudFunction = (req, res) => {
+		const start = Date.now()
+		req.__transactionId = Date.now()
+		// 1. Pre process request
+		return preProcess(req, res)
+		// 2. Capture pre processing errors
+			.catch(err => {
+				console.log('dewdewdwedewdewdwedewdewdwededdewd')
+				try {
+					return setResponseHeaders(res, _appconfig).then(res => {
+						console.log('GETTINNG THEEERRR')
+						res.status(500).send(`Internal Server Error - Pre Processing error: ${err.message}`)
+						return { req, res, __err: err }
+					})
+				}
+				catch (err) {
+					console.log('FUCKKKKKKKKKKKKK')
+					return { req, res, __err: err }
+				}
+			})
+		// 3. Process request
+			.then((ctx={}) => {
+				if (ctx && ctx.__err)
+					return { req, res, __err: ctx.__err }
+				else {
+					let parameters = {}
+					if (routes) {
+						const httpEndpoint = ((req._parsedUrl || {}).pathname || '/').toLowerCase()
+						const r = (routes.map(route => matchRoute(httpEndpoint, route)).filter(route => route) || [])[0]
+						if (!r) {
+							return setResponseHeaders(res, _appconfig).then(res => {
+								res.status(404).send(`Endpoint '${httpEndpoint}' not found.`)
+								return { req, res, ctx }
+							})
+						}
+						else
+							parameters = r.parameters
+					}
+
+					return handleHttpRequest(req, res, _appconfig)
+						.then(() => !res.headersSent 
+							? setResponseHeaders(res, _appconfig).then(res => httpNextRequest(req, res, Object.assign(parameters, getRequestParameters(req)))) 
+							: res)
+						.then(() => ({ req, res, ctx }))
+				}
+			})
+		// 4. Capture processing errors
+			.catch(err => {
+				try {
+					return setResponseHeaders(res, _appconfig).then(res => {
+						res.status(500).send(`Internal Server Error: ${err.message}`)
+						return { req, res, __err: err }
+					})
+				}
+				catch (err) {
+					return { req, res, __err: err }
+				}
+			})
+		// 5. Post processing 
+			.then(({ req, res, ctx }) => {
+				if (!ctx)
+					ctx = {}
+				ctx.__ellapsedMillis = Date.now() - start
+				return postProcess(req, res, ctx)
+				// 6. Capture post processing errors
+					.catch(err => {
+						try {
+							return setResponseHeaders(res, _appconfig).then(res => {
+								res.status(500).send(`Internal Server Error - Post Processing error: ${err.message}`)
+								return { req, res }
+							})
+						}
+						catch (err) {
+							return { req, res }
+						}
+					})
+					.then(() => ({ req, res }))
+			})
 	}
 		
 	return cloudFunction
@@ -280,36 +365,96 @@ const serveHttpEndpoints = (endpoints, appconfig) => {
 		throw new Error('No endpoints have been defined.')
 
 	const _appconfig = Object.assign(getAppConfig() || {}, appconfig || {})
-	const cloudFunction = (req, res) => handleHttpRequest(req, res, _appconfig)
-		.then(() => !res.headersSent 
-			? setResponseHeaders(res, _appconfig).then(res => {
-				const httpEndpoint = ((req._parsedUrl || {}).pathname || '/').toLowerCase()
-				const httpMethod = (req.method || '').toUpperCase()
-				const endpoint = httpEndpoint == '/' 
-					? endpoints.filter(e => e.route.some(x => x.name == '/') && (e.method == httpMethod || !e.method))
-						.map(e => ({ route: e.route, winningRoute: e.route.filter(x => x.name == '/')[0], next: e.next, method: e.method }))[0]
-					: (endpoints.map(e => ({ endpoint: e, route: e.route.map(r => matchRoute(httpEndpoint, r)).filter(r => r) }))
-						.filter(e => e.route.length > 0 && (e.endpoint.method == httpMethod || !e.endpoint.method))
-						.map(e => {
-							const winningRoute = getLongestRoute(e.route)
-							e.endpoint.winningRoute = winningRoute
-							return { endpoint: e.endpoint, winningRoute: winningRoute }
-						})
-						.sort((a, b) => b.winningRoute.match.length - a.winningRoute.match.length)[0] || {}).endpoint
 
-				if (!endpoint) 
-					return res.status(404).send(`Endpoint '${httpEndpoint}' for method ${httpMethod} not found.`)
-				
-				const next = endpoint.next || (() => Promise.resolve(null))
-				if (typeof(next) != 'function') 
-					return res.status(500).send(`Wrong argument exception. Endpoint '${httpEndpoint}' for method ${httpMethod} defines a 'next' argument that is not a function similar to '(req, res, params) => ...'.`) 
+	const preProcess = getPreProcessFn(_appconfig || {})
+	const postProcess = getPostProcessFn(_appconfig || {})
 
-				const parameters = getRequestParameters(req)
+	const cloudFunction = (req, res) => {
+		const start = Date.now()
+		req.__transactionId = Date.now()
+		// 1. Pre process request
+		return preProcess(req, res)
+		// 2. Capture pre processing errors
+			.catch(err => {
+				try {
+					return setResponseHeaders(res, _appconfig).then(res => {
+						res.status(500).send(`Internal Server Error - Pre Processing error: ${err.message}`)
+						return { req, res, __err: err }
+					})
+				}
+				catch (err) {
+					return { req, res, __err: err }
+				}
+			})
+		// 3. Process request
+			.then((ctx={}) => {
+				if (ctx && ctx.__err)
+					return { req, res, __err: ctx.__err }
+				else
+					return handleHttpRequest(req, res, _appconfig)
+						.then(() => !res.headersSent 
+							? setResponseHeaders(res, _appconfig).then(res => {
+								const httpEndpoint = ((req._parsedUrl || {}).pathname || '/').toLowerCase()
+								const httpMethod = (req.method || '').toUpperCase()
+								const endpoint = httpEndpoint == '/' 
+									? endpoints.filter(e => e.route.some(x => x.name == '/') && (e.method == httpMethod || !e.method))
+										.map(e => ({ route: e.route, winningRoute: e.route.filter(x => x.name == '/')[0], next: e.next, method: e.method }))[0]
+									: (endpoints.map(e => ({ endpoint: e, route: e.route.map(r => matchRoute(httpEndpoint, r)).filter(r => r) }))
+										.filter(e => e.route.length > 0 && (e.endpoint.method == httpMethod || !e.endpoint.method))
+										.map(e => {
+											const winningRoute = getLongestRoute(e.route)
+											e.endpoint.winningRoute = winningRoute
+											return { endpoint: e.endpoint, winningRoute: winningRoute }
+										})
+										.sort((a, b) => b.winningRoute.match.length - a.winningRoute.match.length)[0] || {}).endpoint
 
-				return next(req, res, Object.assign(parameters, endpoint.winningRoute.parameters))
-			}) 
-			: res)
-		.then(() => ({ req, res }))
+								if (!endpoint) 
+									return res.status(404).send(`Endpoint '${httpEndpoint}' for method ${httpMethod} not found.`)
+						
+								const next = endpoint.next || (() => Promise.resolve(null))
+								if (typeof(next) != 'function') 
+									return res.status(500).send(`Wrong argument exception. Endpoint '${httpEndpoint}' for method ${httpMethod} defines a 'next' argument that is not a function similar to '(req, res, params) => ...'.`) 
+
+								const parameters = getRequestParameters(req)
+
+								return next(req, res, Object.assign(parameters, endpoint.winningRoute.parameters))
+							}) 
+							: res)
+						.then(() => ({ req, res, ctx }))
+			})
+		// 4. Capture processing errors
+			.catch(err => {
+				try {
+					return setResponseHeaders(res, _appconfig).then(res => {
+						res.status(500).send(`Internal Server Error: ${err.message}`)
+						return { req, res, __err: err }
+					})
+				}
+				catch (err) {
+					return { req, res, __err: err }
+				}
+			})
+		// 5. Post processing request
+			.then(({ req, res, ctx }) => {
+				if (!ctx)
+					ctx = {}
+				ctx.__ellapsedMillis = Date.now() - start
+				return postProcess(req, res, ctx)
+				// 6. Capture post processing errors
+					.catch(err => {
+						try {
+							return setResponseHeaders(res, _appconfig).then(res => {
+								res.status(500).send(`Internal Server Error - Post Processing error: ${err.message}`)
+								return { req, res }
+							})
+						}
+						catch (err) {
+							return { req, res }
+						}
+					})
+					.then(() => ({ req, res }))
+			})
+	}
 		
 	return cloudFunction
 }
