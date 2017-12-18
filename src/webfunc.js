@@ -37,8 +37,8 @@ const getAppConfig = memoize => {
 
 const getActiveEnv = memoize => {
 	const appconfig = getAppConfig(memoize)
-	const processWebFunc = getProcessEnv().WEBFUNC_ENV
-	const activeEnv = ((appconfig || {}).env || {}).active || processWebFunc
+	const processWebFunc = getProcessEnv().NODE_ENV
+	const activeEnv = ((appconfig || {}).env || {}).active || processWebFunc || 'default'
 	if (activeEnv) {
 		const env = Object.assign((appconfig.env[activeEnv] || {}), { _name: activeEnv })
 		return env 
@@ -303,7 +303,7 @@ const serveHttp = (arg1, arg2, arg3) => {
 const _supportedHostings = { 'now': true, 'sh': true, 'localhost': true, 'express': true, 'gcp': true, 'aws': true }
 const listen = (functionName, port) => {
 	const _appconfig = getAppConfig() || {}
-	
+
 	const env = getActiveEnv()
 	const hostingType = env.hostingType || 'localhost'
 	if (!_supportedHostings[hostingType.toLowerCase()])
