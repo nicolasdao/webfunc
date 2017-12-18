@@ -7,6 +7,7 @@
 */
 const path = require('path')
 const fs = require('fs')
+const shortid = require('shortid')
 const { getRouteDetails, matchRoute } = require('./routing')
 const { app, HttpHandler } = require('./handler')
 require('colors')
@@ -221,14 +222,13 @@ const serveHttp = (arg1, arg2, arg3) => {
 
 	const cloudFunction = (req, res) => {
 		const start = Date.now()
-		req.__transactionId = Date.now()
+		req.__transactionId = shortid.generate().replace(/-/g, 'r').replace(/_/g, '9')
 		// 1. Pre process request
 		return preProcess(req, res)
 		// 2. Capture pre processing errors
 			.catch(err => {
 				try {
 					return setResponseHeaders(res, _appconfig).then(res => {
-						console.log('GETTINNG THEEERRR')
 						res.status(500).send(`Internal Server Error - Pre Processing error: ${err.message}`)
 						return { req, res, __err: err }
 					})
@@ -375,7 +375,7 @@ const serveHttpEndpoints = (endpoints, appconfig) => {
 
 	const cloudFunction = (req, res) => {
 		const start = Date.now()
-		req.__transactionId = Date.now()
+		req.__transactionId = shortid.generate().replace(/-/g, 'r').replace(/_/g, '9')
 		// 1. Pre process request
 		return preProcess(req, res)
 		// 2. Capture pre processing errors

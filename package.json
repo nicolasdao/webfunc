@@ -34,7 +34,8 @@
     "colors": "^1.1.2",
     "express": "^4.16.2",
     "http-errors": "^1.6.1",
-    "path-to-regexp": "^2.1.0"
+    "path-to-regexp": "^2.1.0",
+    "shortid": "^2.2.8"
   },
   "devDependencies": {
     "chai": "^4.1.0",
