@@ -319,7 +319,7 @@ const listen = (functionName, port) => {
 			port = explicitPort || 3000
 		const notLocal = hostingType != 'localhost'
 		const startMessage = notLocal
-			? `Ready to receive traffic${explicitPort ? ` on port ${explicitPort}` : ''}`
+			? `Ready to receive traffic${!notLocal ? ` on port ${port}` : ''}`
 			: `Ready to receive traffic on ${`http://localhost:${port}`.bold.italic}`.cyan
 		const secondMsg = notLocal ? '' : 'Press Ctrl+C to stop the server'.cyan
 		return `
