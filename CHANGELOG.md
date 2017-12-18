@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.8.0-alpha.4"></a>
+# [0.8.0-alpha.4](https://github.com/nicolasdao/webfunc/compare/v0.8.0-alpha.3...v0.8.0-alpha.4) (2017-12-18)
+
+
+### Bug Fixes
+
+* Replace the use of the WEBFUNC_ENV with the more standard NODE_ENV env variable ([e828ce6](https://github.com/nicolasdao/webfunc/commit/e828ce6))
+
+
+
 <a name="0.8.0-alpha.3"></a>
 # [0.8.0-alpha.3](https://github.com/nicolasdao/webfunc/compare/v0.8.0-alpha.2...v0.8.0-alpha.3) (2017-12-18)
 
