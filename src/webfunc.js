@@ -15,6 +15,10 @@ require('colors')
 const cwdPath = f => path.join(process.cwd(), f)
 const getProcess = () => process
 const getProcessEnv = () => process.env || {}
+const addEnvToProcess = (key,value) => {
+	if (key)
+		process.env[key] = value
+}
 /*eslint-enable */
 
 let _appconfig = null
@@ -33,9 +37,12 @@ const getAppConfig = memoize => {
 
 const getActiveEnv = memoize => {
 	const appconfig = getAppConfig(memoize)
-	const activeEnv = ((appconfig || {}).env || {}).active
-	if (activeEnv) 
-		return Object.assign((appconfig.env[activeEnv] || {}), { _name: activeEnv })
+	const processWebFunc = getProcessEnv().WEBFUNC_ENV
+	const activeEnv = ((appconfig || {}).env || {}).active || processWebFunc
+	if (activeEnv) {
+		const env = Object.assign((appconfig.env[activeEnv] || {}), { _name: activeEnv })
+		return env 
+	}
 	else
 		return null
 }
@@ -219,7 +226,6 @@ const serveHttp = (arg1, arg2, arg3) => {
 		return preProcess(req, res)
 		// 2. Capture pre processing errors
 			.catch(err => {
-				console.log('dewdewdwedewdewdwedewdewdwededdewd')
 				try {
 					return setResponseHeaders(res, _appconfig).then(res => {
 						console.log('GETTINNG THEEERRR')
@@ -228,7 +234,6 @@ const serveHttp = (arg1, arg2, arg3) => {
 					})
 				}
 				catch (err) {
-					console.log('FUCKKKKKKKKKKKKK')
 					return { req, res, __err: err }
 				}
 			})
@@ -298,9 +303,8 @@ const serveHttp = (arg1, arg2, arg3) => {
 const _supportedHostings = { 'now': true, 'sh': true, 'localhost': true, 'express': true, 'gcp': true, 'aws': true }
 const listen = (functionName, port) => {
 	const _appconfig = getAppConfig() || {}
-
-	const envName = !_appconfig ? 'default' : ((_appconfig.env || {}).active || 'default')
-	const env = ((_appconfig || {}).env || {})[envName] || {}
+	
+	const env = getActiveEnv()
 	const hostingType = env.hostingType || 'localhost'
 	if (!_supportedHostings[hostingType.toLowerCase()])
 		throw new Error(`Unsupported hosting type '${hostingType}'`)
