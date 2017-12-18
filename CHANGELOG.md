@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.8.0-alpha.3"></a>
+# [0.8.0-alpha.3](https://github.com/nicolasdao/webfunc/compare/v0.8.0-alpha.2...v0.8.0-alpha.3) (2017-12-18)
+
+
+### Features
+
+* Add support for a WEBFUNC_ENV process variable that can control which environment is active ([95eee51](https://github.com/nicolasdao/webfunc/commit/95eee51))
+
+
+
 <a name="0.8.0-alpha.2"></a>
 # [0.8.0-alpha.2](https://github.com/nicolasdao/webfunc/compare/v0.8.0-alpha.1...v0.8.0-alpha.2) (2017-12-15)
 
