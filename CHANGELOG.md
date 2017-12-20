@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.8.0-alpha.9"></a>
+# [0.8.0-alpha.9](https://github.com/nicolasdao/webfunc/compare/v0.8.0-alpha.8...v0.8.0-alpha.9) (2017-12-20)
+
+
+### Bug Fixes
+
+* webfunc overrides existing environment variables in the process.env ([b61d3c0](https://github.com/nicolasdao/webfunc/commit/b61d3c0))
+
+
+
 <a name="0.8.0-alpha.8"></a>
 # [0.8.0-alpha.8](https://github.com/nicolasdao/webfunc/compare/v0.8.0-alpha.7...v0.8.0-alpha.8) (2017-12-20)
 
