@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.8.0-alpha.7"></a>
+# [0.8.0-alpha.7](https://github.com/nicolasdao/webfunc/compare/v0.8.0-alpha.6...v0.8.0-alpha.7) (2017-12-20)
+
+
+### Bug Fixes
+
+* Project without any 'now.json' are failing ([1f6354b](https://github.com/nicolasdao/webfunc/commit/1f6354b))
+
+
+
 <a name="0.8.0-alpha.6"></a>
 # [0.8.0-alpha.6](https://github.com/nicolasdao/webfunc/compare/v0.8.0-alpha.5...v0.8.0-alpha.6) (2017-12-18)
 
