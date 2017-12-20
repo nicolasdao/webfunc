@@ -22,6 +22,24 @@ const addEnvToProcess = (key,value) => {
 }
 /*eslint-enable */
 
+const setUpProcessVariables = () => {
+	try {
+		const pkg = require(cwdPath('package.json')) || {}
+		if (pkg.scripts && pkg.scripts.start)
+			pkg.scripts.start.split(' ')
+			.map(x => x.split('='))
+			.filter(x => x.length == 2)
+			.forEach(x => { process.env[x[0]] = x[1]})
+	}
+	catch(err) {
+		console.error(err.message)
+	}
+}
+// This guarentees that any environment variables defined in the package.json's start scripts get assigned even 
+// if the package.json's start script is not executed (which is the case with FaaS like Google Cloud Functions 
+// or AWS Lambda)
+setUpProcessVariables()
+
 let _appconfig = null
 const getAppConfig = memoize => {
 	const skipMemoization = memoize == undefined ? false : !memoize
