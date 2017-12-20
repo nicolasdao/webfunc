@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.8.0-alpha.8"></a>
+# [0.8.0-alpha.8](https://github.com/nicolasdao/webfunc/compare/v0.8.0-alpha.7...v0.8.0-alpha.8) (2017-12-20)
+
+
+### Features
+
+* Add FaaS support for environment variables defined withing the package.json start script ([aba223b](https://github.com/nicolasdao/webfunc/commit/aba223b))
+
+
+
 <a name="0.8.0-alpha.7"></a>
 # [0.8.0-alpha.7](https://github.com/nicolasdao/webfunc/compare/v0.8.0-alpha.6...v0.8.0-alpha.7) (2017-12-20)
 
