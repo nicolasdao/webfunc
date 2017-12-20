@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.8.0-alpha.10"></a>
+# [0.8.0-alpha.10](https://github.com/nicolasdao/webfunc/compare/v0.8.0-alpha.9...v0.8.0-alpha.10) (2017-12-20)
+
+
+### Bug Fixes
+
+* NODE_ENV is not being set properly in GCP ([87a0eb1](https://github.com/nicolasdao/webfunc/commit/87a0eb1))
+
+
+
 <a name="0.8.0-alpha.9"></a>
 # [0.8.0-alpha.9](https://github.com/nicolasdao/webfunc/compare/v0.8.0-alpha.8...v0.8.0-alpha.9) (2017-12-20)
 
