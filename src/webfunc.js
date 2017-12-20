@@ -27,9 +27,14 @@ const setUpProcessVariables = () => {
 		const pkg = require(cwdPath('package.json')) || {}
 		if (pkg.scripts && pkg.scripts.start)
 			pkg.scripts.start.split(' ')
-			.map(x => x.split('='))
-			.filter(x => x.length == 2)
-			.forEach(x => { process.env[x[0]] = x[1]})
+				.map(x => x.split('='))
+				.filter(x => x.length == 2)
+				.forEach(x => { 
+					/*eslint-disable */
+					if (!process.env[x[0]])
+						process.env[x[0]] = x[1]
+					/*eslint-enable */
+				})
 	}
 	catch(err) {
 		console.error(err.message)
