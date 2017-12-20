@@ -41,11 +41,11 @@ const getActiveEnv = memoize => {
 	const processWebFunc = getProcessEnv().NODE_ENV
 	const activeEnv = ((appconfig || {}).env || {}).active || processWebFunc || 'default'
 	if (activeEnv) {
-		const env = Object.assign((appconfig.env[activeEnv] || {}), { _name: activeEnv })
+		const env = Object.assign((((appconfig || {}).env || {})[activeEnv] || {}), { _name: activeEnv })
 		return env 
 	}
 	else
-		return null
+		return {}
 }
 
 let headersCollection = null
