@@ -25,16 +25,22 @@ const addEnvToProcess = (key,value) => {
 const setUpProcessVariables = () => {
 	try {
 		const pkg = require(cwdPath('package.json')) || {}
-		if (pkg.scripts && pkg.scripts.start)
+		if (pkg.scripts && pkg.scripts.start) 
 			pkg.scripts.start.split(' ')
 				.map(x => x.split('='))
 				.filter(x => x.length == 2)
 				.forEach(x => { 
 					/*eslint-disable */
-					if (!process.env[x[0]])
+					if (x[0] != 'NODE_ENV')
 						process.env[x[0]] = x[1]
+					else
+						process.env.WEBFUNC_ENV = x[1]						
 					/*eslint-enable */
 				})
+		/*eslint-disable */
+		if (!process.env.WEBFUNC_ENV && process.env.NODE_ENV)
+			process.env.WEBFUNC_ENV = process.env.NODE_ENV
+		/*eslint-enable */
 	}
 	catch(err) {
 		console.error(err.message)
