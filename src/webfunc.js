@@ -365,16 +365,17 @@ const listen = (functionName, port) => {
 }
 
 const getRequestParameters = req => {
-	const getBody = req.body ? Promise.resolve(req.body) : getRawBody(req)
+	const getBody = req.body ? Promise.resolve(req.body) : getRawBody(req, { encoding: true })
 	return getBody.then(body => {
+		console.log(typeof(body))
 		let bodyParameters = {}
 		if (body) {
-			const bodyType = typeof(req.body)
+			const bodyType = typeof(body)
 			if (bodyType == 'object')
-				bodyParameters = req.body
+				bodyParameters = body
 			else if (bodyType == 'string') {
 				try {
-					bodyParameters = JSON.parse(req.body)
+					bodyParameters = JSON.parse(body)
 				}
 				catch(err) {
 					bodyParameters = {}
