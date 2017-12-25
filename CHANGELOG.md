@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.8.0-alpha.12"></a>
+# [0.8.0-alpha.12](https://github.com/nicolasdao/webfunc/compare/v0.8.0-alpha.11...v0.8.0-alpha.12) (2017-12-25)
+
+
+### Bug Fixes
+
+* Cannot pass body in POST methods ([cf08437](https://github.com/nicolasdao/webfunc/commit/cf08437))
+
+
+
 <a name="0.8.0-alpha.11"></a>
 # [0.8.0-alpha.11](https://github.com/nicolasdao/webfunc/compare/v0.8.0-alpha.10...v0.8.0-alpha.11) (2017-12-25)
 
