@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.8.0-alpha.11"></a>
+# [0.8.0-alpha.11](https://github.com/nicolasdao/webfunc/compare/v0.8.0-alpha.10...v0.8.0-alpha.11) (2017-12-25)
+
+
+### Bug Fixes
+
+* Add support for body parsing for Body parsing does not work when hosted on an express environment ([a1a17ae](https://github.com/nicolasdao/webfunc/commit/a1a17ae))
+
+
+
 <a name="0.8.0-alpha.10"></a>
 # [0.8.0-alpha.10](https://github.com/nicolasdao/webfunc/compare/v0.8.0-alpha.9...v0.8.0-alpha.10) (2017-12-20)
 
