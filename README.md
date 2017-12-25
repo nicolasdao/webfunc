@@ -1,12 +1,26 @@
 <a href="https://neap.co" target="_blank"><img src="https://neap.co/img/neap_black_small_logo.png" alt="Neap Pty Ltd logo" title="Neap" align="right" height="50" width="120"/></a>
 
-# WebFunc - Lightweight Serverless Web Framework
+# WebFunc - Universal Serverless Web Framework
 [![NPM][1]][2] [![Tests][3]][4]
 
 [1]: https://img.shields.io/npm/v/webfunc.svg?style=flat
 [2]: https://www.npmjs.com/package/webfunc
 [3]: https://travis-ci.org/nicolasdao/webfunc.svg?branch=master
 [4]: https://travis-ci.org/nicolasdao/webfunc
+
+__*Wefunc*__ is a _universal_ web framework that uses the awesome [Zeit Now CLI](https://zeit.co/now) to manage deployments. Universal means write your code once with _webfunc_ and deploy it on any serverless platform:
+- [Zeit Now](https://zeit.co/now)
+- [Google Cloud Functions](https://cloud.google.com/functions/)
+- [AWS Lambda](https://aws.amazon.com/lambda/) (COMING SOON...)
+- [Azure Functions](https://azure.microsoft.com/en-us/services/functions/) (COMING SOON...)
+
+You can also run it locally without any other dependencies. Run `node index.js` and that's it. 
+
+Out-of-the-box features include:
+- [_Routing_](#how-to-use-it)
+- [_CORS_](#cors)
+- [_Environment Variables_](#adding-multiple-deployment-environments) 
+- 3rd party middleware.
 
 # Table of Contents
 
@@ -16,17 +30,76 @@
 > * [Authentication](#authentication) 
 > * [Make It Work With Express](#make-it-work-with-express) 
 
-Add CORS support and routing to Google Cloud Functions & Firebase Functions projects (AWS Lambdas coming soon).
-- [Routing](#how-to-use-it)
-- [CORS Support](#cors)
-- [Environment Variables](#adding-multiple-deployment-environments)
+# Intro
+
+
+
+_index.js:_
+
+```js
+const { listen, serve } = require('webfunc')
+
+const server = serve('/users/:username', (req, res, params) => res.status(200).send(`Hello env ${params.username}`))
+eval(listen('server', 4000))
+```  
+
+Add a __*start*__ script in your _package.json_
+```js
+  "scripts": {
+    "start": "node index.js"
+  }
+```
+
+_Deploy locally without any other dependencies_
+```
+npm start
+```
+
+_Deploy to Zeit Now_
+```
+now
+```
+
+_Deploy to Google Cloud Function_
+```
+now gcp
+```
+> For this to work you need to configure a __*now.json*__ file as well as update the _start_ script. More detail 
+
+
 
 # Install
 ```
 npm install webfunc --save
 ```
 
-# How To Use It
+# How To Use It - Show Me The Code
+## Creating A REST API
+### Single Endpoint Locally
+_index.js:_
+
+```js
+const { listen, serve } = require('webfunc')
+
+const server = serve('/users/:username', (req, res, params) => res.status(200).send(`Hello ${params.username}`))
+eval(listen('server', 4000))
+```  
+
+To run this code locally, simply run in your terminal:
+```
+node index.js
+```
+
+> To speed up your development, use [_hot reloading_](#easy-hot-reloading) as explained in the [Tips & Tricks](#tips-tricks) section below.
+
+### Multiple Endpoints Locally
+```js
+const { listen, serve, app } = require('webfunc')
+
+const server = serve('/users/:username', (req, res, params) => res.status(200).send(`Hello env ${params.username}`))
+eval(listen('server', 4000))
+``` 
+
 
 In its simplest form, a Google Cloud Functions project looks like this:
 ```js
@@ -281,6 +354,25 @@ If you do need to allow access to anybody, then do not allow requests to send co
 }
 ```
 If you do need to pass authentication token, you will have to pass it using a special header(e.g. Authorization), or pass it in the query string if you want to avoid preflight queries (preflight queries happens in cross-origin requests when special headers are being used). However, passing credentials in the query string are considered a bad practice. 
+
+# Tips & Tricks
+## Dev Lifecycle
+### Easy Hot Reloading
+While developing on your localhost, we recommend using hot reloading to help you automatically restart your node process after each change. [_node-dev_](https://github.com/fgnass/node-dev) is a lightweight development tools that watches the minimum amount of files in your project and automatically restart the node process each time a file has changed. 
+```
+npm install node-dev --save-dev
+```
+Change your __*start*__ script in your _package.json_ from `"start": "node index.js"` to:
+```js
+  "scripts": {
+    "start": "node-dev index.js"
+  }
+```
+Then simply start your server as follow:
+```
+npm start
+```
+
 
 # Contributing
 ```

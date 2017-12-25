@@ -1413,6 +1413,40 @@ describe('webfunc', () =>
 			return Promise.all([result_01, result_02])
 		})))
 
-
+/*eslint-disable */
+describe('webfunc', () => 
+	describe('#serveHttp: 22', () => 
+		it('Should capture the body of a POST request and interpret it as a JSON in the params argument.', () => {
+			/*eslint-enable */
+			const req = httpMocks.createRequest({
+				method: 'POST',
+				headers: {
+					origin: 'http://localhost:8080',
+					referer: 'http://localhost:8080'
+				},
+				body: {
+					username: 'nic',
+					password: '1234'
+				}
+			})
+			const res = httpMocks.createResponse()
+			const appconfig = {
+				headers: {
+					'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS, POST',
+					'Access-Control-Allow-Headers': 'Authorization, Content-Type, Origin',
+					'Access-Control-Allow-Origin': 'http://boris.com, http://localhost:8080',
+					'Access-Control-Max-Age': '1296000'
+				}
+			}
+			const fn = serveHttp((req, res, params) => {
+				res.status(200).send(`The secret password of ${params.username} is ${params.password}`)
+				return res
+			}, appconfig)
+			return fn(req, res).then(() => {
+				assert.isOk(req)
+				assert.equal(res.statusCode, 200)
+				assert.equal(res._getData(), 'The secret password of nic is 1234')
+			})
+		})))
 
 

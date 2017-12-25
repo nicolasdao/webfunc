@@ -8,6 +8,7 @@
 const path = require('path')
 const fs = require('fs')
 const shortid = require('shortid')
+const getRawBody = require('raw-body')
 const { getRouteDetails, matchRoute } = require('./routing')
 const { app, HttpHandler } = require('./handler')
 require('colors')
@@ -287,7 +288,7 @@ const serveHttp = (arg1, arg2, arg3) => {
 
 					return handleHttpRequest(req, res, _appconfig)
 						.then(() => !res.headersSent 
-							? setResponseHeaders(res, _appconfig).then(res => httpNextRequest(req, res, Object.assign(parameters, getRequestParameters(req)))) 
+							? setResponseHeaders(res, _appconfig).then(res => getRequestParameters(req).then(paramts => httpNextRequest(req, res, Object.assign(parameters, paramts)))) 
 							: res)
 						.then(() => ({ req, res, ctx }))
 				}
@@ -364,24 +365,28 @@ const listen = (functionName, port) => {
 }
 
 const getRequestParameters = req => {
-	let bodyParameters = {}
-	if (req.body) {
-		const bodyType = typeof(req.body)
-		if (bodyType == 'object')
-			bodyParameters = req.body
-		else if (bodyType == 'string') {
-			try {
-				bodyParameters = JSON.parse(req.body)
-			}
-			catch(err) {
-				bodyParameters = {}
-				console.log(err)
+	const getBody = req.body ? Promise.resolve(req.body) : getRawBody(req)
+	return getBody.then(body => {
+		let bodyParameters = {}
+		if (body) {
+			const bodyType = typeof(req.body)
+			if (bodyType == 'object')
+				bodyParameters = req.body
+			else if (bodyType == 'string') {
+				try {
+					bodyParameters = JSON.parse(req.body)
+				}
+				catch(err) {
+					bodyParameters = {}
+					console.log(err)
+				}
 			}
 		}
-	}
-	const parameters = Object.assign((bodyParameters || {}), req.query || {})
 
-	return parameters
+		const parameters = Object.assign((bodyParameters || {}), req.query || {})
+
+		return parameters
+	})
 }
 
 const getLongestRoute = (routes=[]) => routes.sort((a,b) => b.match.length - a.match.length)[0]
@@ -448,9 +453,8 @@ const serveHttpEndpoints = (endpoints, appconfig) => {
 								if (typeof(next) != 'function') 
 									return res.status(500).send(`Wrong argument exception. Endpoint '${httpEndpoint}' for method ${httpMethod} defines a 'next' argument that is not a function similar to '(req, res, params) => ...'.`) 
 
-								const parameters = getRequestParameters(req)
-
-								return next(req, res, Object.assign(parameters, endpoint.winningRoute.parameters))
+								const paramts = Object.assign({}, endpoint.winningRoute.parameters)
+								return getRequestParameters(req).then(parameters => next(req, res, Object.assign(parameters, paramts)))
 							}) 
 							: res)
 						.then(() => ({ req, res, ctx }))
