@@ -96,40 +96,26 @@ node index.js
 ```js
 const { listen, serve, app } = require('webfunc')
 
-const server = serve('/users/:username', (req, res, params) => res.status(200).send(`Hello env ${params.username}`))
+const server = serve(
+  [
+    // Create standard GET endpoints.
+    app.get('/users/:username', (req, res, params) => res.status(200).send(`Hello ${params.username}`)),
+    // Define multiple routes that trigger the same logic.
+    app.get(['/companies/:companyName', '/organizations/:orgName'], (req, res, params) => res.status(200).send(params.companyName ? `Hello company ${params.companyName}` : `Hello organization ${params.orgName}`)),
+    // Support for any standard http verbs (GET, POST, PUT, DELETE, HEAD, OPTIONS). In the example below, the payload is expected to be 
+    // similar to { "username": "Nicolas", password: "1234" }. More details about body parsing below.
+    app.post('/login', (req, res, params) => res.status(200).send(`Welcome ${params.username}`)),
+    // Create endpoints that accept any http verbs.
+    app.any('/', (req, res) => res.status(200).send('Welcome to this awesome API!'))
+  ])
 eval(listen('server', 4000))
 ``` 
 
+### CORS & Body Parsing Supported Out Of The Box
+Those 2 features being so common, we decided to include them. That means no need for middleware such as [CORS](https://github.com/expressjs/cors) or [body-parser](https://github.com/expressjs/body-parser). 
 
-In its simplest form, a Google Cloud Functions project looks like this:
-```js
-exports.yourapp = (req, res) => {
-  res.status(200).send('Hello World')
-}
-```
-
-Simply update it as follow:
-```js
-const { serveHttp } = require('webfunc')
-
-exports.yourapp = serveHttp((req, res) => {
-  res.status(200).send('Hello World')
-})
-```
-
-And if you want to add more routes:
-
-```js
-const { serveHttp, app } = require('webfunc')
-
-exports.yourapp = serveHttp([
-  app.get('/', (req, res) => res.status(200).send('Hello World')),
-  app.get('/users/{userId}', (req, res, params) => res.status(200).send(`Hello user ${params.userId}`)),
-  app.get('/users/{userId}/document/{docName}', (req, res, params) => res.status(200).send(`Hello user ${params.userId}. I like your document ${params.docName}`)),
-])
-```
-
-Easy isn't it!?
+#### Body Parsing & Query Parameters
+With webfunc, query parameters and the payload are treated equal. That means that they are all aggregated 
 
 To configure CORS, add a new _**appconfig.json**_ file and configure it as explained in the next section.
 
