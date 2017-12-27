@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.8.0-alpha.13"></a>
+# [0.8.0-alpha.13](https://github.com/nicolasdao/webfunc/compare/v0.8.0-alpha.12...v0.8.0-alpha.13) (2017-12-27)
+
+
+### Features
+
+* Add out of the box support for multipart and file upload ([dd9e919](https://github.com/nicolasdao/webfunc/commit/dd9e919))
+
+
+
 <a name="0.8.0-alpha.12"></a>
 # [0.8.0-alpha.12](https://github.com/nicolasdao/webfunc/compare/v0.8.0-alpha.11...v0.8.0-alpha.12) (2017-12-25)
 
