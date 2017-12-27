@@ -286,9 +286,11 @@ const serveHttp = (arg1, arg2, arg3) => {
 							parameters = r.parameters
 					}
 
+					const extractParams = _appconfig.extractParams == undefined || _appconfig.extractParams
+					const getParams = extractParams ? getRequestParameters(req) : Promise.resolve({})
 					return handleHttpRequest(req, res, _appconfig)
 						.then(() => !res.headersSent 
-							? setResponseHeaders(res, _appconfig).then(res => getRequestParameters(req).then(paramts => httpNextRequest(req, res, Object.assign(parameters, paramts)))) 
+							? setResponseHeaders(res, _appconfig).then(res => getParams.then(paramts => httpNextRequest(req, res, extractParams ? Object.assign(parameters, paramts) : {}))) 
 							: res)
 						.then(() => ({ req, res, ctx }))
 				}
@@ -461,7 +463,7 @@ const serveHttpEndpoints = (endpoints, appconfig) => {
 		req.__transactionId = shortid.generate().replace(/-/g, 'r').replace(/_/g, '9')
 		// 1. Pre process request
 		return preProcess(req, res)
-		// 2. Capture pre processing errors
+			// 2. Capture pre processing errors
 			.catch(err => {
 				try {
 					return setResponseHeaders(res, _appconfig).then(res => {
@@ -473,7 +475,7 @@ const serveHttpEndpoints = (endpoints, appconfig) => {
 					return { req, res, __err: err }
 				}
 			})
-		// 3. Process request
+			// 3. Process request
 			.then((ctx={}) => {
 				if (ctx && ctx.__err)
 					return { req, res, __err: ctx.__err }
@@ -503,12 +505,14 @@ const serveHttpEndpoints = (endpoints, appconfig) => {
 									return res.status(500).send(`Wrong argument exception. Endpoint '${httpEndpoint}' for method ${httpMethod} defines a 'next' argument that is not a function similar to '(req, res, params) => ...'.`) 
 
 								const paramts = Object.assign({}, endpoint.winningRoute.parameters)
-								return getRequestParameters(req).then(parameters => next(req, res, Object.assign(parameters, paramts)))
+								const extractParams = _appconfig.extractParams == undefined || _appconfig.extractParams
+								const getParams = extractParams ? getRequestParameters(req) : Promise.resolve({})
+								return getParams.then(parameters => next(req, res, extractParams ? Object.assign(parameters, paramts) : {}))
 							}) 
 							: res)
 						.then(() => ({ req, res, ctx }))
 			})
-		// 4. Capture processing errors
+			// 4. Capture processing errors
 			.catch(err => {
 				try {
 					return setResponseHeaders(res, _appconfig).then(res => {
@@ -520,13 +524,13 @@ const serveHttpEndpoints = (endpoints, appconfig) => {
 					return { req, res, __err: err }
 				}
 			})
-		// 5. Post processing request
+			// 5. Post processing request
 			.then(({ req, res, ctx }) => {
 				if (!ctx)
 					ctx = {}
 				ctx.__ellapsedMillis = Date.now() - start
 				return postProcess(req, res, ctx)
-				// 6. Capture post processing errors
+					// 6. Capture post processing errors
 					.catch(err => {
 						try {
 							return setResponseHeaders(res, _appconfig).then(res => {

@@ -1427,6 +1427,9 @@ describe('webfunc', () =>
 				body: {
 					username: 'nic',
 					password: '1234'
+				},
+				_parsedUrl: {
+					pathname: '/users/create'
 				}
 			})
 			const res = httpMocks.createResponse()
@@ -1438,15 +1441,54 @@ describe('webfunc', () =>
 					'Access-Control-Max-Age': '1296000'
 				}
 			}
-			const fn = serveHttp((req, res, params) => {
-				res.status(200).send(`The secret password of ${params.username} is ${params.password}`)
+			const fn = serveHttp('users/:action', (req, res, params) => {
+				res.status(200).send(`Action ${params.action}. The secret password of ${params.username} is ${params.password}`)
 				return res
 			}, appconfig)
 			return fn(req, res).then(() => {
 				assert.isOk(req)
 				assert.equal(res.statusCode, 200)
-				assert.equal(res._getData(), 'The secret password of nic is 1234')
+				assert.equal(res._getData(), 'Action create. The secret password of nic is 1234')
 			})
 		})))
 
+/*eslint-disable */
+describe('webfunc', () => 
+	describe('#serveHttp: 23', () => 
+		it(`Should not extract any parameters from the payload or the query string when the 'extractParams' property is set to false.`, () => {
+			/*eslint-enable */
+			const req = httpMocks.createRequest({
+				method: 'POST',
+				headers: {
+					origin: 'http://localhost:8080',
+					referer: 'http://localhost:8080'
+				},
+				body: {
+					username: 'nic',
+					password: '1234'
+				},
+				_parsedUrl: {
+					pathname: '/users/create'
+				}
+			})
+			const res = httpMocks.createResponse()
+			const appconfig = {
+				headers: {
+					'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS, POST',
+					'Access-Control-Allow-Headers': 'Authorization, Content-Type, Origin',
+					'Access-Control-Allow-Origin': 'http://boris.com, http://localhost:8080',
+					'Access-Control-Max-Age': '1296000'
+				},
+				extractParams: false
+			}
+			const fn = serveHttp('users/:action', (req, res, params) => {
+				res.status(200).send(`Action ${params.action}. The secret password of ${params.username} is ${params.password}`)
+				return res
+			}, appconfig)
+			return fn(req, res).then(() => {
+				assert.isOk(req)
+				assert.equal(res.statusCode, 200)
+				assert.equal(res._getData(), 'Action undefined. The secret password of undefined is undefined')
+			})
+		})))
 
