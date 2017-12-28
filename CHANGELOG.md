@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.8.0-alpha.16"></a>
+# [0.8.0-alpha.16](https://github.com/nicolasdao/webfunc/compare/v0.8.0-alpha.15...v0.8.0-alpha.16) (2017-12-28)
+
+
+### Bug Fixes
+
+* the 'req' object does not have any 'body' property thought its payload has been added to the 'params' object ([ad7ad25](https://github.com/nicolasdao/webfunc/commit/ad7ad25))
+
+
+
 <a name="0.8.0-alpha.15"></a>
 # [0.8.0-alpha.15](https://github.com/nicolasdao/webfunc/compare/v0.8.0-alpha.14...v0.8.0-alpha.15) (2017-12-27)
 
