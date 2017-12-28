@@ -391,11 +391,13 @@ const getRequestParameters = req => {
 			if (!isMultipart) {
 				const body = bod.encoded ? bod.body.toString() : bod.body
 				const bodyType = typeof(body)
-				if (bodyType == 'object')
+				if (bodyType == 'object') {
 					bodyParameters = Object.assign({ body: body }, body)
+					req.body = body
+				}
 				else if (bodyType == 'string') {
 					try {
-						if (isXwwwFormUrlencoded)
+						if (isXwwwFormUrlencoded) {
 							bodyParameters = body.split('&').filter(x => x).reduce((acc,x) => {
 								const [k,v] = x.split('=')
 								const key = k ? unescape(k) : null
@@ -403,12 +405,19 @@ const getRequestParameters = req => {
 								if (key)
 									acc[key] = value
 								return acc
-							}, { body: body })
-						else
+							}, {})
+							req.body = Object.assign({}, bodyParameters)
+							bodyParameters.body = body
+						}
+						else{
+							const parsedBody = JSON.parse(body)
 							bodyParameters = Object.assign({ body: bod.body }, JSON.parse(body))
+							req.body = parsedBody
+						}
 					}
 					catch(err) {
 						bodyParameters = { body: bod.body }
+						req.body = bod.body
 					}
 				}
 			}
@@ -430,7 +439,10 @@ const getRequestParameters = req => {
 						if (name)
 							acc[name] = { value: hexToBuf(value), filename, mimetype }
 						return acc
-					}, { body: bod.body })
+					}, {})
+
+				req.body = Object.assign({}, bodyParameters)
+				bodyParameters.body = bod.body
 			}
 		}
 
