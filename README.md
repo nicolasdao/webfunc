@@ -19,6 +19,7 @@ You can also run it locally without any other dependencies. Run `node index.js` 
 Out-of-the-box features include:
 - [_Routing_](#how-to-use-it)
 - [_CORS_](#cors)
+- [_Body & Query Parsing_](#how-to-use-it)
 - [_Environment Variables_](#adding-multiple-deployment-environments) 
 - 3rd party middleware.
 
@@ -31,8 +32,6 @@ Out-of-the-box features include:
 > * [Make It Work With Express](#make-it-work-with-express) 
 
 # Intro
-
-
 
 _index.js:_
 
