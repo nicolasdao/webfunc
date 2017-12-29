@@ -28,6 +28,7 @@ const addEnvToProcess = (key,value) => {
 // This will get the configuration from the 'now.json' to configure the app
 const CONFIGPATH = cwdPath('now.json')
 const HOSTINGS = { 'now': true, 'sh': true, 'localhost': true, 'express': true, 'gcp': true, 'aws': true }
+const PARAMSMODE = { 'all': true, 'body': true, 'route': true, 'none': true }
 const getAppConfig = () => fs.existsSync(CONFIGPATH) ? require(CONFIGPATH) : {}
 const getRequiredResponseHeaders = (config={}) => {
 	const headers = config.headers || {}
@@ -330,6 +331,7 @@ const processEvent = (req, res, config={}, endpoints=[], handlers=[], requiredHe
 	// 0. Create a request identity for tracing purpose
 	req.__receivedTime = Date.now()
 	req.__transactionId = shortid.generate().replace(/-/g, 'r').replace(/_/g, '9')
+	req.__ellapsedMillis = () => Date.now() - req.__receivedTime
 
 	// 1. Make sure the pre and post event methods exist
 	if (!preEvent)
@@ -372,10 +374,10 @@ const processEvent = (req, res, config={}, endpoints=[], handlers=[], requiredHe
 					return res.status(404).send(`Endpoint '${pathname}' for method ${httpMethod} not found.`)
 
 				// 5.4. Extract all params from that request, including both the url route params and the payload params.
-				const paramts = Object.assign({}, endpoint.winningRoute.parameters)
-				const extractParams = config.extractParams == undefined || config.extractParams
-				const getParams = extractParams ? reqUtil.getParams(req) : Promise.resolve({})
-				return getParams.then(parameters => extractParams ? Object.assign(parameters, paramts) : {})
+				const paramsMode = PARAMSMODE[config.paramsMode] ? config.paramsMode : 'all'
+				const paramts = paramsMode == 'all' || paramsMode == 'route' ? Object.assign({}, endpoint.winningRoute.parameters) : {}
+				const getParams = paramsMode == 'all' || paramsMode == 'body' ? reqUtil.getParams(req) : Promise.resolve({})
+				return getParams.then(parameters => Object.assign(parameters, paramts))
 					.then(parameters => 
 						// 5.5. Process all handlers
 						executeHandlers(req, res, parameters, handlers)
@@ -392,10 +394,7 @@ const processEvent = (req, res, config={}, endpoints=[], handlers=[], requiredHe
 			_processErr = err
 		})
 		// 6. Run the final post-event processing
-		.then(() => {
-			req.__ellapsedMillis = Date.now() - req.__receivedTime
-			return postEvent(req, res)
-		})
+		.then(() => postEvent(req, res))
 		.catch(err => {
 			if (!_preEventErr && !_processErr)
 				try { res.status(500).send(`Internal Server Error - Post Processing error: ${err.message}`) } catch(e) { console.error(e.message) } 

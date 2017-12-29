@@ -923,7 +923,7 @@ describe('app', () =>
 
 /*eslint-disable */
 describe('app', () => 
-	describe('#handleEvent: 22', () => 
+	describe('#handleEvent: 20', () => 
 		it('Should capture the body of a POST request and interpret it as a JSON in the params argument.', () => {
 			/*eslint-enable */
 			const req = httpMocks.createRequest({
@@ -964,8 +964,8 @@ describe('app', () =>
 
 /*eslint-disable */
 describe('app', () => 
-	describe('#handleEvent: 23', () => 
-		it(`Should not extract any parameters from the payload or the query string when the 'extractParams' property is set to false.`, () => {
+	describe('#handleEvent: 21', () => 
+		it(`Should not extract any parameters from the payload or the route when the 'paramsMode' property of the now.json config is set to 'none'.`, () => {
 			/*eslint-enable */
 			const req = httpMocks.createRequest({
 				method: 'POST',
@@ -989,7 +989,7 @@ describe('app', () =>
 					'Access-Control-Allow-Origin': 'http://boris.com, http://localhost:8080',
 					'Access-Control-Max-Age': '1296000'
 				},
-				extractParams: false
+				paramsMode: 'none'
 			}
 
 			app.reset()
@@ -1004,3 +1004,138 @@ describe('app', () =>
 			})
 		})))
 
+/*eslint-disable */
+describe('app', () => 
+	describe('#handleEvent: 22', () => 
+		it(`Should not extract any route parameters when the 'paramsMode' property of the now.json config is set to 'body'.`, () => {
+			/*eslint-enable */
+			const req = httpMocks.createRequest({
+				method: 'POST',
+				headers: {
+					origin: 'http://localhost:8080',
+					referer: 'http://localhost:8080'
+				},
+				body: {
+					username: 'nic',
+					password: '1234'
+				},
+				_parsedUrl: {
+					pathname: '/users/create'
+				}
+			})
+			const res = httpMocks.createResponse()
+			const appconfig = {
+				headers: {
+					'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS, POST',
+					'Access-Control-Allow-Headers': 'Authorization, Content-Type, Origin',
+					'Access-Control-Allow-Origin': 'http://boris.com, http://localhost:8080',
+					'Access-Control-Max-Age': '1296000'
+				},
+				paramsMode: 'body'
+			}
+
+			app.reset()
+			app.use(appconfig)
+			app.post('users/:action', (req, res, params) => res.status(200).send(`Action ${params.action}. The secret password of ${params.username} is ${params.password}`))
+			const fn = app.handleEvent()
+			
+			return fn(req, res).then(() => {
+				assert.isOk(req)
+				assert.equal(res.statusCode, 200)
+				assert.equal(res._getData(), 'Action undefined. The secret password of nic is 1234')
+			})
+		})))
+
+/*eslint-disable */
+describe('app', () => 
+	describe('#handleEvent: 23', () => 
+		it(`Should not extract any body parameters when the 'paramsMode' property of the now.json config is set to 'route'.`, () => {
+			/*eslint-enable */
+			const req = httpMocks.createRequest({
+				method: 'POST',
+				headers: {
+					origin: 'http://localhost:8080',
+					referer: 'http://localhost:8080'
+				},
+				body: {
+					username: 'nic',
+					password: '1234'
+				},
+				_parsedUrl: {
+					pathname: '/users/create'
+				}
+			})
+			const res = httpMocks.createResponse()
+			const appconfig = {
+				headers: {
+					'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS, POST',
+					'Access-Control-Allow-Headers': 'Authorization, Content-Type, Origin',
+					'Access-Control-Allow-Origin': 'http://boris.com, http://localhost:8080',
+					'Access-Control-Max-Age': '1296000'
+				},
+				paramsMode: 'route'
+			}
+
+			app.reset()
+			app.use(appconfig)
+			app.post('users/:action', (req, res, params) => res.status(200).send(`Action ${params.action}. The secret password of ${params.username} is ${params.password}`))
+			const fn = app.handleEvent()
+			
+			return fn(req, res).then(() => {
+				assert.isOk(req)
+				assert.equal(res.statusCode, 200)
+				assert.equal(res._getData(), 'Action create. The secret password of undefined is undefined')
+			})
+		})))
+
+/*eslint-disable */
+describe('app', () => 
+	describe('#handleEvent: 23', () => 
+		it(`Should add metadata '__transactionId', '__receivedTime' and '__ellapsedMillis()' to the request object.`, () => {
+			/*eslint-enable */
+			const req = httpMocks.createRequest({
+				method: 'POST',
+				headers: {
+					origin: 'http://localhost:8080',
+					referer: 'http://localhost:8080'
+				},
+				body: {
+					username: 'nic',
+					password: '1234'
+				},
+				_parsedUrl: {
+					pathname: '/users/create'
+				}
+			})
+			const res = httpMocks.createResponse()
+			const appconfig = {
+				headers: {
+					'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS, POST',
+					'Access-Control-Allow-Headers': 'Authorization, Content-Type, Origin',
+					'Access-Control-Allow-Origin': 'http://boris.com, http://localhost:8080',
+					'Access-Control-Max-Age': '1296000'
+				},
+				paramsMode: 'route'
+			}
+
+			app.reset()
+			app.use(appconfig)
+			app.post('users/:action', (req, res, params) => res.status(200).send(`Action ${params.action}. The secret password of ${params.username} is ${params.password}`))
+			const fn = app.handleEvent()
+
+			assert.isOk(!req.__transactionId, '__transactionId should not exist prior to being processed by webfunc.')
+			assert.isOk(!req.__receivedTime, '__receivedTime should not exist prior to being processed by webfunc.')
+			assert.isOk(!req.__ellapsedMillis, '__ellapsedMillis should not exist prior to being processed by webfunc.')
+			
+			return fn(req, res).then(() => {
+				assert.isOk(req.__transactionId, '__transactionId should exist.')
+				assert.isOk(req.__receivedTime, '__receivedTime should exist.')
+				assert.isOk(req.__ellapsedMillis, '__ellapsedMillis should exist.')
+				assert.isOk(req.__ellapsedMillis() >= 0, '__ellapsedMillis() should exist.')
+				const t1 = req.__ellapsedMillis()
+				for (let i=0;i<5000000;i++) {
+					let r = 0
+				}
+				assert.isOk(req.__ellapsedMillis() - t1 > 0, '__ellapsedMillis() should grow monotonously')
+			})
+		})))
