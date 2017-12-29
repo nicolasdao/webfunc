@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.9.1-alpha.1"></a>
+## [0.9.1-alpha.1](https://github.com/nicolasdao/webfunc/compare/v0.9.1-alpha.0...v0.9.1-alpha.1) (2017-12-29)
+
+
+### Bug Fixes
+
+* Explicitly setting the 'extractParams' to true in the now.json does not enable the automatic params extraction ([365e445](https://github.com/nicolasdao/webfunc/commit/365e445))
+* Missing 'path' dependency ([0a7769e](https://github.com/nicolasdao/webfunc/commit/0a7769e))
+
+
+
 <a name="0.9.1-alpha.0"></a>
 ## [0.9.1-alpha.0](https://github.com/nicolasdao/webfunc/compare/v0.9.0...v0.9.1-alpha.0) (2017-12-29)
 
