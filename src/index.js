@@ -373,7 +373,7 @@ const processEvent = (req, res, config={}, endpoints=[], handlers=[], requiredHe
 
 				// 5.4. Extract all params from that request, including both the url route params and the payload params.
 				const paramts = Object.assign({}, endpoint.winningRoute.parameters)
-				const extractParams = config.extractParams == undefined
+				const extractParams = config.extractParams == undefined || config.extractParams
 				const getParams = extractParams ? reqUtil.getParams(req) : Promise.resolve({})
 				return getParams.then(parameters => extractParams ? Object.assign(parameters, paramts) : {})
 					.then(parameters => 
