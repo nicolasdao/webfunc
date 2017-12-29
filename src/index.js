@@ -349,6 +349,8 @@ const processEvent = (req, res, config={}, endpoints=[], handlers=[], requiredHe
 	// 4. Run pre-event processing
 	return preEvent(req, res)
 		.catch(err => {
+			console.error('Error in pre-event processing')
+			console.error(err)
 			try { res.status(500).send(`Internal Server Error - Pre Processing error: ${err.message}`) } catch(e) { console.error(e.message) } 
 			_preEventErr = err
 		})
@@ -389,6 +391,8 @@ const processEvent = (req, res, config={}, endpoints=[], handlers=[], requiredHe
 			}
 		})
 		.catch(err => {
+			console.error('Error in request/response processing')
+			console.error(err)
 			if (!_preEventErr)
 				try { res.status(500).send(`Internal Server Error - Processing error: ${err.message}`) } catch(e) { console.error(e.message) } 
 			_processErr = err
@@ -396,6 +400,8 @@ const processEvent = (req, res, config={}, endpoints=[], handlers=[], requiredHe
 		// 6. Run the final post-event processing
 		.then(() => postEvent(req, res))
 		.catch(err => {
+			console.error('Error in post-event processing')
+			console.error(err)
 			if (!_preEventErr && !_processErr)
 				try { res.status(500).send(`Internal Server Error - Post Processing error: ${err.message}`) } catch(e) { console.error(e.message) } 
 		})

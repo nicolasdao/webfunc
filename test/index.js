@@ -1134,7 +1134,9 @@ describe('app', () =>
 				assert.isOk(req.__ellapsedMillis() >= 0, '__ellapsedMillis() should exist.')
 				const t1 = req.__ellapsedMillis()
 				for (let i=0;i<5000000;i++) {
+					/*eslint-disable */
 					let r = 0
+					/*eslint-enable */
 				}
 				assert.isOk(req.__ellapsedMillis() - t1 > 0, '__ellapsedMillis() should grow monotonously')
 			})
