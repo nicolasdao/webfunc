@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.10.0-alpha.0"></a>
+# [0.10.0-alpha.0](https://github.com/nicolasdao/webfunc/compare/v0.9.1-alpha.1...v0.10.0-alpha.0) (2017-12-29)
+
+
+### Features
+
+* Add more granular support to control the way the default params extraction works. Can now turn it off partially + Add more unit tests ([6ed5de0](https://github.com/nicolasdao/webfunc/commit/6ed5de0))
+
+
+
 <a name="0.9.1-alpha.1"></a>
 ## [0.9.1-alpha.1](https://github.com/nicolasdao/webfunc/compare/v0.9.1-alpha.0...v0.9.1-alpha.1) (2017-12-29)
 
