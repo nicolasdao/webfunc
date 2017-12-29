@@ -5,7 +5,7 @@
   "contributors": [
     "Nicolas Dao <nic@neap.co> (https://neap.co/)"
   ],
-  "main": "src/webfunc.js",
+  "main": "src/index.js",
   "scripts": {
     "test": "mocha",
     "eslint": "eslint src/ test/ --fix",
