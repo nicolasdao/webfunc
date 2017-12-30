@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.10.0-alpha.2"></a>
+# [0.10.0-alpha.2](https://github.com/nicolasdao/webfunc/compare/v0.10.0-alpha.1...v0.10.0-alpha.2) (2017-12-30)
+
+
+### Bug Fixes
+
+* Prevent the active environment to be set up in the start script of the package.json. Replace that with the now.json's env.active property or default to 'default' ([6fe6809](https://github.com/nicolasdao/webfunc/commit/6fe6809))
+
+
+
 <a name="0.10.0-alpha.1"></a>
 # [0.10.0-alpha.1](https://github.com/nicolasdao/webfunc/compare/v0.10.0-alpha.0...v0.10.0-alpha.1) (2017-12-29)
 
