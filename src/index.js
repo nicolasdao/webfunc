@@ -9,7 +9,7 @@ const fs = require('fs')
 const shortid = require('shortid')
 const path = require('path')
 const { getRouteDetails, matchRoute } = require('./routing')
-const { reqUtil, pkgJson } = require('./utils')
+const { reqUtil } = require('./utils')
 require('colors')
 
 /*eslint-disable */
@@ -61,16 +61,11 @@ let _allowedMethods = getAllowedMethods(_config) // Object
 let _preEvent = () => Promise.resolve(null)
 let _postEvent = () => Promise.resolve(null)
 
-// This guarentees that any environment variables defined in the package.json's start scripts get assigned even 
-// if the package.json's start script is not executed (which is the case with FaaS like Google Cloud Functions 
-// or AWS Lambda)
-pkgJson.initStartVariables()
-
 //////////////////////// 							END - INITIALIZE APP 							  ////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-const getEnvName = () => ((_config || {}).env || {}).active || getProcessEnv().WEBFUNC_ENV || 'default'
+const getEnvName = () => ((_config || {}).env || {}).active || 'default'
 const getEnv = () => ((_config || {}).env || {})[getEnvName()] || {}
 const getHostingType = () => getEnv().hostingType || 'localhost'
 
