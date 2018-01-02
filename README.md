@@ -1,4 +1,4 @@
-<a href="https://neap.co" target="_blank"><img src="https://neap.co/img/neap_black_small_logo.png" alt="Neap Pty Ltd logo" title="Neap" align="right" height="50" width="120"/></a>
+<a href="https://neap.co" target="_blank"><img src="https://neap.co/img/neap_color_vertical.png" alt="Neap Pty Ltd logo" title="Neap" height="158" width="100" style="float: right" align="right" /></a>
 
 # WebFunc - Universal Serverless Web Framework
 [![NPM][1]][2] [![Tests][3]][4]
@@ -8,63 +8,60 @@
 [3]: https://travis-ci.org/nicolasdao/webfunc.svg?branch=master
 [4]: https://travis-ci.org/nicolasdao/webfunc
 
-__*Wefunc*__ is a _universal_ web framework that uses the awesome [Zeit Now CLI](https://zeit.co/now) to manage deployments. Universal means write your code once with _webfunc_ and deploy it on any serverless platform:
-- [Zeit Now](https://zeit.co/now)
-- [Google Cloud Functions](https://cloud.google.com/functions/)
-- [AWS Lambda](https://aws.amazon.com/lambda/) (COMING SOON...)
-- [Azure Functions](https://azure.microsoft.com/en-us/services/functions/) (COMING SOON...)
+__*Universal serverless*__ web framework that uses the awesome [Zeit Now CLI](https://zeit.co/now) to manage deployments. 
 
-You can also run it locally without any other dependencies. Run `node index.js` and that's it. 
+```js
+const { app } = require('webfunc')
+
+app.get('/users/:username', (req, res, params) => res.status(200).send(`Hello ${params.username}`))
+
+eval(app.listen('app', 4000))
+```  
+
+Webfunc allows you to write code for serverless like you would with [Express](https://expressjs.com/). Write once, deploy everywhere. This is why it is said to be a __*universal serverless web framework*__.
+
+Targeted platforms:
+- [__*Zeit Now*__](https://zeit.co/now) (using express under the hood)
+- [__*Google Cloud Functions*__](https://cloud.google.com/functions/) (incl. Firebase Function)
+- [__*AWS Lambdas*__](https://aws.amazon.com/lambda) (COMING SOON...)
+- [__*Azure Functions*__](https://azure.microsoft.com/en-us/services/functions/) (COMING SOON...)
+
+__*[Webfunc](https://github.com/nicolasdao/webfunc) supports [Express](https://expressjs.com/) middlewares*__. 
+
+Forget any external dependencies to run your serverless app locally. Run `node index.js` and that's it. 
 
 Out-of-the-box features include:
-- [_Routing_](#how-to-use-it)
+- [_Routing_](#basic)
 - [_CORS_](#cors)
-- [_Body & Query Parsing_](#how-to-use-it)
-- [_Environment Variables_](#adding-multiple-deployment-environments) 
-- 3rd party middleware.
+- [_Body & Route Variables Parsing_](#creating-a-rest-api)
+- [_Environment Variables Per Deployment_](#managing-environment-variables-per-deployment) 
+- [_Middleware (incl. Express)_](#compatible-with-all-express-middleware)
 
 # Table of Contents
 
 > * [Install](#install) 
 > * [How To Use It](#how-to-use-it) 
-> * [CORS](#cors) 
-> * [Authentication](#authentication) 
-> * [Make It Work With Express](#make-it-work-with-express) 
-
-# Intro
-
-_index.js:_
-
-```js
-const { listen, serve } = require('webfunc')
-
-const server = serve('/users/:username', (req, res, params) => res.status(200).send(`Hello env ${params.username}`))
-eval(listen('server', 4000))
-```  
-
-Add a __*start*__ script in your _package.json_
-```js
-  "scripts": {
-    "start": "node index.js"
-  }
-```
-
-_Deploy locally without any other dependencies_
-```
-npm start
-```
-
-_Deploy to Zeit Now_
-```
-now
-```
-
-_Deploy to Google Cloud Function_
-```
-now gcp
-```
-> For this to work you need to configure a __*now.json*__ file as well as update the _start_ script. More detail 
-
+>   - [Basic](#basic)
+>   - [Creating A REST API](#creating-a-rest-api)
+>   - [Compatible With All Express Middleware](#compatible-with-all-express-middleware)
+>   - [Managing Environment Variables Per Deployment](#managing-environment-variables-per-deployment)
+> * [Configuration](#configuration)
+>   - [CORS](#cors) 
+>   - [Disabling Body Or Route Parsing](#disabling-body-or-route-parsing)
+> * [Tips & Tricks](#tips-tricks)
+>   - [Dev - Easy Hot Reloading](#dev-easy-hot-reloading)
+>   - [Dev - Better Deployments With now-flow](#dev-better-deployments-with-now-flow)
+> * [Use Cases](#use-cases)
+>   - [Authentication](#authentication) 
+>   - [Uploading Files & Images](#uploading-files-images)
+>   - [GraphQL](#graphql)
+> * [FAQ](#faq)
+> * [Annexes](#annexes)
+>   - [A.1. CORS Refresher](#a1-cors-refresher)
+>   - [A.2. CORS Basic Errors](#a2-cors-basic-errors)
+> * [Contributing](#contributing)
+> * [About Neap](#this-is-what-we-re-up-to)
+> * [License](#license)
 
 
 # Install
@@ -72,16 +69,78 @@ now gcp
 npm install webfunc --save
 ```
 
-# How To Use It - Show Me The Code
+# How To Use It
+## Basic
+> To deploy your app to any serverless solution, first make sure you have installed [_Zeit Now_](https://zeit.co/now) globally:
+```
+npm install now -g
+```
+
+__*1. Create an index.js:*__
+
+```js
+const { app } = require('webfunc')
+
+app.get('/users/:username', (req, res, params) => res.status(200).send(`Hello ${params.username}`))
+
+eval(app.listen('app', 4000))
+```  
+
+__*2. Add a "start" script in your package.json*__
+```js
+  "scripts": {
+    "start": "node index.js"
+  }
+```
+
+__*3.A. Deploy locally without any other dependencies*__
+```
+npm start
+```
+
+__*3.B. Deploy to Zeit Now*__
+```
+now
+```
+
+__*3.C. Deploy to Google Cloud Function*__
+
+Add a __*now.json*__ file similar to the following:
+```js
+{
+  "gcp": {
+    "memory": 128,
+    "functionName": "webfunctest"
+  },
+  "env":{
+    "active": "staging",
+    "default":{
+      "hostingType": "localhost"
+    },
+    "staging":{
+      "hostingType": "gcp"
+    }
+  }
+}
+```
+
+The `env.active = "staging"` indicates that the configuration for your app is inside the `env.staging` property. There, you can see `"hostingType": "gcp"`. Webfunc uses the `hostingType` property to define how to serve your app (this is indeed different from platform to platform. Trying to deploy a `"hostingType": "gcp"` to Zeit Now will fail).  
+
+```
+now gcp
+```
+
 ## Creating A REST API
-### Single Endpoint Locally
+>A REST api is cool but GraphQL is even cooler. Check out how you can create a [GraphQL api](#graphql) in less than 2 minutes [__*here*__](#graphql).
+### Single Endpoint
 _index.js:_
 
 ```js
-const { listen, serve } = require('webfunc')
+const { app } = require('webfunc')
 
-const server = serve('/users/:username', (req, res, params) => res.status(200).send(`Hello ${params.username}`))
-eval(listen('server', 4000))
+app.get('/users/:username', (req, res, params) => res.status(200).send(`Hello ${params.username}`))
+
+eval(app.listen('app', 4000))
 ```  
 
 To run this code locally, simply run in your terminal:
@@ -91,45 +150,137 @@ node index.js
 
 > To speed up your development, use [_hot reloading_](#easy-hot-reloading) as explained in the [Tips & Tricks](#tips-tricks) section below.
 
-### Multiple Endpoints Locally
+### Multiple Endpoints
 ```js
-const { listen, serve, app } = require('webfunc')
+const { app } = require('webfunc')
 
-const server = serve(
-  [
-    // Create standard GET endpoints.
-    app.get('/users/:username', (req, res, params) => res.status(200).send(`Hello ${params.username}`)),
-    // Define multiple routes that trigger the same logic.
-    app.get(['/companies/:companyName', '/organizations/:orgName'], (req, res, params) => res.status(200).send(params.companyName ? `Hello company ${params.companyName}` : `Hello organization ${params.orgName}`)),
-    // Support for any standard http verbs (GET, POST, PUT, DELETE, HEAD, OPTIONS). In the example below, the payload is expected to be 
-    // similar to { "username": "Nicolas", password: "1234" }. More details about body parsing below.
-    app.post('/login', (req, res, params) => res.status(200).send(`Welcome ${params.username}`)),
-    // Create endpoints that accept any http verbs.
-    app.any('/', (req, res) => res.status(200).send('Welcome to this awesome API!'))
-  ])
-eval(listen('server', 4000))
+// 1. Simple GET method. 
+app.get('/users/:username', (req, res, params) => 
+  res.status(200).send(`Hello ${params.username}`))
+
+// 2. GET method with more variables in the route. The conventions are the same as
+//    the 'path-to-regex' module (https://github.com/pillarjs/path-to-regexp).
+app.get('/users/:username/account/:accountId', (req, res, params) => 
+  res.status(200).send(`Hello ${params.username} (account: ${params.accountId})`))
+
+// 3. Support for multiple routes pointing to the same action.
+app.get(['/companies/:companyName', '/organizations/:orgName'], (req, res, params) => 
+  res.status(200).send(params.companyName ? `Hello company ${params.companyName}` : `Hello organization ${params.orgName}`))
+
+// 4. Supports all http verbs: GET, POST, PUT, DELETE, HEAD, OPTIONS.
+app.post('/login', (req, res, params={}) => {
+  if (params.username == 'nic' && params.password == '123')
+    res.status(200).send(`Welcome ${params.username}.`)
+  else
+    res.status(401).send('Invalid username or password.')
+})
+
+// 5. Supports route for any http verb.
+app.all('/', (req, res) => res.status(200).send('Welcome to this awesome API!'))
+
+eval(app.listen('app', 4000))
 ``` 
 
-### CORS & Body Parsing Supported Out Of The Box
-Those 2 features being so common, we decided to include them. That means no need for middleware such as [CORS](https://github.com/expressjs/cors) or [body-parser](https://github.com/expressjs/body-parser). 
+Notice that in all the cases above, the `params` argument contains any parameters that are either passed in the route or in the payload. This scenario is so common that webfunc automatically supports that feature. No need of installing any middleware like [body-parser](https://github.com/expressjs/body-parser). Webfunc can even automatically parse __*multipart/form-data*__ content type usually used to upload files (e.g. images, documents, ...). More details under [Uploading Images](#uploading-images) in the [Use Cases](#use-cases) section.
 
-#### Body Parsing & Query Parameters
-With webfunc, query parameters and the payload are treated equal. That means that they are all aggregated 
+Based on certain requirements, it might be necessary to disable this behavior. To do so, please refer to [Disabling Body Or Route Parsing](#disabling-body-or-route-parsing) under the [Configuration](#configuration) section.
 
-To configure CORS, add a new _**appconfig.json**_ file and configure it as explained in the next section.
+## Compatible With All Express Middleware
+That's probably one of the biggest advantage of using webfunc. [Express](https://expressjs.com/) offers countless of open-sourced [middleware](https://expressjs.com/en/resources/middleware.html) that would not be as easily usable in a FaaS environment without webfunc. 
 
-The fastest way to get started with webfunc is to use [_**gimpy**_](https://github.com/nicolasdao/gimpy). Gimpy can create Google Cloud Functions projects and deploy them both locally and on your Google Cloud Account (providing that you have already installed the gcloud SDK, the gcloud beta component, and Google Function Emulator). Example:
+```js
+const { app } = require('webfunc')
+const responseTime = require('response-time')
 
+app.use(responseTime())
+
+app.get('/users/:username', (req, res, params) => 
+  res.status(200).send(`Hello ${params.username}`))
+
+app.get('/users/:username/account/:accountId', (req, res, params) => 
+  res.status(200).send(`Hello ${params.username} (account: ${params.accountId})`))
+
+eval(app.listen('app', 4000))
 ```
-gimp new webapp-serverless helloWorld
-cd helloWorld
-npm install
-npm start
+
+The snippet above demonstrate how to use the Express middleware [response-time](https://github.com/expressjs/response-time). This middleware measures the time it takes for your server to process a request. It will add a new response header called __X-Response-Time__. In this example, all APIs will be affected. Similar to Express, webfunc allows to target APIs specifically:
+
+```js
+const { app } = require('webfunc')
+const responseTime = require('response-time')
+
+app.get('/users/:username', responseTime(), (req, res, params) => 
+  res.status(200).send(`Hello ${params.username}`))
+
+app.get('/users/:username/account/:accountId', (req, res, params) => 
+  res.status(200).send(`Hello ${params.username} (account: ${params.accountId})`))
+
+eval(app.listen('app', 4000))
 ```
 
-# Configuring CORS as well as Multiple Environment Variables - appconfig.json
+In the snippet above, the _response-time_ will only affect the first API.
+
+Obviously, you can also create your own middleware the exact same way you would have done it with Express:
+
+```js
+const { app } = require('webfunc')
+
+const authenticate = () => (req, res, next) => {
+  if (!req.headers['Authorization'])
+    res.status(401).send(`Missing 'Authorization' header.`)
+  next()
+}
+
+app.use(authenticate())
+
+app.get('/users/:username', (req, res, params) => 
+  res.status(200).send(`Hello ${params.username}`))
+
+app.get('/users/:username/account/:accountId', (req, res, params) => 
+  res.status(200).send(`Hello ${params.username} (account: ${params.accountId})`))
+
+eval(app.listen('app', 4000))
+```
+
+## Managing Environment Variables Per Deployment
+The following code allows to access the current active environment's variables:
+
+```js
+const { getActiveEnv } = require('webfunc')
+const activeEnv = getActiveEnv()
+console.log(activeEnv.myCustomVar) // > "Hello Default"
+```
+The _**getActiveEnv**_ function looks for an _**env**_ property inside the _**now.json**_ file. Then, it looks for the current active environment (i.e. the value of the _**active**_ property), and extract the JSON object associated to that value. Here is an example of a typical _now.json_ file:
+
+```js
+{
+  "env": {
+    "active": "default",
+    "default": {
+      "hostingType": "localhost",
+      "myCustomVar": "Hello Default"
+    },
+    "staging": {
+      "hostingType": "gcp",
+      "myCustomVar": "Hello Staging"
+    },
+    "production": {
+      "hostingType": "now",
+      "myCustomVar": "Hello Prod"
+    }
+  }
+}
+```
+
+As you can see, the example above demonstrates 4 different types of enviornment setups: _default_, _staging_, _prod_. You can obviouly define as many as you want, and add whatever you need under those environments. 
+
+# Configuration
 ## CORS
-This is the main 'raison d'être' of this project. Out-of-the box, Google Cloud Functions does not support easy configuration for CORS when triggered through HTTP (at least as of July 2017). Webfunc fills that gap using configurations defined in a _**appconfig.json**_ file. 
+>More details about those headers in the [Annexes](#annexes) section under [A.1. CORS Refresher](#a1-cors-refresher).
+
+Similar to body parsing, CORS (i.e. [Cross-Origin Resource Sharing](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS)) is a feature that is so oftem required that webfunc also supports it out-of-the box. That means that in most cases, the [Express CORS](https://github.com/expressjs/cors) middleware will not be necessary. 
+
+To configure CORS, add the following in your _**now.json**_ file:
 
 ```js
 {
@@ -141,65 +292,50 @@ This is the main 'raison d'être' of this project. Out-of-the box, Google Cloud 
   }
 }
 ```
-More details about those headers in the [Annexes](#annexes) section under [A.1. CORS Refresher](#a1-cors-refresher).
 
-> CORS is a classic source of headache. Though webfunc allows to easily configure any Google Cloud Functions project, it will not prevent anybody to badly configure a project, and therefore loose a huge amount of time. For that reason, a series of common mistakes have been documented in the [Annexes](#annexes) section under [A.2. CORS Basic Errors](#a2-cors-basic-errors).
+>CORS is a classic source of headache. Though webfunc allows to easily configure any project, it will not prevent you to badly configure a project, and therefore loose a huge amount of time. For that reason, a series of common mistakes have been documented in the [Annexes](#annexes) section under [A.2. CORS Basic Errors](#a2-cors-basic-errors).
 
-## Adding Multiple Deployment Environments
-The following code allows to access the current active environment's variables:
+## Disabling Body Or Route Parsing
+Webfunc's default behavior is to parse in a json object both the payload and any variables found in the route. Based on certain requirements, it might be necessary to disable this behavior (e.g. trying to read the payload again in your app might not work after webfunc has parsed it). 
 
-```js
-const { getActiveEnv } = require('webfunc')
-const activeEnv = getActiveEnv()
-console.log(activeEnv.myCustomVar) // > "Hello Default"
-```
-The _**getActiveEnv**_ function looks for an _**env**_ property inside the _**appconfig.json**_ file. Then, it looks for the current active environment (i.e. the value of the _**active**_ property), and extract the JSON object associated to that value. Here is an example of a typical _appconfig.json_ file:
+To disable completely or partially that behavior, add a `"paramsMode"` property in the __*now.json*__ configuration file in the root of your application. 
 
+_Example of a now.json config that disable the payload parsing only:_
 ```js
 {
-  "env": {
-    "active": "default",
-    "default": {
-      "functionName": "helloneap",
-      "trigger": "--trigger-http",
-      "entryPoint": "helloNeap",
-      "googleProject": "DevEnv",
-      "bucket": "devenvbucket",
-      "myCustomVar": "Hello Default"
-    },
-    "build": {
-      "functionName": "helloneap",
-      "trigger": "--trigger-http",
-      "entryPoint": "helloNeap",
-      "googleProject": "DevEnv",
-      "bucket": "devenvbucket",
-      "myCustomVar": "Hello Build"
-    },
-    "staging": {
-      "functionName": "helloneap",
-      "trigger": "--trigger-http",
-      "entryPoint": "helloNeap",
-      "googleProject": "StagingEnv",
-      "bucket": "stagingenvbucket",
-      "myCustomVar": "Hello Staging"
-    },
-    "prod": {
-      "functionName": "helloneap",
-      "trigger": "--trigger-http",
-      "entryPoint": "helloNeap",
-      "googleProject": "ProdEnv",
-      "bucket": "prodenvbucket",
-      "myCustomVar": "Hello Prod"
-    }
-  }
+  "paramsMode": "route"
 }
 ```
 
-As you can see, the example above demonstrates 4 different types of enviornment setups: _default_, _build_, _staging_, _prod_. You can obviouly define as many as you want, and add whatever you need under those environments. 
+That _paramsMode_ property accepts 4 modes:
+- __*all*__: (default) Both the payload and the route variables are extracted.
+- __*route*__: Only the variables from the route are extracted. The payload is completely ignored.
+- __*body*__: Only the payload is parsed. The route variables are completely ignored.
+- __*none*__: Neither the payload nor the route variables are extracted.
 
-> NOTE: _**getActiveEnv**_ accepts one optional boolean called 'memoize'. By default it is set to true. That means that calling it multiple times will not incure more read resources. 
+If the _paramsMode_ property is not defined in the _now.json_, then the default mode is _all_.
 
-# Authentication 
+# Tips & Tricks
+## Dev - Easy Hot Reloading
+While developing on your localhost, we recommend using hot reloading to help you automatically restart your node process after each change. [_node-dev_](https://github.com/fgnass/node-dev) is a lightweight development tools that watches the minimum amount of files in your project and automatically restart the node process each time a file has changed. 
+```
+npm install node-dev --save-dev
+```
+Change your __*start*__ script in your _package.json_ from `"start": "node index.js"` to:
+```js
+  "scripts": {
+    "start": "node-dev index.js"
+  }
+```
+Then simply start your server as follow:
+```
+npm start
+```
+
+## Dev - Better Deployments With now-flow
+
+# Use Cases
+## Authentication 
 Authentication using webfunc is left to you. That being said, here is a quick example on how that could work using the awesome [passport](http://passportjs.org/) package. The following piece of code for Google Cloud Functions exposes a _signin_ POST endpoint that expects an email and a password and that returns a JWT token. Passing that JWT token in the _Authorization_ header using the _bearer_ scheme will allow access to the _/_ endpoint.
 
 ```js
@@ -210,13 +346,13 @@ const { ExtractJwt, Strategy } = require("passport-jwt")
 
 const SECRETKEY = 'your-super-secret-key'
 const jwtOptions = {
-	jwtFromRequest: ExtractJwt.fromAuthHeaderWithScheme('bearer'),
-	secretOrKey: SECRETKEY
+  jwtFromRequest: ExtractJwt.fromAuthHeaderWithScheme('bearer'),
+  secretOrKey: SECRETKEY
 }
 
 passport.use(new Strategy(jwtOptions, (decryptedToken, next) => {
-	// do more verification based on your requirements.
-	return next(null, decryptedToken)
+  // do more verification based on your requirements.
+  return next(null, decryptedToken)
 }))
 
 /**
@@ -227,29 +363,29 @@ passport.use(new Strategy(jwtOptions, (decryptedToken, next) => {
  */
 exports.jwtTest = serveHttp([
 
-	app.get('/', (req, res) => passport.authenticate('jwt', (err, user) => {
-		if (user)
-			res.status(200).send(`Welcome ${user.username}!`)
-		else
-			res.status(401).send(`You must be logged in to access this endpoint!`)
-	})(req, res)),
+  app.get('/', (req, res) => passport.authenticate('jwt', (err, user) => {
+    if (user)
+      res.status(200).send(`Welcome ${user.username}!`)
+    else
+      res.status(401).send(`You must be logged in to access this endpoint!`)
+  })(req, res)),
 
-	app.post('/signin', (req, res, params) => {
-		if (params.email == 'hello@webfunc.co' && params.password == 'supersecuredpassword') {
-			const user = {
-				id: 1,
-				roles: [{
-					name: 'Admin',
-					company: 'neap pty ltd'
-				}],
-				username: 'neapnic',
-				email: 'hello@webfunc.co'
-			}
-			res.status(200).send({ message: 'Successfully logged in', token: jwt.sign(user, SECRETKEY) })
-		}
-		else
-			res.status(401).send(`Username or password invalid!`)	
-	})
+  app.post('/signin', (req, res, params) => {
+    if (params.email == 'hello@webfunc.co' && params.password == 'supersecuredpassword') {
+      const user = {
+        id: 1,
+        roles: [{
+          name: 'Admin',
+          company: 'neap pty ltd'
+        }],
+        username: 'neapnic',
+        email: 'hello@webfunc.co'
+      }
+      res.status(200).send({ message: 'Successfully logged in', token: jwt.sign(user, SECRETKEY) })
+    }
+    else
+      res.status(401).send(`Username or password invalid!`) 
+  })
 ])
 ```
 
@@ -274,22 +410,53 @@ Access the secured _/_ endpoint:
 ```
 curl -v -H "Authorization: Bearer your-jwt-token" http://localhost:8010/your-google-project/us-central1/jwtTest
 ```
-# Make It Work With Express
-_index.js_
+
+## Uploading Files & Images
+
+## GraphQL
+
+# FAQ
+## What does webfunc use eval() to start the server?
+You should have noticed that all the snippets above end up with `eval(app.listen('app', 4000))`. The main issue webfunc tackles is to serve endpoints using a uniform API regardless of the serverless hosting platform. This is indeed a challenge as different platforms use different convention. [Zeit Now](https://zeit.co/now) uses a standard [Express](https://expressjs.com/) server, which means that the api to start the server is similar to `app.listen()`. However, with FaaS ([Google Cloud Functions](https://cloud.google.com/functions/), [AWS Lambdas](https://aws.amazon.com/lambda), ...), there is no server to be started. The server lifecycle is automatically managed by the 3rd party. The only piece of code you need to write is a handler function similar to `exports.handler = (req, res) => res.status(200).send('Hello world')`. In order to manage those 2 main scenarios, webfunc generate the code to be run as a string, and evaluate it using `eval()`. You can easily inspect the code as follow:
+
 ```js
-const express = require('express')
-const server = express()
-const { serveHttp, app } = require('webfunc')
+const { app } = require('webfunc')
 
-server.all('*', serveHttp([
-  app.get('/', (req, res) => res.status(200).send('Hello World')),
-  app.get('/users/{userId}', (req, res, params) => res.status(200).send(`Hello user ${params.userId}`)),
-  app.get('/users/{userId}/document/{docName}', (req, res, params) => res.status(200).send(`Hello user ${params.userId}. I like your document ${params.docName}`)),
-]))
+app.get('/users/:username', (req, res, params) => res.status(200).send(`Hello ${params.username}`))
 
-server.listen(3000)
+const code = app.listen('app', 4000)
+console.log(eval(code))
+eval(code)
+```  
+
+Ro see the difference between a hosting type `"now"` and `"gcp"`, update the __*now.json*__ file as follow:
+```js
+{
+  "env": {
+    "active": "default",
+    "default": {
+      "hostingType": "gcp"
+    }
+  }
+}
 ```
 
+Then run:
+```
+node index.js
+```
+
+## Can I Use Webfunc In a Non-Serverless Environment?
+Absolutely! If you don't specify a string as the first argument of the `listen` api, then it will work as an Express server:
+```js
+const { app } = require('webfunc')
+
+app.get('/users/:username', (req, res, params) => res.status(200).send(`Hello ${params.username}`))
+
+app.listen(4000)
+```
+
+Then run:
 ```
 node index.js
 ```
@@ -339,25 +506,6 @@ If you do need to allow access to anybody, then do not allow requests to send co
 }
 ```
 If you do need to pass authentication token, you will have to pass it using a special header(e.g. Authorization), or pass it in the query string if you want to avoid preflight queries (preflight queries happens in cross-origin requests when special headers are being used). However, passing credentials in the query string are considered a bad practice. 
-
-# Tips & Tricks
-## Dev Lifecycle
-### Easy Hot Reloading
-While developing on your localhost, we recommend using hot reloading to help you automatically restart your node process after each change. [_node-dev_](https://github.com/fgnass/node-dev) is a lightweight development tools that watches the minimum amount of files in your project and automatically restart the node process each time a file has changed. 
-```
-npm install node-dev --save-dev
-```
-Change your __*start*__ script in your _package.json_ from `"start": "node index.js"` to:
-```js
-  "scripts": {
-    "start": "node-dev index.js"
-  }
-```
-Then simply start your server as follow:
-```
-npm start
-```
-
 
 # Contributing
 ```
