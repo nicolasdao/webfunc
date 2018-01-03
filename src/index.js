@@ -94,7 +94,7 @@ const nextToPromise = next => (req, res, params={}) => Promise.resolve(null).the
 
 const executeHandlers = (req, res, params={}, handlers=[]) => 
 	handlers.reduce(
-		(acc, handler) => acc.then(() => handler(req, res, params)), 
+		(acc, handler) => acc.then(() => !res.headersSent ? handler(req, res, params) : null), 
 		Promise.resolve(null))
 
 const resetConfig = (config={}) => {
@@ -351,7 +351,7 @@ const processEvent = (req, res, config={}, endpoints=[], handlers=[], requiredHe
 		})
 		// 5. Run the main request/response processing 
 		.then(() => {
-			if (!_preEventErr) {
+			if (!res.headersSent && !_preEventErr) {
 				// 5.1. Validate CORS
 				if (!validateCORS(req, res, config, allowedOrigins, allowedMethods))
 					return
@@ -379,9 +379,9 @@ const processEvent = (req, res, config={}, endpoints=[], handlers=[], requiredHe
 						// 5.5. Process all handlers
 						executeHandlers(req, res, parameters, handlers)
 							// 5.6. Process endpoint handler
-							.then(() => endpoint.handler ? endpoint.handler(req, res, parameters) : Promise.resolve(null))
+							.then(() => !res.headersSent && endpoint.handler ? endpoint.handler(req, res, parameters) : null)
 							// 5.7. Process the endpoint next function
-							.then(() => endpoint.next(req, res, parameters))
+							.then(() => !res.headersSent && endpoint.next(req, res, parameters))
 					)
 			}
 		})
