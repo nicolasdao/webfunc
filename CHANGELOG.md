@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.10.0-alpha.3"></a>
+# [0.10.0-alpha.3](https://github.com/nicolasdao/webfunc/compare/v0.10.0-alpha.2...v0.10.0-alpha.3) (2018-01-03)
+
+
+### Bug Fixes
+
+* Creating a handler that returns a 500 straight away throw an exception similar to 'cannot set headers after they have been set...' ([cd8f19d](https://github.com/nicolasdao/webfunc/commit/cd8f19d))
+
+
+
 <a name="0.10.0-alpha.2"></a>
 # [0.10.0-alpha.2](https://github.com/nicolasdao/webfunc/compare/v0.10.0-alpha.1...v0.10.0-alpha.2) (2017-12-30)
 
