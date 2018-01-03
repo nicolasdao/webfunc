@@ -1,4 +1,4 @@
-<a href="https://neap.co" target="_blank"><img src="https://neap.co/img/neap_color_vertical.png" alt="Neap Pty Ltd logo" title="Neap" height="158" width="100" style="float: right" align="right" /></a>
+<a href="https://neap.co" target="_blank"><img src="https://neap.co/img/neap_color_vertical.png" alt="Neap Pty Ltd logo" title="Neap" height="126" width="80" style="float: right" align="right" /></a>
 
 # WebFunc - Universal Serverless Web Framework
 [![NPM][1]][2] [![Tests][3]][4]
