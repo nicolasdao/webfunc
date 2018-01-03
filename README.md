@@ -33,7 +33,7 @@ Forget any external dependencies to run your serverless app locally. Run `node i
 Out-of-the-box features include:
 - [_Routing_](#basic)
 - [_CORS_](#cors)
-- [_Body & Route Variables Parsing_](#creating-a-rest-api)
+- [_Body & Route Variables Parsing_](#multiple-endpoints)
 - [_Environment Variables Per Deployment_](#managing-environment-variables-per-deployment) 
 - [_Middleware (incl. Express)_](#compatible-with-all-express-middleware)
 
@@ -413,7 +413,95 @@ curl -v -H "Authorization: Bearer your-jwt-token" http://localhost:8010/your-goo
 
 ## Uploading Files & Images
 
+As mentioned before, webfunc's default behavior is to [automatically extract the payload as well as the route variables](#multiple-endpoints) into a json object. This includes the request with a __*multipart/form-data*__ content type. In that case, an object similar to the following will be stored under `params.yourVariableName`:
+```js
+{
+  filename: "filename.ext",
+  mimetype: "image/png",
+  value: <Buffer>
+}
+```
+
+where
+- `filename` is a string representing the name of the uploaded file.
+- `mimetype` is a string representing the mimetype of the uploaded file (e.g. 'image/png').
+- `value` is a Buffer representing the uploaded file itself.
+
+Here is a code snippet that shows how to store locally the uploaded file:
+
+```js
+const { app } = require('webfunc')
+const path = require('path')
+const fs = require('fs')
+
+const save = (filePath, data) => new Promise((onSuccess, onFailure) => fs.writeFile(filePath, data, err => {
+  if (err) {
+    console.error(err)
+    onFailure(err)
+  }
+  else
+    onSuccess()
+}))
+
+app.post('/upload', (req, res, params) => 
+  save(path.join(process.cwd(), params.myimage.filename), params.myimage.value)
+  .then(() => res.status(200).send('Upload successfull'))
+  .catch(err => res.status(500).send(err.message))
+)
+
+eval(app.listen('app', 4000))
+```
+
+You can test this code locally by using [Postman](https://www.getpostman.com/) as follow:
+
+
 ## GraphQL
+
+Deploying a GraphQL api as well as a GraphiQL Web UI to document and test that api has never been easier. GraphQL is beyond the topic of this document. You can learn all about it on the official webpage. 
+
+To create your own GraphQL api in a few minutes using webfunc, simply run those commands:
+```
+git clone https://github.com/nicolasdao/graphql-universal-server.git
+cd graphql-universal-server
+npm install
+npm start
+```
+
+This will locally host the following:
+
+- [http://localhost:4000](http://localhost:4000): This is the GraphQL endpoint that your client can start querying.
+- [http://localhost:4000/graphiql](http://localhost:4000/graphiql): This is the GraphiQL Web UI that you can use to test and query your GraphQL server. 
+
+More details about modifying this project for your own project [here](https://github.com/nicolasdao/graphql-universal-server).
+
+The index.js of that project looks like this:
+
+```js
+const { app } = require('webfunc')
+const { graphqlHandler } = require('graphql-serverless')
+const { transpileSchema } = require('graphql-s2s').graphqls2s
+const { makeExecutableSchema } = require('graphql-tools')
+const { glue } = require('schemaglue')
+
+const { schema, resolver } = glue('./src/graphql')
+
+const executableSchema = makeExecutableSchema({
+  typeDefs: transpileSchema(schema),
+  resolvers: resolver
+})
+
+const graphqlOptions = {
+  schema: executableSchema,
+  graphiql: true,
+  endpointURL: '/graphiql',
+  context: {} // add whatever global context is relevant to you app
+}
+
+// The GraphQL api
+app.all(['/', '/graphiql'], graphqlHandler(graphqlOptions), () => null)
+
+eval(app.listen('app', 4000))
+```
 
 # FAQ
 ## What does webfunc use eval() to start the server?
