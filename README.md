@@ -18,7 +18,7 @@ app.get('/users/:username', (req, res, params) => res.status(200).send(`Hello ${
 eval(app.listen('app', 4000))
 ```  
 
-Webfunc allows you to write code for serverless like you would with [Express](https://expressjs.com/). Write once, deploy everywhere. This is why it is said to be a __*universal serverless web framework*__.
+Webfunc allows to write code for serverless similar to [Express](https://expressjs.com/). Write once, deploy everywhere. This is why it is said to be a __*universal serverless web framework*__.
 
 Targeted platforms:
 - [__*Zeit Now*__](https://zeit.co/now) (using express under the hood)
@@ -85,6 +85,7 @@ app.get('/users/:username', (req, res, params) => res.status(200).send(`Hello ${
 
 eval(app.listen('app', 4000))
 ```  
+>More details on why `eval` is used under [What does webfunc use eval() to start the server?](#what-does-webfunc-use-eval-to-start-the-server) in the [FAQ](#faq).
 
 __*2. Add a "start" script in your package.json*__
 ```js
@@ -148,7 +149,7 @@ To run this code locally, simply run in your terminal:
 node index.js
 ```
 
-> To speed up your development, use [_hot reloading_](#easy-hot-reloading) as explained in the [Tips & Tricks](#tips-tricks) section below.
+> To speed up your development, use [_hot reloading_](#dev---easy-hot-reloading) as explained in the [Tips & Tricks](#tips--tricks) section below.
 
 ### Multiple Endpoints
 ```js
@@ -181,7 +182,7 @@ app.all('/', (req, res) => res.status(200).send('Welcome to this awesome API!'))
 eval(app.listen('app', 4000))
 ``` 
 
-Notice that in all the cases above, the `params` argument contains any parameters that are either passed in the route or in the payload. This scenario is so common that webfunc automatically supports that feature. No need of installing any middleware like [body-parser](https://github.com/expressjs/body-parser). Webfunc can even automatically parse __*multipart/form-data*__ content type usually used to upload files (e.g. images, documents, ...). More details under [Uploading Images](#uploading-images) in the [Use Cases](#use-cases) section.
+Notice that in all the cases above, the `params` argument contains any parameters that are either passed in the route or in the payload. This scenario is so common that webfunc automatically supports that feature. No need of installing any middleware like [body-parser](https://github.com/expressjs/body-parser). Webfunc can even automatically parse __*multipart/form-data*__ content type usually used to upload files (e.g. images, documents, ...). More details under [Uploading Images](#uploading-files--images) in the [Use Cases](#use-cases) section.
 
 Based on certain requirements, it might be necessary to disable this behavior. To do so, please refer to [Disabling Body Or Route Parsing](#disabling-body-or-route-parsing) under the [Configuration](#configuration) section.
 
@@ -417,7 +418,7 @@ where
 - `mimetype` is a string representing the mimetype of the uploaded file (e.g. 'image/png').
 - `value` is a Buffer representing the uploaded file itself.
 
-Here is a code snippet that shows how to store locally the uploaded file:
+Here is a code snippet that shows how to store the uploaded file locally:
 
 ```js
 const { app } = require('webfunc')
@@ -443,6 +444,7 @@ eval(app.listen('app', 4000))
 ```
 
 You can test this code locally by using [Postman](https://www.getpostman.com/) as follow:
+
 <img src="https://raw.githubusercontent.com/nicolasdao/webfunc/master/docs/mutltipart.png" alt="Neap Pty Ltd logo" title="Neap" />
 
 
@@ -508,7 +510,7 @@ console.log(eval(code))
 eval(code)
 ```  
 
-Ro see the difference between a hosting type `"now"` and `"gcp"`, update the __*now.json*__ file as follow:
+To observe the difference between a hosting type `"now"` and `"gcp"`, update the __*now.json*__ file as follow:
 ```js
 {
   "env": {
