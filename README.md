@@ -339,7 +339,7 @@ npm start
 Authentication using webfunc is left to you. That being said, here is a quick example on how that could work using the awesome [passport](http://passportjs.org/) package. The following piece of code for Google Cloud Functions exposes a _signin_ POST endpoint that expects an email and a password and that returns a JWT token. Passing that JWT token in the _Authorization_ header using the _bearer_ scheme will allow access to the _/_ endpoint.
 
 ```js
-const { serveHttp, app } = require('webfunc')
+const { app } = require('webfunc')
 const jwt = require('jsonwebtoken')
 const passport = require('passport')
 const { ExtractJwt, Strategy } = require("passport-jwt")
@@ -355,60 +355,50 @@ passport.use(new Strategy(jwtOptions, (decryptedToken, next) => {
   return next(null, decryptedToken)
 }))
 
-/**
- * Responds to any HTTP request.
- *
- * @param {!Object} req Cloud Function request context.
- * @param {!Object} res Cloud Function response context.
- */
-exports.jwtTest = serveHttp([
+const authenticate = () => (req, res, next, params) => passport.authenticate('jwt', (err, user) => {
+  if (user) {
+    params.user = user
+    next()
+  }
+  else
+    res.status(401).send(`You must be logged in to access this endpoint!`)
+})(req, res)
 
-  app.get('/', (req, res) => passport.authenticate('jwt', (err, user) => {
-    if (user)
-      res.status(200).send(`Welcome ${user.username}!`)
-    else
-      res.status(401).send(`You must be logged in to access this endpoint!`)
-  })(req, res)),
-
-  app.post('/signin', (req, res, params) => {
-    if (params.email == 'hello@webfunc.co' && params.password == 'supersecuredpassword') {
-      const user = {
-        id: 1,
-        roles: [{
-          name: 'Admin',
-          company: 'neap pty ltd'
-        }],
-        username: 'neapnic',
-        email: 'hello@webfunc.co'
-      }
-      res.status(200).send({ message: 'Successfully logged in', token: jwt.sign(user, SECRETKEY) })
+// This api does not require authentication. It is used to acquire the bearer token.
+app.post('/signin', (req, res, params) => {
+  if (params.email == 'hello@webfunc.co' && params.password == 'supersecuredpassword') {
+    const user = {
+      id: 1,
+      roles: [{
+        name: 'Admin',
+        company: 'neap pty ltd'
+      }],
+      username: 'neapnic',
+      email: 'hello@webfunc.co'
     }
-    else
-      res.status(401).send(`Username or password invalid!`) 
-  })
-])
-```
+    res.status(200).send({ message: 'Successfully logged in', token: jwt.sign(user, SECRETKEY) })
+  }
+  else
+    res.status(401).send(`Username or password invalid!`) 
+})
 
-This piece of code is also accessible via the _**jwt-passport-example**_ gimpy template. Simply install [_**gimpy**_](https://github.com/nicolasdao/gimpy) globally, and then run the following:
+// This api requires authentication. You must pass a header names "Authorization"
+app.get('/', authenticate(), (req, res, params) => res.status(200).send(`Welcome ${params.user.username}!`))
 
-```
-gimp new jwt-passport-example jwtTest
-cd jwtTest
-npm install
-npm start
+eval(app.listen('app', 4000))
 ```
 
 To test that piece of code:
 
-Login:
+__*1. Login:*__
 ```
-curl -X POST -H 'Content-Type: application/json' -d '{"email":"hello@webfunc.co","password":"supersecuredpassword"}' http://localhost:8010/your-google-project/us-central1/jwtTest/signin
+curl -X POST -H 'Content-Type: application/json' -d '{"email":"hello@webfunc.co","password":"supersecuredpassword"}' http://localhost:4000/signin
 ```
 Extract the token received from this POST request and use it in the following GET request's header:
 
-Access the secured _/_ endpoint:
+__*2. Access the secured _/_ endpoint:*__
 ```
-curl -v -H "Authorization: Bearer your-jwt-token" http://localhost:8010/your-google-project/us-central1/jwtTest
+curl -v -H "Authorization: Bearer your-jwt-token" http://localhost:4000
 ```
 
 ## Uploading Files & Images
