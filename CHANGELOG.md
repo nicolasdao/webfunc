@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.10.0"></a>
+# [0.10.0](https://github.com/nicolasdao/webfunc/compare/v0.10.0-alpha.5...v0.10.0) (2018-01-04)
+
+
+### Bug Fixes
+
+* Conflict between webfunc and now-cli in the now.json for the 'env' property. To fix tat conflict, we have renamed 'env' to 'environment' ([e3b6a37](https://github.com/nicolasdao/webfunc/commit/e3b6a37))
+
+
+
 <a name="0.10.0-alpha.5"></a>
 # [0.10.0-alpha.5](https://github.com/nicolasdao/webfunc/compare/v0.10.0-alpha.4...v0.10.0-alpha.5) (2018-01-04)
 
