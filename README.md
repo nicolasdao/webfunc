@@ -1,4 +1,4 @@
-# WebFunc &middot;  [![NPM](https://img.shields.io/npm/v/webfunc.svg?style=flat)](https://www.npmjs.com/package/webfunc) [![Tests](https://travis-ci.org/nicolasdao/webfunc.svg?branch=master)](https://travis-ci.org/nicolasdao/webfunc) [![Neap](https://neap.co/img/neap_color_horizontal.png)](https://neap.co)
+# WebFunc &middot;  [![NPM](https://img.shields.io/npm/v/webfunc.svg?style=flat)](https://www.npmjs.com/package/webfunc) [![Tests](https://travis-ci.org/nicolasdao/webfunc.svg?branch=master)](https://travis-ci.org/nicolasdao/webfunc) [![Neap](https://neap.co/img/made_by_neap.svg)](#this-is-what-we-re-up-to)
 __*Universal serverless*__ web framework that uses the awesome [Zeit Now CLI](https://zeit.co/now) to manage deployments. 
 
 Write code for serverless similar to [Express](https://expressjs.com/). Write once, deploy everywhere. This is why it is said to be a __*Universal Serverless Web Framework*__. 
@@ -585,6 +585,7 @@ npm test
 ```
 
 # This Is What We re Up To
+<a href="https://neap.co" target="_blank"><img src="https://neap.co/img/neap_color_horizontal.png" alt="Neap Pty Ltd logo" title="Neap" height="89" width="200" style="float: right" align="right" /></a>
 We are Neap, an Australian Technology consultancy powering the startup ecosystem in Sydney. We simply love building Tech and also meeting new people, so don't hesitate to connect with us at [https://neap.co](https://neap.co).
 
 # License
