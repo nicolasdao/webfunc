@@ -13,13 +13,7 @@ app.get('/users/:username', (req, res, params) => res.status(200).send(`Hello ${
 eval(app.listen('app', 4000))
 ```  
 
-Targeted platforms:
-- [__*Zeit Now*__](https://zeit.co/now) (using express under the hood)
-- [__*Google Cloud Functions*__](https://cloud.google.com/functions/) (incl. Firebase Function)
-- [__*AWS Lambdas*__](https://aws.amazon.com/lambda) (COMING SOON...)
-- [__*Azure Functions*__](https://azure.microsoft.com/en-us/services/functions/) (COMING SOON...)
-
-__*[Webfunc](https://github.com/nicolasdao/webfunc) supports [Express](https://expressjs.com/) middlewares*__. 
+__*[Webfunc](https://github.com/nicolasdao/webfunc) supports [Express middleware](#compatible-with-all-express-middleware)*__. 
 
 Forget any external dependencies to run your serverless app locally. Run `node index.js` and that's it. 
 
