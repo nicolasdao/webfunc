@@ -1,14 +1,9 @@
-<a href="https://neap.co" target="_blank"><img src="https://neap.co/img/neap_color_horizontal.png" alt="Neap Pty Ltd logo" title="Neap" height="100" width="225" style="float: right" align="right" /></a>
-
-# WebFunc - Universal Serverless Web Framework
-[![NPM][1]][2] [![Tests][3]][4]
-
-[1]: https://img.shields.io/npm/v/webfunc.svg?style=flat
-[2]: https://www.npmjs.com/package/webfunc
-[3]: https://travis-ci.org/nicolasdao/webfunc.svg?branch=master
-[4]: https://travis-ci.org/nicolasdao/webfunc
+<a href="https://neap.co" target="_blank"><img src="https://neap.co/img/neap_color_horizontal.png" alt="Neap Pty Ltd logo" title="Neap" height="89" width="200" style="float: right" align="right" /></a>
+# WebFunc &middot;  [![NPM](https://img.shields.io/npm/v/webfunc.svg?style=flat)](https://www.npmjs.com/package/webfunc) [![Tests](https://travis-ci.org/nicolasdao/webfunc.svg?branch=master)](https://travis-ci.org/nicolasdao/webfunc)
 
 __*Universal serverless*__ web framework that uses the awesome [Zeit Now CLI](https://zeit.co/now) to manage deployments. 
+
+Webfunc allows to write code for serverless similar to [Express](https://expressjs.com/). Write once, deploy everywhere. This is why it is said to be a __*Universal Serverless Web Framework*__.
 
 ```js
 const { app } = require('webfunc')
@@ -17,8 +12,6 @@ app.get('/users/:username', (req, res, params) => res.status(200).send(`Hello ${
 
 eval(app.listen('app', 4000))
 ```  
-
-Webfunc allows to write code for serverless similar to [Express](https://expressjs.com/). Write once, deploy everywhere. This is why it is said to be a __*universal serverless web framework*__.
 
 Targeted platforms:
 - [__*Zeit Now*__](https://zeit.co/now) (using express under the hood)
