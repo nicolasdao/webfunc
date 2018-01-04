@@ -1,5 +1,5 @@
 # WebFunc &middot;  [![NPM](https://img.shields.io/npm/v/webfunc.svg?style=flat)](https://www.npmjs.com/package/webfunc) [![Tests](https://travis-ci.org/nicolasdao/webfunc.svg?branch=master)](https://travis-ci.org/nicolasdao/webfunc) [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause) [![Neap](https://neap.co/img/made_by_neap.svg)](#this-is-what-we-re-up-to)
-__*Universal Serverless Web Framework*__ and manage deployments with a single command(thanks to the awesome [Zeit Now-CLI](https://zeit.co/now)). Write code for serverless similar to [Express](https://expressjs.com/) once, deploy everywhere. Targeted platforms:
+__*Universal Serverless Web Framework*__. Write code for serverless similar to [Express](https://expressjs.com/) once, deploy everywhere (thanks to the awesome [Zeit Now-CLI](https://zeit.co/now)). Targeted platforms:
 - [__*Zeit Now*__](https://zeit.co/now) (using express under the hood)
 - [__*Google Cloud Functions*__](https://cloud.google.com/functions/) (incl. Firebase Function)
 - [__*AWS Lambdas*__](https://aws.amazon.com/lambda) (COMING SOON...)
