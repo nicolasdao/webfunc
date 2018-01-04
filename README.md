@@ -35,13 +35,13 @@ Out-of-the-box features include:
 > * [Configuration](#configuration)
 >   - [CORS](#cors) 
 >   - [Disabling Body Or Route Parsing](#disabling-body-or-route-parsing)
-> * [Tips & Tricks](#tips--tricks)
->   - [Dev - Easy Hot Reloading](#dev---easy-hot-reloading)
->   - [Dev - Better Deployments With now-flow](#dev---better-deployments-with-now-flow)
 > * [Use Cases](#use-cases)
 >   - [Authentication](#authentication) 
 >   - [Uploading Files & Images](#uploading-files--images)
 >   - [GraphQL](#graphql)
+> * [Tips & Tricks](#tips--tricks)
+>   - [Dev - Easy Hot Reloading](#dev---easy-hot-reloading)
+>   - [Dev - Better Deployments With now-flow](#dev---better-deployments-with-now-flow)
 > * [FAQ](#faq)
 > * [Annexes](#annexes)
 >   - [A.1. CORS Refresher](#a1-cors-refresher)
@@ -303,25 +303,6 @@ That _paramsMode_ property accepts 4 modes:
 
 If the _paramsMode_ property is not defined in the _now.json_, then the default mode is _all_.
 
-# Tips & Tricks
-## Dev - Easy Hot Reloading
-While developing on your localhost, we recommend using hot reloading to help you automatically restart your node process after each change. [_node-dev_](https://github.com/fgnass/node-dev) is a lightweight development tools that watches the minimum amount of files in your project and automatically restart the node process each time a file has changed. 
-```
-npm install node-dev --save-dev
-```
-Change your __*start*__ script in your _package.json_ from `"start": "node index.js"` to:
-```js
-  "scripts": {
-    "start": "node-dev index.js"
-  }
-```
-Then simply start your server as follow:
-```
-npm start
-```
-
-## Dev - Better Deployments With now-flow
-
 # Use Cases
 ## Authentication 
 Authentication using webfunc is left to you. That being said, here is a quick example on how that could work using the awesome [passport](http://passportjs.org/) package. The following piece of code for Google Cloud Functions exposes a _signin_ POST endpoint that expects an email and a password and that returns a JWT token. Passing that JWT token in the _Authorization_ header using the _bearer_ scheme will allow access to the _/_ endpoint.
@@ -483,6 +464,101 @@ app.all(['/', '/graphiql'], graphqlHandler(graphqlOptions), () => null)
 eval(app.listen('app', 4000))
 ```
 
+# Tips & Tricks
+## Dev - Easy Hot Reloading
+While developing on your localhost, we recommend using hot reloading to help you automatically restart your node process after each change. [_node-dev_](https://github.com/fgnass/node-dev) is a lightweight development tools that watches the minimum amount of files in your project and automatically restart the node process each time a file has changed. 
+```
+npm install node-dev --save-dev
+```
+Change your __*start*__ script in your _package.json_ from `"start": "node index.js"` to:
+```js
+  "scripts": {
+    "start": "node-dev index.js"
+  }
+```
+Then simply start your server as follow:
+```
+npm start
+```
+
+## Dev - Better Deployments With now-flow
+[__*now-flow*__](https://github.com/nicolasdao/now-flow) reduces the issues that arise when deploying to multiple environments (e.g. dev, staging, production, ...) using [Zeit now-CLI](https://zeit.co/now). Simply define your alias and all your environment variables specific to each environment inside your traditional __now.json__, and let NowFlow do the rest. 
+
+#### Problem Explained
+
+[__*Zeit now-CLI*__](https://zeit.co/now) allows to deploy serverless applications to its own serverless infrastructure or to the most popular FaaS (i.e. Function as a Service) solutions (e.g. [Google Cloud Functions](https://cloud.google.com/functions/), [AWS Lambdas](https://aws.amazon.com/lambda)). However, a common challenge is to establish a sound strategy to manage multiple environments (e.g. dev, staging, production, ...). Typically, those environments might have a different:
+- `hostingType` (e.g. localhost, now, gcp, aws, ...).
+- `alias` if the application is deployed to [Zeit now-CLI](https://zeit.co/now).
+- `start` script in the package.json.
+- Many other environment specific variables.
+
+The manual solution is to:
+1. Update the `start` script in the _package.json_ specific to your environment if you deploy to Zeit Now (e.g. production: `"start": "NODE_ENV=production node index.js"`, staging: `"start": "NODE_ENV=staging node index.js"`, localhost: `"start": "node-dev index.js"`).
+2. If you're deploying to [Google Cloud Functions](https://cloud.google.com/functions/), you might need to configure the `gcp` property in the _now.json_.
+3. If you're using the [Webfunc](https://github.com/nicolasdao/webfunc) serverless web framework, then you also need to set up the `env.active` property to the target environment in the _now.json_.
+4. Run the right command (e.g. `now` if deploying to [Zeit Now](https://zeit.co/now), and `now gcp` if deploying to [Google Cloud Functions](https://cloud.google.com/functions/)).
+5. Potentially _alias_ your deployment if your're deploying to [Zeit Now](https://zeit.co/now):
+> - Update the `alias` property of the _now.json_ file to the alias name specific to your environment.
+> - Run `now alias`
+
+This process is obviously proned to errors. It is also tedious if you're deploying often. This is why we created __*now-flow*__. 
+
+#### Solution - How NowFlow Works?
+Configure your _now.json_ once, and then replace all the manual steps above with a single command similar to `nowflow production`.
+
+__*Example:*__
+
+_now.json_
+```js
+{
+  "env": {
+    "active": "default",
+    "default": {
+      "hostingType": "localhost"
+    },
+    "staging": {
+      "hostingType": "gcp",
+      "gcp": {
+        "functionName": "yourapp-test",
+        "memory": 128
+      }
+    },
+    "production": {
+      "hostingType": "now",
+      "scripts": {
+        "start": "NODE_ENV=production node index.js"
+      },
+      "alias": "yourapp-prod"
+    }
+  }
+}
+```
+
+To deploy the production environment, simply run:
+
+```
+nowflow production 
+```
+
+This will deploy to [Zeit Now](https://zeit.co/now) and make sure that:
+- The _package.json_ that is being deployed will contain the _start_ script `"NODE_ENV=production node index.js"`.
+- The `env.active` property of the _now.json_ is set to `production`.
+- Once the deployment to [Zeit Now](https://zeit.co/now) is finished, it is automatically aliased to `yourapp-prod`. 
+
+On the contrary, to deploy the staging environment, simply run:
+
+```
+nowflow staging 
+```
+
+This will deploy to [Google Cloud Functions](https://cloud.google.com/functions/) and make sure that:
+- The `env.active` property of the _now.json_ is set to `staging`.
+- The _now.json_ contains a `gcp` property identical to the one defined in the staging configuration.
+
+No more deployment then aliasing steps. No more worries that some environment variables have been properly deployed to the right environment. 
+
+> More details about __*now-flow*__ [here](https://github.com/nicolasdao/now-flow).
+
 # FAQ
 ## What does webfunc use eval() to start the server?
 You should have noticed that all the snippets above end up with `eval(app.listen('app', 4000))`. The main issue webfunc tackles is to serve endpoints using a uniform API regardless of the serverless hosting platform. This is indeed a challenge as different platforms use different convention. [Zeit Now](https://zeit.co/now) uses a standard [Express](https://expressjs.com/) server, which means that the api to start the server is similar to `app.listen()`. However, with FaaS ([Google Cloud Functions](https://cloud.google.com/functions/), [AWS Lambdas](https://aws.amazon.com/lambda), ...), there is no server to be started. The server lifecycle is automatically managed by the 3rd party. The only piece of code you need to write is a handler function similar to `exports.handler = (req, res) => res.status(200).send('Hello world')`. In order to manage those 2 main scenarios, webfunc generate the code to be run as a string, and evaluate it using `eval()`. You can easily inspect the code as follow:
@@ -545,7 +621,7 @@ The following configuration is forbidden:
 }
 ```
 
-You cannot allow anybody to access a resource("Access-Control-Allow-Origin": "*") while at the same time allowing anybody to share cookies("Access-Control-Allow-Credentials": "true"). This would be a huge security breach (i.e. [CSRF attach](https://en.wikipedia.org/wiki/Cross-site_request_forgery)). 
+You cannot allow anybody to access a resource(`"Access-Control-Allow-Origin": "*"`) while at the same time allowing anybody to share cookies(`"Access-Control-Allow-Credentials": "true"`). This would be a huge security breach (i.e. [CSRF attach](https://en.wikipedia.org/wiki/Cross-site_request_forgery)). 
 
 For that reason, this configuration, though it allow your resource to be called from the same origin, would fail once your API is called from a different origin. A error similar to the following would be thrown by the browser:
 ```
@@ -581,8 +657,25 @@ npm test
 ```
 
 # This Is What We re Up To
-<a href="https://neap.co" target="_blank"><img src="https://neap.co/img/neap_color_horizontal.png" alt="Neap Pty Ltd logo" title="Neap" height="89" width="200" style="float: right" align="right" /></a>
 We are Neap, an Australian Technology consultancy powering the startup ecosystem in Sydney. We simply love building Tech and also meeting new people, so don't hesitate to connect with us at [https://neap.co](https://neap.co).
+
+Our other open-sourced projects:
+#### Web Framework & Deployment Tools
+* [__*webfunc*__](https://github.com/nicolasdao/webfunc): Write code for serverless similar to Express once, deploy everywhere. 
+* [__*now-flow*__](https://github.com/nicolasdao/now-flow): Automate your Zeit Now Deployments.
+
+#### GraphQL
+* [__*graphql-serverless*__](https://github.com/nicolasdao/graphql-serverless): GraphQL (incl. a GraphiQL interface) middleware for [webfunc](https://github.com/nicolasdao/webfunc).
+* [__*schemaglue*__](https://github.com/nicolasdao/schemaglue): Naturally breaks down your monolithic graphql schema into bits and pieces and then glue them back together.
+* [__*graphql-s2s*__](https://github.com/nicolasdao/graphql-s2s): Add GraphQL Schema support for type inheritance, generic typing, metadata decoration. Transpile the enriched GraphQL string schema into the standard string schema understood by graphql.js and the Apollo server client.
+
+#### React & React Native
+* [__*react-native-game-engine*__](https://github.com/bberak/react-native-game-engine): A lightweight game engine for react native.
+* [__*react-native-game-engine-handbook*__](https://github.com/bberak/react-native-game-engine-handbook): A React Native app showcasing some examples using react-native-game-engine.
+
+#### Tools
+* [__*aws-cloudwatch-logger*__](https://github.com/nicolasdao/aws-cloudwatch-logger): Promise based logger for AWS CloudWatch LogStream.
+
 
 # License
 Copyright (c) 2018, Neap Pty Ltd.
@@ -603,3 +696,5 @@ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
 ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+<p align="center"><a href="https://neap.co" target="_blank"><img src="https://neap.co/img/neap_color_horizontal.png" alt="Neap Pty Ltd logo" title="Neap" height="89" width="200"/></a></p>
