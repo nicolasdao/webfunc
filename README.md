@@ -3,6 +3,12 @@ __*Universal serverless*__ web framework that uses the awesome [Zeit Now CLI](ht
 
 Write code for serverless similar to [Express](https://expressjs.com/). Write once, deploy everywhere. This is why it is said to be a __*Universal Serverless Web Framework*__. 
 
+Targeted platforms:
+- [__*Zeit Now*__](https://zeit.co/now) (using express under the hood)
+- [__*Google Cloud Functions*__](https://cloud.google.com/functions/) (incl. Firebase Function)
+- [__*AWS Lambdas*__](https://aws.amazon.com/lambda) (COMING SOON...)
+- [__*Azure Functions*__](https://azure.microsoft.com/en-us/services/functions/) (COMING SOON...)
+
 ```js
 const { app } = require('webfunc')
 
