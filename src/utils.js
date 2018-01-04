@@ -6,10 +6,8 @@
  * LICENSE file in the root directory of this source tree.
 */
 const getRawBody = require('raw-body')
-const path = require('path')
 
 /*eslint-disable */
-const cwdPath = f => path.join(process.cwd(), f)
 const utf8ToHex = s => s ? Buffer.from(s).toString('hex') : ''
 const hexToUtf8 = h => h ? Buffer.from(h, 'hex').toString() : ''
 const hexToBuf = h => h ? Buffer.from(h, 'hex') : new Buffer(0)

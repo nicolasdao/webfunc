@@ -100,7 +100,7 @@ Add a __*now.json*__ file similar to the following:
     "memory": 128,
     "functionName": "webfunctest"
   },
-  "env":{
+  "environment":{
     "active": "staging",
     "default":{
       "hostingType": "localhost"
@@ -112,7 +112,7 @@ Add a __*now.json*__ file similar to the following:
 }
 ```
 
-The `env.active = "staging"` indicates that the configuration for your app is inside the `env.staging` property. There, you can see `"hostingType": "gcp"`. Webfunc uses the `hostingType` property to define how to serve your app (this is indeed different from platform to platform. Trying to deploy a `"hostingType": "gcp"` to Zeit Now will fail).  
+The `environment.active = "staging"` indicates that the configuration for your app is inside the `environment.staging` property. There, you can see `"hostingType": "gcp"`. Webfunc uses the `hostingType` property to define how to serve your app (this is indeed different from platform to platform. Trying to deploy a `"hostingType": "gcp"` to Zeit Now will fail).  
 
 ```
 now gcp
@@ -234,15 +234,16 @@ eval(app.listen('app', 4000))
 The following code allows to access the current active environment's variables:
 
 ```js
-const { getActiveEnv } = require('webfunc')
-const activeEnv = getActiveEnv()
-console.log(activeEnv.myCustomVar) // > "Hello Default"
+const { appConfig } = require('webfunc')
+console.log(appConfig.myCustomVar) // > "Hello Default"
 ```
-The _**getActiveEnv**_ function looks for an _**env**_ property inside the _**now.json**_ file. Then, it looks for the current active environment (i.e. the value of the _**active**_ property), and extract the JSON object associated to that value. Here is an example of a typical _now.json_ file:
+_**appConfig**_ is the configuration inside the _**now.json**_ under the _**active environment**_ (the _active environment_ is the value of the `environment.active` property).
+
+Here is an example of a typical _now.json_ file:
 
 ```js
 {
-  "env": {
+  "environment": {
     "active": "default",
     "default": {
       "hostingType": "localhost",
@@ -260,7 +261,13 @@ The _**getActiveEnv**_ function looks for an _**env**_ property inside the _**no
 }
 ```
 
-As you can see, the example above demonstrates 4 different types of enviornment setups: _default_, _staging_, _prod_. You can obviouly define as many as you want, and add whatever you need under those environments. 
+As you can see, the example above demonstrates 3 different types of environment setups: _default_, _staging_, _prod_. You can obviouly define as many as you want, and add whatever you need under those environments. Since the value of the `environment.active` is `"default"` in this example, the value of the _**appConfig**_ object is:
+```js
+{
+  "hostingType": "localhost",
+  "myCustomVar": "Hello Default"
+}
+```
 
 # Configuration
 ## CORS
@@ -495,7 +502,7 @@ npm start
 The manual solution is to:
 1. Update the `start` script in the _package.json_ specific to your environment if you deploy to Zeit Now (e.g. production: `"start": "NODE_ENV=production node index.js"`, staging: `"start": "NODE_ENV=staging node index.js"`, localhost: `"start": "node-dev index.js"`).
 2. If you're deploying to [Google Cloud Functions](https://cloud.google.com/functions/), you might need to configure the `gcp` property in the _now.json_.
-3. If you're using the [Webfunc](https://github.com/nicolasdao/webfunc) serverless web framework, then you also need to set up the `env.active` property to the target environment in the _now.json_.
+3. If you're using the [Webfunc](https://github.com/nicolasdao/webfunc) serverless web framework, then you also need to set up the `environment.active` property to the target environment in the _now.json_.
 4. Run the right command (e.g. `now` if deploying to [Zeit Now](https://zeit.co/now), and `now gcp` if deploying to [Google Cloud Functions](https://cloud.google.com/functions/)).
 5. Potentially _alias_ your deployment if your're deploying to [Zeit Now](https://zeit.co/now):
 > - Update the `alias` property of the _now.json_ file to the alias name specific to your environment.
@@ -511,7 +518,7 @@ __*Example:*__
 _now.json_
 ```js
 {
-  "env": {
+  "environment": {
     "active": "default",
     "default": {
       "hostingType": "localhost"
@@ -542,7 +549,7 @@ nowflow production
 
 This will deploy to [Zeit Now](https://zeit.co/now) and make sure that:
 - The _package.json_ that is being deployed will contain the _start_ script `"NODE_ENV=production node index.js"`.
-- The `env.active` property of the _now.json_ is set to `production`.
+- The `environment.active` property of the _now.json_ is set to `production`.
 - Once the deployment to [Zeit Now](https://zeit.co/now) is finished, it is automatically aliased to `yourapp-prod`. 
 
 On the contrary, to deploy the staging environment, simply run:
@@ -552,7 +559,7 @@ nowflow staging
 ```
 
 This will deploy to [Google Cloud Functions](https://cloud.google.com/functions/) and make sure that:
-- The `env.active` property of the _now.json_ is set to `staging`.
+- The `environment.active` property of the _now.json_ is set to `staging`.
 - The _now.json_ contains a `gcp` property identical to the one defined in the staging configuration.
 
 No more deployment then aliasing steps. No more worries that some environment variables have been properly deployed to the right environment. 
@@ -576,7 +583,7 @@ eval(code)
 To observe the difference between a hosting type `"now"` and `"gcp"`, update the __*now.json*__ file as follow:
 ```js
 {
-  "env": {
+  "environment": {
     "active": "default",
     "default": {
       "hostingType": "gcp"

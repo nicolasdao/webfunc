@@ -14,11 +14,6 @@ require('colors')
 
 /*eslint-disable */
 const cwdPath = f => path.join(process.cwd(), f)
-const getProcessEnv = () => process.env || {}
-const addEnvToProcess = (key,value) => {
-	if (key)
-		process.env[key] = value
-}
 /*eslint-enable */
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -65,8 +60,8 @@ let _postEvent = () => Promise.resolve(null)
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-const getEnvName = () => ((_config || {}).env || {}).active || 'default'
-const getEnv = () => ((_config || {}).env || {})[getEnvName()] || {}
+const getActiveEnv = () => ((_config || {}).environment || {}).active || 'default'
+const getEnv = () => ((_config || {}).environment || {})[getActiveEnv()] || {}
 const getHostingType = () => getEnv().hostingType || 'localhost'
 
 /**
@@ -456,6 +451,7 @@ const validateCORS = (req, res, config={}, allowedOrigins={}, allowedMethods={})
 
 module.exports = {
 	app,
+	get appConfig() { return getEnv() },
 	utils: {
 		headers: {
 			setResponseHeaders,
