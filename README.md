@@ -585,7 +585,7 @@ npm test
 We are Neap, an Australian Technology consultancy powering the startup ecosystem in Sydney. We simply love building Tech and also meeting new people, so don't hesitate to connect with us at [https://neap.co](https://neap.co).
 
 # License
-Copyright (c) 2017, Neap Pty Ltd.
+Copyright (c) 2018, Neap Pty Ltd.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
