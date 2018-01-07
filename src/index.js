@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2017, Neap Pty Ltd.
+ * Copyright (c) 2018, Neap Pty Ltd.
  * All rights reserved.
  * 
  * This source code is licensed under the BSD-style license found in the
@@ -273,7 +273,7 @@ const createEndpoint = (args, verb) => {
 			throw new Error(`Wrong argument exception. When only one argument is passed to an ${httpVerb} endpoint, then that argument must be either be a string (endpoint path), an array of strings (collection of endpoint path) or a function similar to (req, res) => ...`)
 
 		if (firstArgIsArray && args[0].some(x => typeof(x) != 'string'))
-				throw new Error(`Wrong argument exception. When the first argument passed to create an ${httpVerb} endpoint is an array, that array must be made of string only.`)
+			throw new Error(`Wrong argument exception. When the first argument passed to create an ${httpVerb} endpoint is an array, that array must be made of string only.`)
 
 		_endpoints.push({ 
 			routes: getRouteDetails(firstArgType == 'function' ? '/' : args[0]), 

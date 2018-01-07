@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2017, Neap Pty Ltd.
+ * Copyright (c) 2018, Neap Pty Ltd.
  * All rights reserved.
  * 
  * This source code is licensed under the BSD-style license found in the
@@ -1172,10 +1172,10 @@ describe('app', () =>
 
 			app.reset()
 			app.use(appconfig)
-			app.preEvent = (req, res) => {
+			app.preEvent = () => {
 				preEventProof = ++counter
 			}
-			app.postEvent = (req, res) => {
+			app.postEvent = () => {
 				postEventProof = ++counter
 			}
 			app.get(['/users/:userId', '/companies/:companyId'], (req, res) => {

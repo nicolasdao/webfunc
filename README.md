@@ -8,7 +8,7 @@ __*Universal Serverless Web Framework*__. Write code for serverless similar to [
 ```js
 const { app } = require('webfunc')
 
-app.get('/users/:username', (req, res, params) => res.status(200).send(`Hello ${params.username}`))
+app.get('/users/:username', (req, res) => res.status(200).send(`Hello ${req.params.username}`))
 
 eval(app.listen('app', 4000))
 ```  
@@ -68,7 +68,7 @@ __*1. Create an index.js:*__
 ```js
 const { app } = require('webfunc')
 
-app.get('/users/:username', (req, res, params) => res.status(200).send(`Hello ${params.username}`))
+app.get('/users/:username', (req, res) => res.status(200).send(`Hello ${req.params.username}`))
 
 eval(app.listen('app', 4000))
 ```  
@@ -126,7 +126,7 @@ _index.js:_
 ```js
 const { app } = require('webfunc')
 
-app.get('/users/:username', (req, res, params) => res.status(200).send(`Hello ${params.username}`))
+app.get('/users/:username', (req, res) => res.status(200).send(`Hello ${req.params.username}`))
 
 eval(app.listen('app', 4000))
 ```  
@@ -143,22 +143,22 @@ node index.js
 const { app } = require('webfunc')
 
 // 1. Simple GET method. 
-app.get('/users/:username', (req, res, params) => 
-  res.status(200).send(`Hello ${params.username}`))
+app.get('/users/:username', (req, res) => 
+  res.status(200).send(`Hello ${req.params.username}`))
 
 // 2. GET method with more variables in the route. The conventions are the same as
 //    the 'path-to-regex' module (https://github.com/pillarjs/path-to-regexp).
-app.get('/users/:username/account/:accountId', (req, res, params) => 
-  res.status(200).send(`Hello ${params.username} (account: ${params.accountId})`))
+app.get('/users/:username/account/:accountId', (req, res) => 
+  res.status(200).send(`Hello ${req.params.username} (account: ${req.params.accountId})`))
 
 // 3. Support for multiple routes pointing to the same action.
-app.get(['/companies/:companyName', '/organizations/:orgName'], (req, res, params) => 
-  res.status(200).send(params.companyName ? `Hello company ${params.companyName}` : `Hello organization ${params.orgName}`))
+app.get(['/companies/:companyName', '/organizations/:orgName'], (req, res) => 
+  res.status(200).send(req.params.companyName ? `Hello company ${req.params.companyName}` : `Hello organization ${req.params.orgName}`))
 
 // 4. Supports all http verbs: GET, POST, PUT, DELETE, HEAD, OPTIONS.
 app.post('/login', (req, res, params={}) => {
-  if (params.username == 'nic' && params.password == '123')
-    res.status(200).send(`Welcome ${params.username}.`)
+  if (req.params.username == 'nic' && req.params.password == '123')
+    res.status(200).send(`Welcome ${req.params.username}.`)
   else
     res.status(401).send('Invalid username or password.')
 })
@@ -169,66 +169,113 @@ app.all('/', (req, res) => res.status(200).send('Welcome to this awesome API!'))
 eval(app.listen('app', 4000))
 ``` 
 
-Notice that in all the cases above, the `params` argument contains any parameters that are either passed in the route or in the payload. This scenario is so common that webfunc automatically supports that feature. No need of installing any middleware like [body-parser](https://github.com/expressjs/body-parser). Webfunc can even automatically parse __*multipart/form-data*__ content type usually used to upload files (e.g. images, documents, ...). More details under [Uploading Images](#uploading-files--images) in the [Use Cases](#use-cases) section.
+Notice that in all the cases above, the `req.params` argument contains any parameters that are either passed in the route or in the payload. This scenario is so common that webfunc automatically supports that feature. No need of installing any middleware like [body-parser](https://github.com/expressjs/body-parser). Webfunc can even automatically parse __*multipart/form-data*__ content type usually used to upload files (e.g. images, documents, ...). More details under [Uploading Images](#uploading-files--images) in the [Use Cases](#use-cases) section.
 
 Based on certain requirements, it might be necessary to disable this behavior. To do so, please refer to [Disabling Body Or Route Parsing](#disabling-body-or-route-parsing) under the [Configuration](#configuration) section.
 
 ## Compatible With All Express Middleware
 That's probably one of the biggest advantage of using webfunc. [Express](https://expressjs.com/) offers countless of open-sourced [middleware](https://expressjs.com/en/resources/middleware.html) that would not be as easily usable in a FaaS environment without webfunc. 
 
+Next, we'll demonstrate 4 different basic scenarios:
+1. [Using An Express Middleware Globally](#using-an-express-middleware-globally)
+2. [Using An Express Middleware On a Specific Endpoint Only](#using-an-express-middleware-on-a-specific-endpoint-only)
+3. [Creating Your Own Middleware](#creating-your-own-middleware)
+4. [Chaining Multiple Middleware On a Specific Endpoint](#chaining-multiple-middleware-on-a-specific-endpoint)
+
+### Using An Express Middleware Globally
 ```js
 const { app } = require('webfunc')
 const responseTime = require('response-time')
 
 app.use(responseTime())
 
-app.get('/users/:username', (req, res, params) => 
-  res.status(200).send(`Hello ${params.username}`))
+app.get('/users/:username', (req, res) => 
+  res.status(200).send(`Hello ${req.params.username}`))
 
-app.get('/users/:username/account/:accountId', (req, res, params) => 
-  res.status(200).send(`Hello ${params.username} (account: ${params.accountId})`))
+app.get('/users/:username/account/:accountId', (req, res) => 
+  res.status(200).send(`Hello ${req.params.username} (account: ${req.params.accountId})`))
 
 eval(app.listen('app', 4000))
 ```
 
-The snippet above demonstrate how to use the Express middleware [response-time](https://github.com/expressjs/response-time). This middleware measures the time it takes for your server to process a request. It will add a new response header called __X-Response-Time__. In this example, all APIs will be affected. Similar to Express, webfunc allows to target APIs specifically:
+The snippet above demonstrate how to use the Express middleware [response-time](https://github.com/expressjs/response-time). This middleware measures the time it takes for your server to process a request. It will add a new response header called __X-Response-Time__. In this example, all APIs will be affected. 
+
+### Using An Express Middleware On a Specific Endpoint Only
+Similar to Express, webfunc allows to target APIs specifically:
 
 ```js
 const { app } = require('webfunc')
 const responseTime = require('response-time')
 
-app.get('/users/:username', responseTime(), (req, res, params) => 
-  res.status(200).send(`Hello ${params.username}`))
+app.get('/users/:username', responseTime(), (req, res) => 
+  res.status(200).send(`Hello ${req.params.username}`))
 
-app.get('/users/:username/account/:accountId', (req, res, params) => 
-  res.status(200).send(`Hello ${params.username} (account: ${params.accountId})`))
+app.get('/users/:username/account/:accountId', (req, res) => 
+  res.status(200).send(`Hello ${req.params.username} (account: ${req.params.accountId})`))
 
 eval(app.listen('app', 4000))
 ```
 
 In the snippet above, the _response-time_ will only affect the first API.
 
-Obviously, you can also create your own middleware the exact same way you would have done it with Express:
+### Creating Your Own Middleware
+Obviously, you can also create your own middleware the exact same way you would have done it with Express, which means you'll also be able to use it with Express:
 
 ```js
 const { app } = require('webfunc')
 
-const authenticate = () => (req, res, next) => {
+const authenticate = (req, res, next) => {
   if (!req.headers['Authorization'])
     res.status(401).send(`Missing 'Authorization' header.`)
   next()
 }
 
-app.use(authenticate())
+app.use(authenticate)
 
-app.get('/users/:username', (req, res, params) => 
-  res.status(200).send(`Hello ${params.username}`))
+app.get('/users/:username', (req, res) => 
+  res.status(200).send(`Hello ${req.params.username}`))
 
-app.get('/users/:username/account/:accountId', (req, res, params) => 
-  res.status(200).send(`Hello ${params.username} (account: ${params.accountId})`))
+app.get('/users/:username/account/:accountId', (req, res) => 
+  res.status(200).send(`Hello ${req.params.username} (account: ${req.params.accountId})`))
 
 eval(app.listen('app', 4000))
 ```
+
+### Chaining Multiple Middleware On a Specific Endpoint
+For more complex scenario, you may need to chain multiple middleware differently depending on the endpoint:
+
+```js
+const { app } = require('webfunc')
+
+const doSomething = (req, res, next) => {
+  // Notice that it might be wise to take some precaution and not override the 'req.params'
+  // property, which might have been used a previous middleware.
+  if (!req.params || typeof(req.params) != 'object')
+    req.params = {}
+  Object.assign(req.params, { part_1: 'nice' })
+  next()
+}
+
+const doSomethingElse = (req, res, next) => {
+  if (!req.params || typeof(req.params) != 'object')
+    req.params = {}
+  Object.assign(req.params, { part_2: 'to see you' })
+  next()
+}
+
+// One way to chain:
+app.get('/users/:username', doSomething, doSomethingElse, (req, res) => 
+  res.status(200).send(`Hello ${req.params.username}, ${req.params.part_1} ${req.params.part_2}`))
+
+// Another way to chain:
+const middleware = [doSomething, doSomethingElse]
+
+app.get('/', ...middleware.concat((req, res) => 
+  res.status(200).send(`Hello ${req.params.part_1} ${req.params.part_2}`)))
+
+eval(app.listen('app', 4000))
+```
+
 
 ## Managing Environment Variables Per Deployment
 The following code allows to access the current active environment's variables:
@@ -331,9 +378,13 @@ passport.use(new Strategy(jwtOptions, (decryptedToken, next) => {
   return next(null, decryptedToken)
 }))
 
-const authenticate = () => (req, res, next, params) => passport.authenticate('jwt', (err, user) => {
+const authenticate = () => (req, res, next) => passport.authenticate('jwt', (err, user) => {
   if (user) {
-    params.user = user
+    // Notice that it might be wise to take some precaution and not override the 'req.params'
+    // property, which might have been used a previous middleware.
+    if (!req.params || typeof(req.params) != 'object')
+      req.params = {}
+    Object.assign(req.params, { user })
     next()
   }
   else
@@ -341,8 +392,8 @@ const authenticate = () => (req, res, next, params) => passport.authenticate('jw
 })(req, res)
 
 // This api does not require authentication. It is used to acquire the bearer token.
-app.post('/signin', (req, res, params) => {
-  if (params.email == 'hello@webfunc.co' && params.password == 'supersecuredpassword') {
+app.post('/signin', (req, res) => {
+  if (req.params.email == 'hello@webfunc.co' && req.params.password == 'supersecuredpassword') {
     const user = {
       id: 1,
       roles: [{
@@ -359,7 +410,7 @@ app.post('/signin', (req, res, params) => {
 })
 
 // This api requires authentication. You must pass a header names "Authorization"
-app.get('/', authenticate(), (req, res, params) => res.status(200).send(`Welcome ${params.user.username}!`))
+app.get('/', authenticate(), (req, res) => res.status(200).send(`Welcome ${req.params.user.username}!`))
 
 eval(app.listen('app', 4000))
 ```
@@ -379,7 +430,7 @@ curl -v -H "Authorization: Bearer your-jwt-token" http://localhost:4000
 
 ## Uploading Files & Images
 
-As mentioned before, webfunc's default behavior is to [automatically extract the payload as well as the route variables](#multiple-endpoints) into a json object. This includes the request with a __*multipart/form-data*__ content type. In that case, an object similar to the following will be stored under `params.yourVariableName`:
+As mentioned before, webfunc's default behavior is to [automatically extract the payload as well as the route variables](#multiple-endpoints) into a json object. This includes the request with a __*multipart/form-data*__ content type. In that case, an object similar to the following will be stored under `req.params.yourVariableName`:
 ```js
 {
   filename: "filename.ext",
@@ -409,8 +460,8 @@ const save = (filePath, data) => new Promise((onSuccess, onFailure) => fs.writeF
     onSuccess()
 }))
 
-app.post('/upload', (req, res, params) => 
-  save(path.join(process.cwd(), params.myimage.filename), params.myimage.value)
+app.post('/upload', (req, res) => 
+  save(path.join(process.cwd(), req.params.myimage.filename), req.params.myimage.value)
   .then(() => res.status(200).send('Upload successfull'))
   .catch(err => res.status(500).send(err.message))
 )
@@ -573,7 +624,7 @@ You should have noticed that all the snippets above end up with `eval(app.listen
 ```js
 const { app } = require('webfunc')
 
-app.get('/users/:username', (req, res, params) => res.status(200).send(`Hello ${params.username}`))
+app.get('/users/:username', (req, res) => res.status(200).send(`Hello ${req.params.username}`))
 
 const code = app.listen('app', 4000)
 console.log(eval(code))
@@ -602,7 +653,7 @@ Absolutely! If you don't specify a string as the first argument of the `listen` 
 ```js
 const { app } = require('webfunc')
 
-app.get('/users/:username', (req, res, params) => res.status(200).send(`Hello ${params.username}`))
+app.get('/users/:username', (req, res) => res.status(200).send(`Hello ${req.params.username}`))
 
 app.listen(4000)
 ```
