@@ -65,31 +65,26 @@ const getEnv = () => ((_config || {}).environment || {})[getActiveEnv()] || {}
 const getHostingType = () => getEnv().hostingType || 'localhost'
 
 /**
- * Converts a function similar to (req, res, next, params) => ... to a promise similar to (req, res, params) => ...
+ * Converts a function similar to (req, res) => ... or (req, res, next) => ... to a promise similar to (req, res) => ...
  * 
- * @param  {Function} handler 	(req, res, next, params) => ...
- * @return {Promise}     		(req, res, params) => ...
+ * @param  {Function} fn 	(req, res) => ... or (req, res, next) => ...
+ * @return {Promise}     	(req, res) => ...
  */
-const handlerToPromise = handler => (req, res, params={}) => new Promise((onSuccess, onFailure) => {
+const fnToPromise = fn => (req, res) => new Promise((onSuccess, onFailure) => {
 	try {
-		handler(req, res, onSuccess, params)
+		if (fn.length < 3)
+			Promise.resolve(fn(req, res)).then(() => onSuccess())
+		else
+			fn(req, res, onSuccess)
 	}
 	catch(err) {
 		onFailure(err)
 	}
 })
 
-/**
- * Converts a function similar to (req, res, params) => ... to a promise similar to (req, res, params) => ...
- * 
- * @param  {Function} next 	(req, res, params) => ...
- * @return {Promise}     	(req, res, params) => ...
- */
-const nextToPromise = next => (req, res, params={}) => Promise.resolve(null).then(() => next(req, res, params))
-
-const executeHandlers = (req, res, params={}, handlers=[]) => 
+const executeHandlers = (req, res, handlers=[]) => 
 	handlers.reduce(
-		(acc, handler) => acc.then(() => !res.headersSent ? handler(req, res, params) : null), 
+		(acc, handler) => acc.then(() => !res.headersSent ? handler(req, res) : null), 
 		Promise.resolve(null))
 
 const resetConfig = (config={}) => {
@@ -107,7 +102,7 @@ const app = {
 			throw new Error('Missing required argument. The \'use\' function requires one argument.')
 		const inputType = typeof(handlerOrConfig)
 		if (inputType == 'function')
-			_handlers.push(handlerToPromise(handlerOrConfig))
+			_handlers.push(fnToPromise(handlerOrConfig))
 		else if (inputType == 'object')
 			resetConfig(Object.assign(_config, handlerOrConfig))
 		else
@@ -120,13 +115,13 @@ const app = {
 		_preEvent = () => Promise.resolve(null)
 		_postEvent = () => Promise.resolve(null)
 	},
-	get: (path, handler, next) => createEndpoint(path, handler, next, 'GET'),
-	post: (path, handler, next) => createEndpoint(path, handler, next, 'POST'),
-	put: (path, handler, next) => createEndpoint(path, handler, next, 'PUT'),
-	delete: (path, handler, next) => createEndpoint(path, handler, next, 'DELETE'),
-	head: (path, handler, next) => createEndpoint(path, handler, next, 'HEAD'),
-	options: (path, handler, next) => createEndpoint(path, handler, next, 'OPTIONS'),
-	all: (path, handler, next) => createEndpoint(path, handler, next, null),
+	get: (...args) => createEndpoint(args, 'GET'),
+	post: (...args) => createEndpoint(args, 'POST'),
+	put: (...args) => createEndpoint(args, 'PUT'),
+	delete: (...args) => createEndpoint(args, 'DELETE'),
+	head: (...args) => createEndpoint(args, 'HEAD'),
+	options: (...args) => createEndpoint(args, 'OPTIONS'),
+	all: (...args) => createEndpoint(args, null),
 	get preEvent() {
 		return _preEvent || (() => Promise.resolve(null))
 	},
@@ -257,24 +252,6 @@ const createListenArity = (arg1, arg2, defaultPort=3000) => {
  * @param  {Function} 				arg3 	Optional argument 'next'
  * @return {Object}      					{ path:..., handler:..., next:... }
  */
-const createEndpointArity = (arg1, arg2, arg3) => {
-	if (!arg1)
-		throw new Error('Missing required argument. Impossible to create an endpoint without any argument. Pass at least one function similar to (req, res) => ...')
-
-	// Case 1: 3 Arguments
-	if (arg1 != undefined && arg2 != undefined && arg3 != undefined) 
-		return { path: arg1, handler: arg2, next: arg3 }
-	// Case 2: 2 Arguments
-	else if (arg1 != undefined && arg2 != undefined) {
-		if (typeof(arg1) == 'function')
-			return { path: '/', handler: arg1, next: arg2 }
-		else
-			return { path: arg1, handler: null, next: arg2 }
-	}
-	// Case 3: 1 Argument
-	else 
-		return { path: '/', handler: null, next: arg1 }
-}
 
 /**
  * Creates an endpoint
@@ -283,25 +260,62 @@ const createEndpointArity = (arg1, arg2, arg3) => {
  * @param  {Function} 			next    Request/Response processing function similar to (req, res, params) => ...
  * @param  {String}   			verb    Http verb
  */
-const createEndpoint = (path, handler, next, verb) => {
-	const input = createEndpointArity(path, handler, next)
-	const pathType = typeof(input.path)
-	const handlerType = typeof(input.handler)
-	const nextType = typeof(input.next)
+const createEndpoint = (args, verb) => {
+	const httpVerb = `HTTP ${verb || 'ALL'}`
+	if (!args || !args.length)
+		throw new Error(`Missing required argument. Impossible to create an ${httpVerb} endpoint without any argument. Pass at least one function similar to (req, res) => ...`)
 
-	if (pathType != 'string' && !(pathType == 'object' && input.path.length > 0))
-		throw new Error('Wrong argument exception. Invalid endpoint\'s path. A valid path is either a string or an array of strings.')
-	if (input.handler && handlerType != 'function')
-		throw new Error('Wrong argument exception. Invalid endpoint\'s middleware handler. A handler must be a function similar to (req, res, next) => ...')
-	if (nextType != 'function')
-		throw new Error('Wrong argument exception. Invalid endpoint\'s next argument. \'next\' must be a function similar to (req, res, params) => ...')
+	const firstArgType = typeof(args[0])
+	const firstArgIsArray = firstArgType == 'object' && args[0].length != undefined
+	// Case 1 - Single arguments. It must be a function
+	if (args.length == 1) {
+		if (firstArgType != 'function' && firstArgType != 'string' && !firstArgIsArray)
+			throw new Error(`Wrong argument exception. When only one argument is passed to an ${httpVerb} endpoint, then that argument must be either be a string (endpoint path), an array of strings (collection of endpoint path) or a function similar to (req, res) => ...`)
 
-	_endpoints.push({ 
-		routes: getRouteDetails(input.path), 
-		method: verb, 
-		next: nextToPromise(input.next), 
-		handler: input.handler ? handlerToPromise(input.handler) : null
-	})
+		if (firstArgIsArray && args[0].some(x => typeof(x) != 'string'))
+				throw new Error(`Wrong argument exception. When the first argument passed to create an ${httpVerb} endpoint is an array, that array must be made of string only.`)
+
+		_endpoints.push({ 
+			routes: getRouteDetails(firstArgType == 'function' ? '/' : args[0]), 
+			method: verb, 
+			execute: (req, res) => executeHandlers(req, res, [fnToPromise(args[0])])
+		})
+	}
+	// Case 2 - Two or more arguments. Unless the first argument is a path ('string'), then they should all be functions
+	else {
+		const firstArgType = typeof(args[0])
+		const firstArgIsArray = firstArgType == 'object' && args[0].length != undefined
+		let p, handlerFns, idxOffset
+		if (firstArgType == 'string' || firstArgIsArray) {
+			[p, ...handlerFns] = args
+			idxOffset = 2
+
+			if (firstArgIsArray && args[0].some(x => typeof(x) != 'string'))
+				throw new Error(`Wrong argument exception. When the first argument passed to create an ${httpVerb} endpoint is an array, that array must be made of string only.`)
+		}
+		else {
+			p = '/'
+			handlerFns = args
+			idxOffset = 1
+		}
+
+		const lastHandlerIdx = handlerFns.length - 1
+		const handlers = handlerFns.map((h,idx) => {
+			if (typeof(h) != 'function')
+				throw new Error(`Wrong argument exception. The ${idx + idxOffset}th argument passed to the ${httpVerb} endpoint must be a function.`)
+
+			if (h.length < 3 && idx < lastHandlerIdx)
+				throw new Error(`Wrong argument exception. The ${idx + idxOffset}th argument passed to the ${httpVerb} endpoint is considered a middleware (as it is not the last argument) and must therefore be a 3 arguments function similar to (req, res, next) => ...`)
+
+			return fnToPromise(h)
+		})
+
+		_endpoints.push({ 
+			routes: getRouteDetails(p), 
+			method: verb, 
+			execute: (req, res) => executeHandlers(req, res, handlers)
+		})
+	}
 }
 
 const getLongestRoute = (routes=[]) => routes.sort((a,b) => b.match.length - a.match.length)[0]
@@ -370,14 +384,16 @@ const processEvent = (req, res, config={}, endpoints=[], handlers=[], requiredHe
 				const paramts = paramsMode == 'all' || paramsMode == 'route' ? Object.assign({}, endpoint.winningRoute.parameters) : {}
 				const getParams = paramsMode == 'all' || paramsMode == 'body' ? reqUtil.getParams(req) : Promise.resolve({})
 				return getParams.then(parameters => Object.assign(parameters, paramts))
-					.then(parameters => 
-						// 5.5. Process all handlers
-						executeHandlers(req, res, parameters, handlers)
-							// 5.6. Process endpoint handler
-							.then(() => !res.headersSent && endpoint.handler ? endpoint.handler(req, res, parameters) : null)
-							// 5.7. Process the endpoint next function
-							.then(() => !res.headersSent && endpoint.next(req, res, parameters))
-					)
+					.then(parameters => {
+						// 5.5. Add all paramaters to the request object
+						if (!req.params || typeof(req.params) != 'object')
+							req.params = {}
+						Object.assign(req.params, parameters || {})
+						// 5.6. Process all global handlers
+						return executeHandlers(req, res, handlers)
+							// 5.8. Process the endpoint
+							.then(() => !res.headersSent && endpoint.execute(req, res))
+					})
 			}
 		})
 		.catch(err => {

@@ -508,7 +508,7 @@ describe('app', () =>
 
 			app.reset()
 			app.use(appconfig)
-			app.all('/Users/:username', (req, res, params) => res.status(200).send(`Hello ${params.username}${params.lastname ? ` ${params.lastname}` : ''}`))
+			app.all('/Users/:username', (req, res) => res.status(200).send(`Hello ${req.params.username}${req.params.lastname ? ` ${req.params.lastname}` : ''}`))
 			const result_01 = app.handleEvent()(req_01, res_01).then(() => {
 				assert.equal(res_01._getData(),'Hello nicolas')
 				const headers = res_01._getHeaders()
@@ -576,8 +576,8 @@ describe('app', () =>
 
 			app.reset()
 			app.use(appconfig)
-			app.get('/users/:username/account/:accountId', (req, res, params) => res.status(200).send(`Hello ${params.username} (account: ${params.accountId})`))
-			app.get('/company/:name', (req, res, params) => res.status(200).send(`Hello ${params.name} (Hello: ${params.hello})`))
+			app.get('/users/:username/account/:accountId', (req, res) => res.status(200).send(`Hello ${req.params.username} (account: ${req.params.accountId})`))
+			app.get('/company/:name', (req, res) => res.status(200).send(`Hello ${req.params.name} (Hello: ${req.params.hello})`))
 			const result_01 = app.handleEvent()(req_01, res_01).then(() => {
 				assert.equal(res_01._getData(),'Hello nicolas (account: 1234)')
 				const headers = res_01._getHeaders()
@@ -640,7 +640,7 @@ describe('app', () =>
 
 			app.reset()
 			app.use(appconfig)
-			app.all('/users/:username/account/:accountId', (req, res, params) => res.status(200).send(`Hello ${params.username} (account: ${params.accountId})`))
+			app.all('/users/:username/account/:accountId', (req, res) => res.status(200).send(`Hello ${req.params.username} (account: ${req.params.accountId})`))
 			const result_01 = app.handleEvent()(req_01, res_01).then(() => {
 				assert.equal(res_01._getData(),'Hello nicolas (account: 1234)')
 				const headers = res_01._getHeaders()
@@ -701,19 +701,19 @@ describe('app', () =>
 				}
 			}
 
-			const testHandler = (req, res, next, params) => {
-				res.status(200).send(`Hello ${params.username} (account: ${params.accountId})`)
+			const testHandler = (req, res, next) => {
+				res.status(200).send(`Hello ${req.params.username} (account: ${req.params.accountId})`)
 				next()
 			}
-			const testHandler2 = (req, res, next, params) => {
-				res.status(200).send(`Bye Bye ${params.username} (account: ${params.accountId})`)
+			const testHandler2 = (req, res, next) => {
+				res.status(200).send(`Bye Bye ${req.params.username} (account: ${req.params.accountId})`)
 				next()
 			}
 
 			app.reset()
 			app.use(appconfig)
-			app.all('/users/:username/account/:accountId', testHandler, () => null)
-			app.all('/users/:username/byebye/:accountId', testHandler2, () => null)
+			app.all('/users/:username/account/:accountId', testHandler)
+			app.all('/users/:username/byebye/:accountId', testHandler2)
 			const fn = app.handleEvent()
 
 			const result_01 = fn(req_01, res_01).then(() => {
@@ -773,7 +773,7 @@ describe('app', () =>
 			app.use(testHandler1)
 			app.use(testHandler2)
 			app.use(testHandler3)
-			app.all('/users/:username/account/:accountId', () => null)
+			app.all('/users/:username/account/:accountId')
 			const fn = app.handleEvent()
 
 			const result_01 = fn(req_01, res_01).then(() => {
@@ -896,7 +896,7 @@ describe('app', () =>
 
 			app.reset()
 			app.use(appconfig)
-			app.get(['/users/:userId', '/companies/:companyId'], (req, res, params) => res.status(200).send(`Hello No. ${params.userId || params.companyId}`))
+			app.get(['/users/:userId', '/companies/:companyId'], (req, res) => res.status(200).send(`Hello No. ${req.params.userId || req.params.companyId}`))
 			const fn = app.handleEvent()
 
 			const result_01 = fn(req_01, res_01).then(() => {
@@ -952,7 +952,7 @@ describe('app', () =>
 
 			app.reset()
 			app.use(appconfig)
-			app.post('users/:action', (req, res, params) => res.status(200).send(`Action ${params.action}. The secret password of ${params.username} is ${params.password}`))
+			app.post('users/:action', (req, res) => res.status(200).send(`Action ${req.params.action}. The secret password of ${req.params.username} is ${req.params.password}`))
 			const fn = app.handleEvent()
 
 			return fn(req, res).then(() => {
@@ -994,7 +994,7 @@ describe('app', () =>
 
 			app.reset()
 			app.use(appconfig)
-			app.post('users/:action', (req, res, params) => res.status(200).send(`Action ${params.action}. The secret password of ${params.username} is ${params.password}`))
+			app.post('users/:action', (req, res) => res.status(200).send(`Action ${req.params.action}. The secret password of ${req.params.username} is ${req.params.password}`))
 			const fn = app.handleEvent()
 			
 			return fn(req, res).then(() => {
@@ -1036,7 +1036,7 @@ describe('app', () =>
 
 			app.reset()
 			app.use(appconfig)
-			app.post('users/:action', (req, res, params) => res.status(200).send(`Action ${params.action}. The secret password of ${params.username} is ${params.password}`))
+			app.post('users/:action', (req, res) => res.status(200).send(`Action ${req.params.action}. The secret password of ${req.params.username} is ${req.params.password}`))
 			const fn = app.handleEvent()
 			
 			return fn(req, res).then(() => {
@@ -1078,7 +1078,7 @@ describe('app', () =>
 
 			app.reset()
 			app.use(appconfig)
-			app.post('users/:action', (req, res, params) => res.status(200).send(`Action ${params.action}. The secret password of ${params.username} is ${params.password}`))
+			app.post('users/:action', (req, res) => res.status(200).send(`Action ${req.params.action}. The secret password of ${req.params.username} is ${req.params.password}`))
 			const fn = app.handleEvent()
 			
 			return fn(req, res).then(() => {
@@ -1090,7 +1090,7 @@ describe('app', () =>
 
 /*eslint-disable */
 describe('app', () => 
-	describe('#handleEvent: 23', () => 
+	describe('#handleEvent: 24', () => 
 		it(`Should add metadata '__transactionId', '__receivedTime' and '__ellapsedMillis()' to the request object.`, () => {
 			/*eslint-enable */
 			const req = httpMocks.createRequest({
@@ -1120,7 +1120,7 @@ describe('app', () =>
 
 			app.reset()
 			app.use(appconfig)
-			app.post('users/:action', (req, res, params) => res.status(200).send(`Action ${params.action}. The secret password of ${params.username} is ${params.password}`))
+			app.post('users/:action', (req, res) => res.status(200).send(`Action ${req.params.action}. The secret password of ${req.params.username} is ${req.params.password}`))
 			const fn = app.handleEvent()
 
 			assert.isOk(!req.__transactionId, '__transactionId should not exist prior to being processed by webfunc.')
@@ -1140,4 +1140,146 @@ describe('app', () =>
 				}
 				assert.isOk(req.__ellapsedMillis() - t1 > 0, '__ellapsedMillis() should grow monotonously')
 			})
+		})))
+
+/*eslint-disable */
+describe('app', () => 
+	describe('#handleEvent: 25', () => 
+		it(`Should support preEvent and postEvent handler.`, () => {
+			/*eslint-enable */
+			const req_01 = httpMocks.createRequest({
+				method: 'GET',
+				headers: {
+					origin: 'http://localhost:8080',
+					referer: 'http://localhost:8080'
+				},
+				_parsedUrl: {
+					pathname: '/users/1'
+				}
+			})
+			const res_01 = httpMocks.createResponse()
+
+			const appconfig = {
+				headers: {
+					'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS, POST',
+					'Access-Control-Allow-Headers': 'Authorization, Content-Type, Origin',
+					'Access-Control-Allow-Origin': 'http://boris.com, http://localhost:8080',
+					'Access-Control-Max-Age': '1296000'
+				}
+			}
+
+			let preEventProof, postEventProof, eventProof, counter = 0
+
+			app.reset()
+			app.use(appconfig)
+			app.preEvent = (req, res) => {
+				preEventProof = ++counter
+			}
+			app.postEvent = (req, res) => {
+				postEventProof = ++counter
+			}
+			app.get(['/users/:userId', '/companies/:companyId'], (req, res) => {
+				eventProof = ++counter
+				res.status(200).send(`Hello No. ${req.params.userId || req.params.companyId}`)
+			})
+			const fn = app.handleEvent()
+
+			const result_01 = fn(req_01, res_01).then(() => {
+				assert.equal(res_01._getData(),'Hello No. 1')
+				const headers = res_01._getHeaders()
+				assert.isOk(headers)
+				assert.equal(headers['Access-Control-Allow-Methods'], 'GET, HEAD, OPTIONS, POST')
+				assert.equal(headers['Access-Control-Allow-Headers'], 'Authorization, Content-Type, Origin')
+				assert.equal(headers['Access-Control-Allow-Origin'], 'http://boris.com, http://localhost:8080')
+				assert.equal(headers['Access-Control-Max-Age'], '1296000')
+				assert.equal(preEventProof, 1)
+				assert.equal(eventProof, 2)
+				assert.equal(postEventProof, 3)
+			})
+
+			return Promise.all([result_01])
+		})))
+
+/*eslint-disable */
+describe('app', () => 
+	describe('#handleEvent: 26', () => 
+		it(`Should support an undetermined number of middleware for a specific endpoint.`, () => {
+			/*eslint-enable */
+			const req_01 = httpMocks.createRequest({
+				method: 'GET',
+				headers: {
+					origin: 'http://localhost:8080',
+					referer: 'http://localhost:8080'
+				},
+				_parsedUrl: {
+					pathname: '/users/nicolas/account/1234'
+				}
+			})
+			const res_01 = httpMocks.createResponse()
+
+			const req_02 = httpMocks.createRequest({
+				method: 'POST',
+				headers: {
+					origin: 'http://localhost:8080',
+					referer: 'http://localhost:8080'
+				},
+				_parsedUrl: {
+					pathname: '/'
+				}
+			})
+			const res_02 = httpMocks.createResponse()
+
+			const appconfig = {
+				headers: {
+					'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS, POST',
+					'Access-Control-Allow-Headers': 'Authorization, Content-Type, Origin',
+					'Access-Control-Allow-Origin': 'http://boris.com, http://localhost:8080',
+					'Access-Control-Max-Age': '1296000'
+				}
+			}
+
+			const testHandler = (req, res, next) => {
+				if (!req.params || typeof(req.params) != 'object') 
+					req.params = {}
+
+				Object.assign(req.params, { message1: 'Hello handler 0' })
+				next()
+			}
+			const testHandler2 = (req, res, next) => {
+				if (!req.params || typeof(req.params) != 'object') 
+					req.params = {}
+
+				Object.assign(req.params, { message2: 'Hello handler 1' })
+				next()
+			}
+
+			const handlers = [testHandler, testHandler2]
+
+			app.reset()
+			app.use(appconfig)
+			app.all('/users/:username/account/:accountId', testHandler, testHandler2, (req, res) => res.status(200).send(`${req.params.message1} - ${req.params.message2}`))
+			app.all('/', ...handlers.concat((req, res) => res.status(200).send(`${req.params.message1} - ${req.params.message2}`)))
+			const fn = app.handleEvent()
+
+			const result_01 = fn(req_01, res_01).then(() => {
+				assert.equal(res_01._getData(),'Hello handler 0 - Hello handler 1')
+				const headers = res_01._getHeaders()
+				assert.isOk(headers)
+				assert.equal(headers['Access-Control-Allow-Methods'], 'GET, HEAD, OPTIONS, POST')
+				assert.equal(headers['Access-Control-Allow-Headers'], 'Authorization, Content-Type, Origin')
+				assert.equal(headers['Access-Control-Allow-Origin'], 'http://boris.com, http://localhost:8080')
+				assert.equal(headers['Access-Control-Max-Age'], '1296000')
+			})
+
+			const result_02 = fn(req_02, res_02).then(() => {
+				assert.equal(res_02._getData(),'Hello handler 0 - Hello handler 1')
+				const headers = res_02._getHeaders()
+				assert.isOk(headers)
+				assert.equal(headers['Access-Control-Allow-Methods'], 'GET, HEAD, OPTIONS, POST')
+				assert.equal(headers['Access-Control-Allow-Headers'], 'Authorization, Content-Type, Origin')
+				assert.equal(headers['Access-Control-Allow-Origin'], 'http://boris.com, http://localhost:8080')
+				assert.equal(headers['Access-Control-Max-Age'], '1296000')
+			})
+
+			return Promise.all([result_01, result_02])
 		})))
