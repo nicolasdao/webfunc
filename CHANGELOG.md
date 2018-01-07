@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.12.0"></a>
+# [0.12.0](https://github.com/nicolasdao/webfunc/compare/v0.11.1-alpha.1...v0.12.0) (2018-01-07)
+
+
+### Features
+
+* Add support for chain of handlers for specific endpoints + remove the necessity to define a (req, res) => ... ([f5ff0b1](https://github.com/nicolasdao/webfunc/commit/f5ff0b1))
+
+
+
 <a name="0.11.1-alpha.1"></a>
 ## [0.11.1-alpha.1](https://github.com/nicolasdao/webfunc/compare/v0.11.1-alpha.0...v0.11.1-alpha.1) (2018-01-07)
 
