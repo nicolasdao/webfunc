@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.11.1-alpha.1"></a>
+## [0.11.1-alpha.1](https://github.com/nicolasdao/webfunc/compare/v0.11.1-alpha.0...v0.11.1-alpha.1) (2018-01-07)
+
+
+### Bug Fixes
+
+* Multipart content type request does not parse the field value when no mymetype is specified. It should default to 'application/text' ([0a0cc76](https://github.com/nicolasdao/webfunc/commit/0a0cc76))
+
+
+
 <a name="0.11.1-alpha.0"></a>
 ## [0.11.1-alpha.0](https://github.com/nicolasdao/webfunc/compare/v0.11.0...v0.11.1-alpha.0) (2018-01-04)
 
