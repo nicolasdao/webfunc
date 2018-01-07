@@ -78,7 +78,7 @@ const getParams = req => {
 						const filename = (metadata.match(/ filename="(.*?)"/) || [null, null])[1]
 						const mimetype = (metadata.match(/Content-Type: (.*?) /) || [null, null])[1]
 						if (name)
-							acc[name] = { value: hexToBuf(value), filename, mimetype }
+							acc[name] = { value: mimetype ? hexToBuf(value) : hexToBuf(value).toString(), filename, mimetype }
 						return acc
 					}, {})
 
