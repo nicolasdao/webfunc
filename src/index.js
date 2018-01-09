@@ -265,32 +265,33 @@ const createEndpoint = (args, verb) => {
 	if (!args || !args.length)
 		throw new Error(`Missing required argument. Impossible to create an ${httpVerb} endpoint without any argument. Pass at least one function similar to (req, res) => ...`)
 
-	const firstArgType = typeof(args[0])
-	const firstArgIsArray = firstArgType == 'object' && args[0].length != undefined
+	const firstArgument = args[0]
+	const firstArgType = typeof(firstArgument)
+	const firstArgIsArray = firstArgType == 'object' && firstArgument.length != undefined
 	// Case 1 - Single arguments. It must be a function
 	if (args.length == 1) {
 		if (firstArgType != 'function' && firstArgType != 'string' && !firstArgIsArray)
 			throw new Error(`Wrong argument exception. When only one argument is passed to an ${httpVerb} endpoint, then that argument must be either be a string (endpoint path), an array of strings (collection of endpoint path) or a function similar to (req, res) => ...`)
 
-		if (firstArgIsArray && args[0].some(x => typeof(x) != 'string'))
+		if (firstArgIsArray && firstArgument.some(x => typeof(x) != 'string'))
 			throw new Error(`Wrong argument exception. When the first argument passed to create an ${httpVerb} endpoint is an array, that array must be made of string only.`)
 
 		_endpoints.push({ 
-			routes: getRouteDetails(firstArgType == 'function' ? '/' : args[0]), 
+			routes: getRouteDetails(firstArgType == 'function' ? '/' : firstArgument), 
 			method: verb, 
-			execute: (req, res) => executeHandlers(req, res, [fnToPromise(args[0])])
+			execute: (req, res) => executeHandlers(req, res, [fnToPromise(firstArgType != 'string' ? firstArgument : () => null)])
 		})
 	}
 	// Case 2 - Two or more arguments. Unless the first argument is a path ('string'), then they should all be functions
 	else {
-		const firstArgType = typeof(args[0])
-		const firstArgIsArray = firstArgType == 'object' && args[0].length != undefined
+		const firstArgType = typeof(firstArgument)
+		const firstArgIsArray = firstArgType == 'object' && firstArgument.length != undefined
 		let p, handlerFns, idxOffset
 		if (firstArgType == 'string' || firstArgIsArray) {
 			[p, ...handlerFns] = args
 			idxOffset = 2
 
-			if (firstArgIsArray && args[0].some(x => typeof(x) != 'string'))
+			if (firstArgIsArray && firstArgument.some(x => typeof(x) != 'string'))
 				throw new Error(`Wrong argument exception. When the first argument passed to create an ${httpVerb} endpoint is an array, that array must be made of string only.`)
 		}
 		else {
@@ -336,6 +337,13 @@ const processEvent = (req, res, config={}, endpoints=[], handlers=[], requiredHe
 	req.__receivedTime = Date.now()
 	req.__transactionId = shortid.generate().replace(/-/g, 'r').replace(/_/g, '9')
 	req.__ellapsedMillis = () => Date.now() - req.__receivedTime
+	let { propName:paramsPropName='params', paramsMode=null } = config.params || {}
+	// Ensure backward compatibility with version 0.12.1-alpha.0
+	if (config.paramsMode && !paramsMode)
+		paramsMode = config.paramsMode
+
+	if (!req[paramsPropName] || typeof(req[paramsPropName]) != 'object')
+		req[paramsPropName] = {}
 
 	// 1. Make sure the pre and post event methods exist
 	if (!preEvent)
@@ -380,15 +388,13 @@ const processEvent = (req, res, config={}, endpoints=[], handlers=[], requiredHe
 					return res.status(404).send(`Endpoint '${pathname}' for method ${httpMethod} not found.`)
 
 				// 5.4. Extract all params from that request, including both the url route params and the payload params.
-				const paramsMode = PARAMSMODE[config.paramsMode] ? config.paramsMode : 'all'
-				const paramts = paramsMode == 'all' || paramsMode == 'route' ? Object.assign({}, endpoint.winningRoute.parameters) : {}
-				const getParams = paramsMode == 'all' || paramsMode == 'body' ? reqUtil.getParams(req) : Promise.resolve({})
+				const validParamsMode = PARAMSMODE[paramsMode] ? paramsMode : 'all'
+				const paramts = validParamsMode == 'all' || validParamsMode == 'route' ? Object.assign({}, endpoint.winningRoute.parameters) : {}
+				const getParams = validParamsMode == 'all' || validParamsMode == 'body' ? reqUtil.getParams(req) : Promise.resolve({})
 				return getParams.then(parameters => Object.assign(parameters, paramts))
 					.then(parameters => {
 						// 5.5. Add all paramaters to the request object
-						if (!req.params || typeof(req.params) != 'object')
-							req.params = {}
-						Object.assign(req.params, parameters || {})
+						Object.assign(req[paramsPropName], parameters || {})
 						// 5.6. Process all global handlers
 						return executeHandlers(req, res, handlers)
 							// 5.8. Process the endpoint

@@ -1283,3 +1283,86 @@ describe('app', () =>
 
 			return Promise.all([result_01, result_02])
 		})))
+
+/*eslint-disable */
+describe('app', () => 
+	describe('#handleEvent: 27', () => 
+		it(`Should support custom 'params' property name (e.g. from the default req.params to your req.myOwnWhatever ).`, () => {
+			/*eslint-enable */
+			const req_01 = httpMocks.createRequest({
+				method: 'GET',
+				headers: {
+					origin: 'http://localhost:8080',
+					referer: 'http://localhost:8080'
+				},
+				_parsedUrl: {
+					pathname: '/users/nicolas'
+				}
+			})
+			const res_01 = httpMocks.createResponse()
+
+			const req_02 = httpMocks.createRequest({
+				method: 'GET',
+				headers: {
+					origin: 'http://localhost:8080',
+					referer: 'http://localhost:8080'
+				},
+				_parsedUrl: {
+					pathname: '/users/nicolas'
+				},
+				query: { lastname: 'dao' }
+			})
+			const res_02 = httpMocks.createResponse()
+
+			const req_03 = httpMocks.createRequest({
+				method: 'GET',
+				headers: {
+					origin: 'http://localhost:8080',
+					referer: 'http://localhost:8080'
+				},
+				_parsedUrl: {
+					pathname: '/'
+				}
+			})
+			const res_03 = httpMocks.createResponse()
+
+			const appconfig = {
+				headers: {
+					'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS, POST',
+					'Access-Control-Allow-Headers': 'Authorization, Content-Type, Origin',
+					'Access-Control-Allow-Origin': 'http://boris.com, http://localhost:8080',
+					'Access-Control-Max-Age': '1296000'
+				},
+				params: {
+					propName: 'myOwnWhatever'
+				}
+			}
+
+			app.reset()
+			app.use(appconfig)
+			app.all('/Users/:username', (req, res) => res.status(200).send(`Hello ${req.myOwnWhatever.username}${req.myOwnWhatever.lastname ? ` ${req.myOwnWhatever.lastname}` : ''}`))
+			const result_01 = app.handleEvent()(req_01, res_01).then(() => {
+				assert.equal(res_01._getData(),'Hello nicolas')
+				const headers = res_01._getHeaders()
+				assert.isOk(headers)
+				assert.equal(headers['Access-Control-Allow-Methods'], 'GET, HEAD, OPTIONS, POST')
+				assert.equal(headers['Access-Control-Allow-Headers'], 'Authorization, Content-Type, Origin')
+				assert.equal(headers['Access-Control-Allow-Origin'], 'http://boris.com, http://localhost:8080')
+				assert.equal(headers['Access-Control-Max-Age'], '1296000')
+			})
+			const result_02 = app.handleEvent()(req_02, res_02).then(() => {
+				assert.equal(res_02._getData(),'Hello nicolas dao')
+				const headers = res_02._getHeaders()
+				assert.isOk(headers)
+				assert.equal(headers['Access-Control-Allow-Methods'], 'GET, HEAD, OPTIONS, POST')
+				assert.equal(headers['Access-Control-Allow-Headers'], 'Authorization, Content-Type, Origin')
+				assert.equal(headers['Access-Control-Allow-Origin'], 'http://boris.com, http://localhost:8080')
+				assert.equal(headers['Access-Control-Max-Age'], '1296000')
+			})
+			const result_03 = app.handleEvent()(req_03, res_03).then(() => {
+				assert.equal(res_03.statusCode, 404)
+				assert.equal(res_03._getData(), 'Endpoint \'/\' for method GET not found.')
+			})
+
+			return Promise.all([result_01, result_02, result_03])
+		})))
