@@ -35,7 +35,7 @@ Out-of-the-box features include:
 > * [Configuration](#configuration)
 >   - [CORS](#cors) 
 >   - [Disabling Body Or Route Parsing](#disabling-body-or-route-parsing)
->   - [Customizing The req.params Property](#customizing-the-req.params-property)
+>   - [Customizing The req.params Property](#customizing-the-reqparams-property)
 > * [Use Cases](#use-cases)
 >   - [Authentication](#authentication) 
 >   - [Uploading Files & Images](#uploading-files--images)
