@@ -989,7 +989,7 @@ describe('app', () =>
 					'Access-Control-Allow-Origin': 'http://boris.com, http://localhost:8080',
 					'Access-Control-Max-Age': '1296000'
 				},
-				paramsMode: 'none'
+				params: { mode: 'none' }
 			}
 
 			app.reset()
@@ -1031,7 +1031,7 @@ describe('app', () =>
 					'Access-Control-Allow-Origin': 'http://boris.com, http://localhost:8080',
 					'Access-Control-Max-Age': '1296000'
 				},
-				paramsMode: 'body'
+				params: { mode: 'body' }
 			}
 
 			app.reset()
@@ -1073,7 +1073,7 @@ describe('app', () =>
 					'Access-Control-Allow-Origin': 'http://boris.com, http://localhost:8080',
 					'Access-Control-Max-Age': '1296000'
 				},
-				paramsMode: 'route'
+				params: { mode: 'route' }
 			}
 
 			app.reset()
@@ -1115,7 +1115,7 @@ describe('app', () =>
 					'Access-Control-Allow-Origin': 'http://boris.com, http://localhost:8080',
 					'Access-Control-Max-Age': '1296000'
 				},
-				paramsMode: 'route'
+				params: { mode: 'route' }
 			}
 
 			app.reset()
