@@ -356,16 +356,16 @@ That _mode_ property accepts 4 modes:
 - __*body*__: Only the payload is parsed. The route variables are completely ignored.
 - __*none*__: Neither the payload nor the route variables are extracted.
 
+If the _params_ property or the _mode_ are not defined in the _now.json_, then the default mode is _all_.
+
 ## Customizing The req.params Property
-If the `params` property conflicts with some middleware or other 3rd party systems, you can change the name of that property to suit your needs. Just configure the __*now.json*__ as follow:
+If the `params` property conflicts with some middleware or other 3rd party systems, you can change that property name. Just configure the __*now.json*__ as follow:
 ```js
 {
   "params": { propName: "somethingElse" }
 }
 ```
 The configuration above with replace `req.params` to `req.somethingElse`. 
-
-If the _params_ property or the _mode_ are not defined in the _now.json_, then the default mode is _all_.
 
 # Use Cases
 ## Authentication 
