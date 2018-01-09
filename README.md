@@ -35,6 +35,7 @@ Out-of-the-box features include:
 > * [Configuration](#configuration)
 >   - [CORS](#cors) 
 >   - [Disabling Body Or Route Parsing](#disabling-body-or-route-parsing)
+>   - [Customizing The req.params Property](#customizing-the-req.params-property)
 > * [Use Cases](#use-cases)
 >   - [Authentication](#authentication) 
 >   - [Uploading Files & Images](#uploading-files--images)
@@ -340,22 +341,31 @@ To configure CORS, add the following in your _**now.json**_ file:
 ## Disabling Body Or Route Parsing
 Webfunc's default behavior is to parse in a json object both the payload and any variables found in the route. Based on certain requirements, it might be necessary to disable this behavior (e.g. trying to read the payload again in your app might not work after webfunc has parsed it). 
 
-To disable completely or partially that behavior, add a `"paramsMode"` property in the __*now.json*__ configuration file in the root of your application. 
+To disable completely or partially that behavior, add a `"params"` property in the __*now.json*__ configuration file in the root of your application as follow: 
 
 _Example of a now.json config that disable the payload parsing only:_
 ```js
 {
-  "paramsMode": "route"
+  "params": { mode: "route" }
 }
 ```
 
-That _paramsMode_ property accepts 4 modes:
+That _mode_ property accepts 4 modes:
 - __*all*__: (default) Both the payload and the route variables are extracted.
 - __*route*__: Only the variables from the route are extracted. The payload is completely ignored.
 - __*body*__: Only the payload is parsed. The route variables are completely ignored.
 - __*none*__: Neither the payload nor the route variables are extracted.
 
-If the _paramsMode_ property is not defined in the _now.json_, then the default mode is _all_.
+## Customizing The req.params Property
+If the `params` property conflicts with some middleware or other 3rd party systems, you can change the name of that property to suit your needs. Just configure the __*now.json*__ as follow:
+```js
+{
+  "params": { propName: "somethingElse" }
+}
+```
+The configuration above with replace `req.params` to `req.somethingElse`. 
+
+If the _params_ property or the _mode_ are not defined in the _now.json_, then the default mode is _all_.
 
 # Use Cases
 ## Authentication 
