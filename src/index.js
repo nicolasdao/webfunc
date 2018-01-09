@@ -337,7 +337,7 @@ const processEvent = (req, res, config={}, endpoints=[], handlers=[], requiredHe
 	req.__receivedTime = Date.now()
 	req.__transactionId = shortid.generate().replace(/-/g, 'r').replace(/_/g, '9')
 	req.__ellapsedMillis = () => Date.now() - req.__receivedTime
-	let { propName:paramsPropName='params', paramsMode=null } = config.params || {}
+	let { propName:paramsPropName='params', mode:paramsMode=null } = config.params || {}
 	// Ensure backward compatibility with version 0.12.1-alpha.0
 	if (config.paramsMode && !paramsMode)
 		paramsMode = config.paramsMode
