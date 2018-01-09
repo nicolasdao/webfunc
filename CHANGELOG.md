@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.13.0-alpha.0"></a>
+# [0.13.0-alpha.0](https://github.com/nicolasdao/webfunc/compare/v0.12.1-alpha.0...v0.13.0-alpha.0) (2018-01-09)
+
+
+### Features
+
+* Add support for custom 'params' property name (e.g. from default req.params to req.myOwnWhateverProp) ([e28d82a](https://github.com/nicolasdao/webfunc/commit/e28d82a))
+
+
+
 <a name="0.12.1-alpha.0"></a>
 ## [0.12.1-alpha.0](https://github.com/nicolasdao/webfunc/compare/v0.12.0...v0.12.1-alpha.0) (2018-01-07)
 
