@@ -29,6 +29,7 @@ Out-of-the-box features include:
 > * [Install](#install) 
 > * [How To Use It](#how-to-use-it) 
 >   - [Basic](#basic)
+>   - [The request Object](#the-request-object)
 >   - [Creating A REST API](#creating-a-rest-api)
 >   - [Compatible With All Express Middleware](#compatible-with-all-express-middleware)
 >   - [Managing Environment Variables Per Deployment](#managing-environment-variables-per-deployment)
@@ -118,6 +119,11 @@ The `environment.active = "staging"` indicates that the configuration for your a
 ```
 now gcp
 ```
+## The request Object
+The first operation made by webfunc when it receives a request is to add 3 properties on the __*request*__ object:
+* `__receivedTime`: Number that milliseconds since epoc when the request reaches the server.
+* `__transactionId`: String representing a unique identifier (e.g. useful for tracing purposes).
+* `__ellapsedMillis`: Function with no arguments returning the number of milliseconds ellapsed since `__receivedTime`.
 
 ## Creating A REST API
 >A REST api is cool but GraphQL is even cooler. Check out how you can create a [GraphQL api](#graphql) in less than 2 minutes [__*here*__](#graphql).
