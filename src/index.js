@@ -73,7 +73,11 @@ const getHostingType = () => getEnv().hostingType || 'localhost'
 const fnToPromise = fn => (req, res) => new Promise((onSuccess, onFailure) => {
 	try {
 		if (fn.length < 3)
-			Promise.resolve(fn(req, res)).then(() => onSuccess())
+			Promise.resolve(fn(req, res))
+				.then(() => onSuccess())
+				.catch(err => {
+					onFailure(err)
+				})
 		else
 			fn(req, res, onSuccess)
 	}
