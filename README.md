@@ -29,13 +29,14 @@ Out-of-the-box features include:
 > * [Install](#install) 
 > * [How To Use It](#how-to-use-it) 
 >   - [Basic](#basic)
+>   - [The request Object](#the-request-object)
 >   - [Creating A REST API](#creating-a-rest-api)
 >   - [Compatible With All Express Middleware](#compatible-with-all-express-middleware)
 >   - [Managing Environment Variables Per Deployment](#managing-environment-variables-per-deployment)
 > * [Configuration](#configuration)
 >   - [CORS](#cors) 
 >   - [Disabling Body Or Route Parsing](#disabling-body-or-route-parsing)
->   - [Customizing The req.params Property](#customizing-the-req.params-property)
+>   - [Customizing The req.params Property](#customizing-the-reqparams-property)
 > * [Use Cases](#use-cases)
 >   - [Authentication](#authentication) 
 >   - [Uploading Files & Images](#uploading-files--images)
@@ -118,6 +119,11 @@ The `environment.active = "staging"` indicates that the configuration for your a
 ```
 now gcp
 ```
+## The request Object
+The first operation made by webfunc when it receives a request is to add 3 properties on the __*request*__ object:
+* `__receivedTime`: Number that milliseconds since epoc when the request reaches the server.
+* `__transactionId`: String representing a unique identifier (e.g. useful for tracing purposes).
+* `__ellapsedMillis`: Function with no arguments returning the number of milliseconds ellapsed since `__receivedTime`.
 
 ## Creating A REST API
 >A REST api is cool but GraphQL is even cooler. Check out how you can create a [GraphQL api](#graphql) in less than 2 minutes [__*here*__](#graphql).
@@ -356,16 +362,16 @@ That _mode_ property accepts 4 modes:
 - __*body*__: Only the payload is parsed. The route variables are completely ignored.
 - __*none*__: Neither the payload nor the route variables are extracted.
 
+If the _params_ property or the _mode_ are not defined in the _now.json_, then the default mode is _all_.
+
 ## Customizing The req.params Property
-If the `params` property conflicts with some middleware or other 3rd party systems, you can change the name of that property to suit your needs. Just configure the __*now.json*__ as follow:
+If the `params` property conflicts with some middleware or other 3rd party systems, you can change that property name. Just configure the __*now.json*__ as follow:
 ```js
 {
   "params": { propName: "somethingElse" }
 }
 ```
 The configuration above with replace `req.params` to `req.somethingElse`. 
-
-If the _params_ property or the _mode_ are not defined in the _now.json_, then the default mode is _all_.
 
 # Use Cases
 ## Authentication 
