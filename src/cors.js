@@ -5,6 +5,7 @@
  * This source code is licensed under the BSD-style license found in the
  * LICENSE file in the root directory of this source tree.
 */
+const url = require('url')
 
 const getRequiredResponseHeaders = (config={}) => {
 	const headers = config.headers || {}
@@ -33,27 +34,29 @@ const getAllowedMethods = (config={}) =>
 
 const setResponseHeaders = (res, responseHeaders=[]) => responseHeaders.forEach(header => res.set(header.key, header.value))
 
-const validateCORS = (req, res, config={}, allowedOrigins={}, allowedMethods={}) => {
-	const noConfig = !config.headers
-	const origin = new String(req.headers.origin).toLowerCase()
-	const referer = new String(req.headers.referer).toLowerCase()
-	const method = new String(req.method).toLowerCase()
-	const sameOrigin = referer.indexOf(origin) == 0
+const getRequestOrigin = req => {
+	const origin = (req.headers.origin || '').toLowerCase()
+	const host = (req.headers.host || '').toLowerCase()
+	const referer = (req.headers.referer || req.headers.referrer || '').toLowerCase()
+	const https = req.secure !== undefined ? req.secure : (req.url || '').trim().match(/^https:/)
+	const refUrl = url.parse(referer)
 
-	if (noConfig) {
-		if (!sameOrigin) {
-			res.status(403).send(`Forbidden - CORS issue. Origin '${origin}' is not allowed.`)
-			return false
-		}
+	if (origin)
+		return origin
+	else if (host)
+		return `${https ? 'https:' : 'http:'}//${host}`
+	else if (referer && refUrl.host) 
+		return refUrl.protocol ? `${refUrl.protocol}//${refUrl.host}` : `${https ? 'https:' : 'http:'}//${refUrl.host}`
+	else
+		return null
+}
 
-		if (method != 'head' && method != 'get' && method != 'options' && method != 'post') {
-			res.status(403).send(`Forbidden - CORS issue. Method '${method.toUpperCase()}' is not allowed.`)
-			return false
-		}
-	}
+const validateCORS = (req, res, allowedOrigins={}, allowedMethods={}) => {
+	const origin = getRequestOrigin(req)
+	const method = (req.method || '').toLowerCase()
 
 	if (!allowedOrigins['*'] && Object.keys(allowedOrigins).length > 0 && !(origin in allowedOrigins)) {
-		res.status(403).send(`Forbidden - CORS issue. Origin '${origin}' is not allowed.`)
+		res.status(403).send(`Forbidden - CORS issue. Origin '${origin || 'undefined'}' is not allowed.`)
 		return false
 	}
 
@@ -75,12 +78,10 @@ const cors = (options={}) => {
 	const allowedOrigins = getAllowedOrigins(options)
 	const allowedMethods = getAllowedMethods(options)
 	const setHeaders = requiredHeaders.length > 0 ? res => setResponseHeaders(res, requiredHeaders) : () => null
-	const corsSetUp = Object.keys(allowedOrigins).length > 0 || Object.keys(allowedMethods).length > 0
-	const config = { headers: corsSetUp ? {} : null }
 
 	return (req, res, next) => {
 		setHeaders(res)
-		validateCORS(req, res, config, allowedOrigins, allowedMethods)
+		validateCORS(req, res, allowedOrigins, allowedMethods)
 		next()
 	}
 }
@@ -91,5 +92,6 @@ module.exports = {
 	getAllowedMethods,
 	setResponseHeaders,
 	validateCORS,
+	getRequestOrigin,
 	cors
 }

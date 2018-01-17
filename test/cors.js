@@ -8,6 +8,7 @@
 const { assert } = require('chai')
 const httpMocks = require('node-mocks-http')
 const { app, cors } = require('../src/index')
+const { getRequestOrigin } = require('../src/cors')
 
 /*eslint-disable */
 describe('cors', () => 
@@ -96,3 +97,41 @@ describe('cors', () =>
 
 		return Promise.all([result_01, result_02, result_03])
 	}))
+
+/*eslint-disable */
+describe('cors', () => 
+	describe('getRequestOrigin', () => 
+		it(`Should retrieves the request's origin even if it is not explecitely defined (look for referer, host, ...).`, () => {
+			/*eslint-enable */
+			const requests = [
+				httpMocks.createRequest({
+					headers: {
+						origin: 'http://localhost:8080'
+					}
+				}),
+				httpMocks.createRequest({
+					headers: {
+						referer: 'http://localhost:8080'
+					}
+				}),
+				httpMocks.createRequest({
+					headers: {
+						host: 'localhost:8080'
+					},
+					secure: false
+				}),
+				httpMocks.createRequest({
+					headers: {
+						host: 'localhost:8080'
+					},
+					url: 'http://localhost:8080'
+				})]
+
+			requests.forEach(req => {
+				const v = getRequestOrigin(req)
+				assert.equal(v, 'http://localhost:8080')
+			})
+		})))
+
+
+

@@ -359,7 +359,7 @@ const processEvent = (req, res, config={}, endpoints=[], handlers=[], requiredHe
 		.then(() => {
 			if (!res.headersSent && !_preEventErr) {
 				// 5.1. Validate CORS
-				if (!validateCORS(req, res, config, allowedOrigins, allowedMethods))
+				if (!validateCORS(req, res, allowedOrigins, allowedMethods))
 					return
 
 				// 5.2. Stop if this is a HEAD or OPTIONS request

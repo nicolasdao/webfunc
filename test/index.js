@@ -78,7 +78,7 @@ describe('app', () =>
 /*eslint-disable */
 describe('app', () => 
 	describe('#handleEvent: 02', () => 
-		it('Should fail if no CORS settings have been set up and the same origin policy if NOT satisfied.', () => {
+		it('Should not fail if no CORS settings have been set up and the same origin policy if NOT satisfied.', () => {
 			/*eslint-enable */
 			const req = httpMocks.createRequest({
 				method: 'GET',
@@ -95,8 +95,8 @@ describe('app', () =>
 			app.get((req, res) => res.status(200).send('Hello World'))
 			return app.handleEvent()(req, res).then(() => {
 				assert.isOk(req)
-				assert.equal(res.statusCode, 403)
-				assert.equal(res._getData(), 'Forbidden - CORS issue. Origin \'http://localhost:8080\' is not allowed.')
+				assert.equal(res.statusCode, 200)
+				assert.equal(res._getData(), 'Hello World')
 			})
 		})))
 
@@ -291,7 +291,7 @@ describe('app', () =>
 /*eslint-disable */
 describe('app', () => 
 	describe('#handleEvent: 09', () => 
-		it('Should fail if a PUT request if sent and no CORS settings have been set up.', () => {
+		it('Should not fail if a PUT request if sent and no CORS settings have been set up.', () => {
 			/*eslint-enable */
 			const req = httpMocks.createRequest({
 				method: 'PUT',
@@ -308,8 +308,8 @@ describe('app', () =>
 			app.all((req, res) => res.status(200).send('Hello World'))
 			return app.handleEvent()(req, res).then(() => {
 				assert.isOk(req)
-				assert.equal(res.statusCode, 403)
-				assert.equal(res._getData(), 'Forbidden - CORS issue. Method \'PUT\' is not allowed.')
+				assert.equal(res.statusCode, 200)
+				assert.equal(res._getData(), 'Hello World')
 			})
 		})))
 
