@@ -36,17 +36,13 @@ const setResponseHeaders = (res, responseHeaders=[]) => responseHeaders.forEach(
 
 const getRequestOrigin = req => {
 	const origin = (req.headers.origin || '').toLowerCase()
-	const host = (req.headers.host || '').toLowerCase()
 	const referer = (req.headers.referer || req.headers.referrer || '').toLowerCase()
-	const https = req.secure !== undefined ? req.secure : (req.url || '').trim().match(/^https:/)
 	const refUrl = url.parse(referer)
 
 	if (origin)
 		return origin
-	else if (host)
-		return `${https ? 'https:' : 'http:'}//${host}`
 	else if (referer && refUrl.host) 
-		return refUrl.protocol ? `${refUrl.protocol}//${refUrl.host}` : `${https ? 'https:' : 'http:'}//${refUrl.host}`
+		return `${refUrl.protocol}//${refUrl.host}`
 	else
 		return null
 }

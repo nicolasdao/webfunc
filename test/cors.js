@@ -113,18 +113,6 @@ describe('cors', () =>
 					headers: {
 						referer: 'http://localhost:8080'
 					}
-				}),
-				httpMocks.createRequest({
-					headers: {
-						host: 'localhost:8080'
-					},
-					secure: false
-				}),
-				httpMocks.createRequest({
-					headers: {
-						host: 'localhost:8080'
-					},
-					url: 'http://localhost:8080'
 				})]
 
 			requests.forEach(req => {
