@@ -10,6 +10,14 @@ const shortid = require('shortid')
 const path = require('path')
 const { getRouteDetails, matchRoute } = require('./routing')
 const { reqUtil } = require('./utils')
+const {
+	getRequiredResponseHeaders,
+	getAllowedOrigins,
+	getAllowedMethods,
+	setResponseHeaders,
+	validateCORS,
+	cors
+} = require('./cors')
 require('colors')
 
 /*eslint-disable */
@@ -25,29 +33,6 @@ const CONFIGPATH = cwdPath('now.json')
 const HOSTINGS = { 'now': true, 'sh': true, 'localhost': true, 'express': true, 'gcp': true, 'aws': true }
 const PARAMSMODE = { 'all': true, 'body': true, 'route': true, 'none': true }
 const getAppConfig = () => fs.existsSync(CONFIGPATH) ? require(CONFIGPATH) : {}
-const getRequiredResponseHeaders = (config={}) => {
-	const headers = config.headers || {}
-	const headersCollection = []
-	for (let key in headers)
-		headersCollection.push({ key, value: headers[key] })
-
-	return headersCollection
-}
-const getAllowedOrigins = (config={}) => 
-	((config.headers || {})['Access-Control-Allow-Origin'] || '')
-		.split(',')
-		.reduce((a, s) => { 
-			if (s) a[s.trim().toLowerCase().replace(/\/$/,'')] = true 
-			return a 
-		}, {})
-
-const getAllowedMethods = (config={}) => 
-	((config.headers || {})['Access-Control-Allow-Methods'] || '')
-		.split(',')
-		.reduce((a, s) => { 
-			if (s) a[s.trim().toLowerCase()] = true 
-			return a 
-		}, {})
 
 let _config = getAppConfig() // Object
 let _requiredResponseHeaders = getRequiredResponseHeaders(_config) // Array
@@ -441,42 +426,9 @@ const extendResponse = res => {
 		res.status = code => { res.statusCode = code; return res }
 }
 
-const setResponseHeaders = (res, responseHeaders=[]) => responseHeaders.forEach(header => res.set(header.key, header.value))
-
-const validateCORS = (req, res, config={}, allowedOrigins={}, allowedMethods={}) => {
-	const noConfig = !config.headers
-	const origin = new String(req.headers.origin).toLowerCase()
-	const referer = new String(req.headers.referer).toLowerCase()
-	const method = new String(req.method).toLowerCase()
-	const sameOrigin = referer.indexOf(origin) == 0
-
-	if (noConfig) {
-		if (!sameOrigin) {
-			res.status(403).send(`Forbidden - CORS issue. Origin '${origin}' is not allowed.`)
-			return false
-		}
-
-		if (method != 'head' && method != 'get' && method != 'options' && method != 'post') {
-			res.status(403).send(`Forbidden - CORS issue. Method '${method.toUpperCase()}' is not allowed.`)
-			return false
-		}
-	}
-
-	if (!allowedOrigins['*'] && Object.keys(allowedOrigins).length != 0 && !(origin in allowedOrigins)) {
-		res.status(403).send(`Forbidden - CORS issue. Origin '${origin}' is not allowed.`)
-		return false
-	}
-
-	if (Object.keys(allowedMethods).length != 0 && method != 'get' && method != 'head' && !(method in allowedMethods)) {
-		res.status(403).send(`Forbidden - CORS issue. Method '${method.toUpperCase()}' is not allowed.`)
-		return false
-	}
-
-	return true
-}
-
 module.exports = {
 	app,
+	cors,
 	get appConfig() { return getEnv() },
 	utils: {
 		headers: {
