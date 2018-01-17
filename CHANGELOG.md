@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.13.0-alpha.5"></a>
+# [0.13.0-alpha.5](https://github.com/nicolasdao/webfunc/compare/v0.13.0-alpha.4...v0.13.0-alpha.5) (2018-01-17)
+
+
+### Features
+
+* Add 'cors' middleware utility for WYSIWYG CORS setup. ([3a54830](https://github.com/nicolasdao/webfunc/commit/3a54830))
+* Add 'cors' middleware utility for WYSIWYG CORS setup. ([032d51f](https://github.com/nicolasdao/webfunc/commit/032d51f))
+
+
+
 <a name="0.13.0-alpha.4"></a>
 # [0.13.0-alpha.4](https://github.com/nicolasdao/webfunc/compare/v0.13.0-alpha.3...v0.13.0-alpha.4) (2018-01-16)
 
