@@ -56,9 +56,12 @@ const cors = ({ allowedHeaders, origins, methods, credentials, maxAge }) => {
 			// 4.3. For OPTIONS requests, set Max-Age if it was defined.
 			if (_maxAge)
 				res.set('Access-Control-Max-Age', _maxAge)
-		}
+			if (addOriginToVary && res.headers)
+				vary(res, 'Origin')
 
-		if (addOriginToVary && res.headers)
+			res.status(200).send()
+		}
+		else if (addOriginToVary && res.headers)
 			vary(res, 'Origin')
 
 		next()
