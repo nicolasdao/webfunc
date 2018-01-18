@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.13.0-alpha.8"></a>
+# [0.13.0-alpha.8](https://github.com/nicolasdao/webfunc/compare/v0.13.0-alpha.7...v0.13.0-alpha.8) (2018-01-18)
+
+
+### Bug Fixes
+
+* CORS is not working as it should ([68f1437](https://github.com/nicolasdao/webfunc/commit/68f1437))
+
+
+
 <a name="0.13.0-alpha.7"></a>
 # [0.13.0-alpha.7](https://github.com/nicolasdao/webfunc/compare/v0.13.0-alpha.6...v0.13.0-alpha.7) (2018-01-17)
 
