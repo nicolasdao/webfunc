@@ -5,89 +5,64 @@
  * This source code is licensed under the BSD-style license found in the
  * LICENSE file in the root directory of this source tree.
 */
-const url = require('url')
-
-const getRequiredResponseHeaders = (config={}) => {
-	const headers = config.headers || {}
-	const headersCollection = []
-	for (let key in headers)
-		headersCollection.push({ key, value: headers[key] })
-
-	return headersCollection
-}
-
-const getAllowedOrigins = (config={}) => 
-	((config.headers || {})['Access-Control-Allow-Origin'] || '')
-		.split(',')
-		.reduce((a, s) => { 
-			if (s) a[s.trim().toLowerCase().replace(/\/$/,'')] = true 
-			return a 
-		}, {})
-
-const getAllowedMethods = (config={}) => 
-	((config.headers || {})['Access-Control-Allow-Methods'] || '')
-		.split(',')
-		.reduce((a, s) => { 
-			if (s) a[s.trim().toLowerCase()] = true 
-			return a 
-		}, {})
-
-const setResponseHeaders = (res, responseHeaders=[]) => responseHeaders.forEach(header => res.set(header.key, header.value))
-
-const getRequestOrigin = req => {
-	const origin = (req.headers.origin || '').toLowerCase()
-	const referer = (req.headers.referer || req.headers.referrer || '').toLowerCase()
-	const refUrl = url.parse(referer)
-
-	if (origin)
-		return origin
-	else if (referer && refUrl.host) 
-		return `${refUrl.protocol}//${refUrl.host}`
-	else
-		return null
-}
-
-const validateCORS = (req, res, allowedOrigins={}, allowedMethods={}) => {
-	const origin = getRequestOrigin(req)
-	const method = (req.method || '').toLowerCase()
-
-	if (!allowedOrigins['*'] && Object.keys(allowedOrigins).length > 0 && !(origin in allowedOrigins)) {
-		res.status(403).send(`Forbidden - CORS issue. Origin '${origin || 'undefined'}' is not allowed.`)
-		return false
-	}
-
-	if (Object.keys(allowedMethods).length > 0 && method != 'get' && method != 'head' && !(method in allowedMethods)) {
-		res.status(403).send(`Forbidden - CORS issue. Method '${method.toUpperCase()}' is not allowed.`)
-		return false
-	}
-
-	return true
-}
+const vary = require('vary')
 
 /**
  * Create the Express-like middleware that will add headers to the response as well as check for CORS
  * compliant request.
  * @param  {Object} options.headers Headers that should be added to all responses regardless of what happens
  */
-const cors = (options={}) => {
-	const requiredHeaders = getRequiredResponseHeaders(options) || []
-	const allowedOrigins = getAllowedOrigins(options)
-	const allowedMethods = getAllowedMethods(options)
-	const setHeaders = requiredHeaders.length > 0 ? res => setResponseHeaders(res, requiredHeaders) : () => null
+const cors = ({ allowedHeaders, origins, methods, credentials, maxAge }) => {
+	const originList = (origins || ['*']).map(x => x.toLowerCase().trim())
+	const allOriginsAllowed = originList.some(x => x == '*')
+	const addOriginToVary = !allOriginsAllowed && originList.length > 0
+	let headers = {
+		'Access-Control-Allow-Methods' : (methods || ['GET','HEAD','PUT','PATCH','POST','DELETE']).map(x => x.toUpperCase()).join(', '),
+		'Access-Control-Allow-Origin': allOriginsAllowed ? '*' : originList.join(', ')
+		//'Access-Control-Request-Headers': '',
+		//'Access-Control-Expose-Headers': '',
+	}
+	if (credentials !== undefined)
+		headers['Access-Control-Allow-Credentials'] = credentials ? true : false
+	if (maxAge)
+		headers['Access-Control-Max-Age'] = maxAge
+	if (allowedHeaders && allowedHeaders.length > 0)
+		headers['Access-Control-Allow-Headers'] = (allowedHeaders || []).join(', ')
 
 	return (req, res, next) => {
-		setHeaders(res)
-		validateCORS(req, res, allowedOrigins, allowedMethods)
+		const requestOrigin = ((req.headers || {}).origin || '').trim()
+		const requestAllowed = allOriginsAllowed || originList.some(x => x == requestOrigin)
+		const creds = headers['Access-Control-Allow-Credentials']
+		const _allowedHeaders = headers['Access-Control-Allow-Headers']
+		const _maxAge = headers['Access-Control-Max-Age']
+
+		// 1. For all requests, set Origin
+		res.set('Access-Control-Allow-Origin', requestAllowed ? requestOrigin : null)
+		// 2. For all requests, set Credential boolean if it was defined.
+		if (creds)
+			res.set('Access-Control-Allow-Credentials', creds)
+		// 3. For all requests, set Expose-Headers if it was defined.
+		if (_allowedHeaders)
+			res.set('Access-Control-Expose-Headers', _allowedHeaders)
+
+		// 4. For OPTIONS requests, add more headers
+		const method = req.method && req.method.toUpperCase && req.method.toUpperCase()
+		if (method == 'OPTIONS') {
+			// 4.1. For OPTIONS requests, set Methods
+			res.set('Access-Control-Allow-Methods', headers['Access-Control-Allow-Methods'])
+			// 4.2. For OPTIONS requests, set Allow-Headers if it was defined.
+			if (_allowedHeaders)
+				res.set('Access-Control-Allow-Headers', _allowedHeaders)
+			// 4.3. For OPTIONS requests, set Max-Age if it was defined.
+			if (_maxAge)
+				res.set('Access-Control-Max-Age', _maxAge)
+		}
+
+		if (addOriginToVary && res.headers)
+			vary(res, 'Origin')
+
 		next()
 	}
 }
 
-module.exports = {
-	getRequiredResponseHeaders,
-	getAllowedOrigins,
-	getAllowedMethods,
-	setResponseHeaders,
-	validateCORS,
-	getRequestOrigin,
-	cors
-}
+module.exports = { cors }

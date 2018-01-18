@@ -36,7 +36,8 @@
     "http-errors": "^1.6.1",
     "path-to-regexp": "^2.1.0",
     "raw-body": "^2.3.2",
-    "shortid": "^2.2.8"
+    "shortid": "^2.2.8",
+    "vary": "^1.1.2"
   },
   "devDependencies": {
     "chai": "^4.1.0",

@@ -10,14 +10,7 @@ const shortid = require('shortid')
 const path = require('path')
 const { getRouteDetails, matchRoute } = require('./routing')
 const { reqUtil } = require('./utils')
-const {
-	getRequiredResponseHeaders,
-	getAllowedOrigins,
-	getAllowedMethods,
-	setResponseHeaders,
-	validateCORS,
-	cors
-} = require('./cors')
+const { cors } = require('./cors')
 require('colors')
 
 /*eslint-disable */
@@ -35,9 +28,6 @@ const PARAMSMODE = { 'all': true, 'body': true, 'route': true, 'none': true }
 const getAppConfig = () => fs.existsSync(CONFIGPATH) ? require(CONFIGPATH) : {}
 
 let _config = getAppConfig() // Object
-let _requiredResponseHeaders = getRequiredResponseHeaders(_config) // Array
-let _allowedOrigins = getAllowedOrigins(_config) // Object
-let _allowedMethods = getAllowedMethods(_config) // Object
 let _preEvent = () => Promise.resolve(null)
 let _postEvent = () => Promise.resolve(null)
 
@@ -78,9 +68,6 @@ const executeHandlers = (req, res, handlers=[]) =>
 
 const resetConfig = (config={}) => {
 	_config = config
-	_requiredResponseHeaders = getRequiredResponseHeaders(config)
-	_allowedOrigins = getAllowedOrigins(config)
-	_allowedMethods = getAllowedMethods(config)
 }
 
 let _handlers = []
@@ -135,7 +122,7 @@ const app = {
 			_postEvent = (req, res) => Promise.resolve(null).then(() => fn(req, res))
 		}
 	},
-	handleEvent: () => (req, res) => processEvent(req, res, _config, _endpoints, _handlers, _requiredResponseHeaders, _allowedOrigins, _allowedMethods, _preEvent, _postEvent),
+	handleEvent: () => (req, res) => processEvent(req, res, _config, _endpoints, _handlers, _preEvent, _postEvent),
 	listen: (appName, port) => {
 		const input = createListenArity(appName, port, 3000)
 		const hostingType = getHostingType()
@@ -153,7 +140,7 @@ const app = {
 		if (!input.appName) {
 			const __express__ = require('express')
 			const __server__ = __express__()
-			__server__.all('*', (req, res) => processEvent(req, res, _config, _endpoints, _handlers, _requiredResponseHeaders, _allowedOrigins, _allowedMethods, _preEvent, _postEvent))
+			__server__.all('*', (req, res) => processEvent(req, res, _config, _endpoints, _handlers, _preEvent, _postEvent))
 			__server__.listen(input.port, () => { 
 				console.log(startMessage)
 				if (secondMsg)
@@ -321,7 +308,7 @@ const matchEndpoint = (pathname, httpMethod, endpoints=[]) => (
 		.sort((a, b) => b.winningRoute.match.length - a.winningRoute.match.length)[0] || {}
 ).endpoint
 
-const processEvent = (req, res, config={}, endpoints=[], handlers=[], requiredHeaders=[], allowedOrigins={}, allowedMethods={}, preEvent, postEvent) => {
+const processEvent = (req, res, config={}, endpoints=[], handlers=[], preEvent, postEvent) => {
 	// 0. Create a request identity for tracing purpose
 	req.__receivedTime = Date.now()
 	req.__transactionId = shortid.generate().replace(/-/g, 'r').replace(/_/g, '9')
@@ -345,7 +332,6 @@ const processEvent = (req, res, config={}, endpoints=[], handlers=[], requiredHe
 
 	// 3. Prepare response with required headers and APIs
 	extendResponse(res)
-	setResponseHeaders(res, requiredHeaders)
 
 	// 4. Run pre-event processing
 	return preEvent(req, res)
@@ -358,16 +344,12 @@ const processEvent = (req, res, config={}, endpoints=[], handlers=[], requiredHe
 		// 5. Run the main request/response processing 
 		.then(() => {
 			if (!res.headersSent && !_preEventErr) {
-				// 5.1. Validate CORS
-				if (!validateCORS(req, res, allowedOrigins, allowedMethods))
-					return
-
-				// 5.2. Stop if this is a HEAD or OPTIONS request
+				// 5.1. Stop if this is a HEAD or OPTIONS request
 				const method = new String(req.method).toLowerCase()
-				if (method == 'head' || method == 'options') 
+				if (method == 'head') 
 					return res.status(200).send()
 
-				// 5.3. Validate the request and make sure that there is an endpoint for it.
+				// 5.2. Validate the request and make sure that there is an endpoint for it.
 				const pathname = ((req._parsedUrl || {}).pathname || '/').toLowerCase()
 				const httpMethod = (req.method || '').toUpperCase()
 
@@ -376,17 +358,17 @@ const processEvent = (req, res, config={}, endpoints=[], handlers=[], requiredHe
 				if (!endpoint) 
 					return res.status(404).send(`Endpoint '${pathname}' for method ${httpMethod} not found.`)
 
-				// 5.4. Extract all params from that request, including both the url route params and the payload params.
+				// 5.3. Extract all params from that request, including both the url route params and the payload params.
 				const validParamsMode = PARAMSMODE[paramsMode] ? paramsMode : 'all'
 				const paramts = validParamsMode == 'all' || validParamsMode == 'route' ? Object.assign({}, endpoint.winningRoute.parameters) : {}
 				const getParams = validParamsMode == 'all' || validParamsMode == 'body' ? reqUtil.getParams(req) : Promise.resolve({})
 				return getParams.then(parameters => Object.assign(parameters, paramts))
 					.then(parameters => {
-						// 5.5. Add all paramaters to the request object
+						// 5.4. Add all paramaters to the request object
 						Object.assign(req[paramsPropName], parameters || {})
-						// 5.6. Process all global handlers
+						// 5.5. Process all global handlers
 						return executeHandlers(req, res, handlers)
-							// 5.8. Process the endpoint
+							// 5.6. Process the endpoint
 							.then(() => !res.headersSent && endpoint.execute(req, res))
 					})
 			}
@@ -429,12 +411,6 @@ const extendResponse = res => {
 module.exports = {
 	app,
 	cors,
-	get appConfig() { return getEnv() },
-	utils: {
-		headers: {
-			setResponseHeaders,
-			getRequiredResponseHeaders
-		}
-	}
+	get appConfig() { return getEnv() }
 }
 

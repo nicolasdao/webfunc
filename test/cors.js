@@ -8,10 +8,171 @@
 const { assert } = require('chai')
 const httpMocks = require('node-mocks-http')
 const { app, cors } = require('../src/index')
-const { getRequestOrigin } = require('../src/cors')
 
 /*eslint-disable */
-describe('cors', () => 
+describe('cors: #01', () => 
+	it(`Should set the response's origin header to the request's origin if it matches the configured list in CORS.`, () => {
+		/*eslint-enable */
+		const req = httpMocks.createRequest({
+			method: 'GET',
+			headers: {
+				origin: 'http://localhost:8080',
+				referer: 'http://localhost:8080'
+			}
+		})
+		const res = httpMocks.createResponse()
+		const corsSetup = cors({
+			origins: ['http://boris.com', 'http://localhost:8080'],
+			methods: ['GET', 'HEAD', 'OPTIONS', 'POST'],
+			allowedHeaders: ['Authorization', 'Content-Type', 'Origin'],
+			maxAge: 1296000
+		})
+
+		app.reset()
+		app.all(corsSetup, (req, res) => res.status(200).send('Hello World'))
+		return app.handleEvent()(req, res).then(() => {
+			assert.isOk(req)
+			assert.equal(res._getData(),'Hello World')
+			const headers = res._getHeaders()
+			assert.isOk(headers)
+			assert.equal(headers['Access-Control-Expose-Headers'], 'Authorization, Content-Type, Origin')
+			assert.equal(headers['Access-Control-Allow-Origin'], 'http://localhost:8080')
+		})
+	}))
+
+/*eslint-disable */
+describe('cors: #02', () => 
+	it(`Should set the response's origin header to null if the origin does not match the configured list in CORS.`, () => {
+		/*eslint-enable */
+		const req = httpMocks.createRequest({
+			method: 'GET',
+			headers: {
+				origin: 'http://localhost:8080',
+				referer: 'http://localhost:8080'
+			}
+		})
+		const res = httpMocks.createResponse()
+		const corsSetup = cors({
+			origins: ['http://boris.com'],
+			methods: ['GET', 'HEAD', 'OPTIONS', 'POST'],
+			allowedHeaders: ['Authorization', 'Content-Type', 'Origin'],
+			maxAge: 1296000
+		})
+
+		app.reset()
+		app.all(corsSetup, (req, res) => res.status(200).send('Hello World'))
+		return app.handleEvent()(req, res).then(() => {
+			assert.isOk(req)
+			assert.equal(res._getData(),'Hello World')
+			const headers = res._getHeaders()
+			assert.isOk(headers)
+			assert.equal(headers['Access-Control-Expose-Headers'], 'Authorization, Content-Type, Origin')
+			assert.equal(headers['Access-Control-Allow-Origin'], 'null')
+		})
+	}))
+
+/*eslint-disable */
+describe('cors: #03', () => 
+	it(`Should set a minimum set of CORS response's headers if the request is not an OPTIONS one.`, () => {
+		/*eslint-enable */
+		const req = httpMocks.createRequest({
+			method: 'GET',
+			headers: {
+				origin: 'http://localhost:8080',
+				referer: 'http://localhost:8080'
+			}
+		})
+		const res = httpMocks.createResponse()
+		const corsSetup = cors({
+			origins: ['http://boris.com', 'http://localhost:8080'],
+			methods: ['GET', 'HEAD', 'OPTIONS', 'POST'],
+			allowedHeaders: ['Authorization', 'Content-Type', 'Origin'],
+			maxAge: 1296000,
+			credentials: true
+		})
+
+		app.reset()
+		app.all(corsSetup, (req, res) => res.status(200).send('Hello World'))
+		return app.handleEvent()(req, res).then(() => {
+			assert.isOk(req)
+			assert.equal(res._getData(),'Hello World')
+			const headers = res._getHeaders()
+			assert.isOk(headers)
+			assert.equal(headers['Access-Control-Expose-Headers'], 'Authorization, Content-Type, Origin')
+			assert.equal(headers['Access-Control-Allow-Origin'], 'http://localhost:8080')
+			assert.equal(headers['Access-Control-Allow-Credentials'], 'true')
+		})
+	}))
+
+/*eslint-disable */
+describe('cors: #04', () => 
+	it(`Should NOT set some CORS response's headers if the request is not an OPTIONS one.`, () => {
+		/*eslint-enable */
+		const req = httpMocks.createRequest({
+			method: 'GET',
+			headers: {
+				origin: 'http://localhost:8080',
+				referer: 'http://localhost:8080'
+			}
+		})
+		const res = httpMocks.createResponse()
+		const corsSetup = cors({
+			origins: ['http://boris.com', 'http://localhost:8080'],
+			methods: ['GET', 'HEAD', 'OPTIONS', 'POST'],
+			allowedHeaders: ['Authorization', 'Content-Type', 'Origin'],
+			maxAge: 1296000
+		})
+
+		app.reset()
+		app.all(corsSetup, (req, res) => res.status(200).send('Hello World'))
+		return app.handleEvent()(req, res).then(() => {
+			assert.isOk(req)
+			assert.equal(res._getData(),'Hello World')
+			const headers = res._getHeaders()
+			assert.isOk(headers)
+			assert.equal(headers['Access-Control-Expose-Headers'], 'Authorization, Content-Type, Origin')
+			assert.equal(headers['Access-Control-Allow-Origin'], 'http://localhost:8080')
+			assert.isOk(!headers['Access-Control-Allow-Headers'])
+			assert.isOk(!headers['Access-Control-Allow-Methods'])
+			assert.isOk(!headers['Access-Control-Max-Age'])
+		})
+	}))
+
+/*eslint-disable */
+describe('cors: #05', () => 
+	it(`Should set all CORS response's headers if the request is an OPTIONS one.`, () => {
+		/*eslint-enable */
+		const req = httpMocks.createRequest({
+			method: 'OPTIONS',
+			headers: {
+				origin: 'http://localhost:8080',
+				referer: 'http://localhost:8080'
+			}
+		})
+		const res = httpMocks.createResponse()
+		const corsSetup = cors({
+			origins: ['http://boris.com', 'http://localhost:8080'],
+			methods: ['GET', 'HEAD', 'OPTIONS', 'POST'],
+			allowedHeaders: ['Authorization', 'Content-Type', 'Origin'],
+			maxAge: 1296000
+		})
+
+		app.reset()
+		app.all(corsSetup, (req, res) => res.status(200).send('Hello World'))
+		return app.handleEvent()(req, res).then(() => {
+			assert.isOk(req)
+			const headers = res._getHeaders()
+			assert.isOk(headers)
+			assert.equal(headers['Access-Control-Expose-Headers'], 'Authorization, Content-Type, Origin')
+			assert.equal(headers['Access-Control-Allow-Origin'], 'http://localhost:8080')
+			assert.equal(headers['Access-Control-Allow-Headers'], 'Authorization, Content-Type, Origin')
+			assert.equal(headers['Access-Control-Allow-Methods'], 'GET, HEAD, OPTIONS, POST')
+			assert.equal(headers['Access-Control-Max-Age'], '1296000')
+		})
+	}))
+
+/*eslint-disable */
+describe('cors: #06', () => 
 	it('Should retrieves required response headers defined inside the config.json file.', () => {
 		/*eslint-enable */
 		const req_01 = httpMocks.createRequest({
@@ -39,28 +200,12 @@ describe('cors', () =>
 		})
 		const res_02 = httpMocks.createResponse()
 
-		const req_03 = httpMocks.createRequest({
-			method: 'POST',
-			headers: {
-				origin: 'http://brendan.com',
-				referer: 'http://brendan.com'
-			},
-			_parsedUrl: {
-				pathname: '/users/nicolas'
-			},
-			query: { lastname: 'dao' }
+		const req_01_cors = cors({
+			origins: ['http://boris.com', 'http://localhost:8080'],
+			methods: ['GET', 'HEAD', 'OPTIONS'],
+			allowedHeaders: ['Authorization', 'Content-Type', 'Origin'],
+			maxAge: 1296000
 		})
-		const res_03 = httpMocks.createResponse()
-
-		const commonHeaders = {
-			'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
-			'Access-Control-Allow-Headers': 'Authorization, Content-Type, Origin',
-			'Access-Control-Max-Age': '1296000'
-		}
-
-		const req_01_cors = cors({ headers: Object.assign({}, commonHeaders, {
-			'Access-Control-Allow-Origin': 'http://boris.com, http://localhost:8080'
-		}) })
 
 		app.reset()
 		app.all('/Users/:username', req_01_cors, (req, res) => res.status(200).send(`Hello ${req.params.username}${req.params.lastname ? ` ${req.params.lastname}` : ''}`))
@@ -69,57 +214,20 @@ describe('cors', () =>
 			assert.equal(res_01._getData(),'Hello nicolas')
 			const headers = res_01._getHeaders()
 			assert.isOk(headers)
-			assert.equal(headers['Access-Control-Allow-Methods'], 'GET, HEAD, OPTIONS')
-			assert.equal(headers['Access-Control-Allow-Headers'], 'Authorization, Content-Type, Origin')
-			assert.equal(headers['Access-Control-Allow-Origin'], 'http://boris.com, http://localhost:8080')
-			assert.equal(headers['Access-Control-Max-Age'], '1296000')
+			assert.equal(headers['Access-Control-Expose-Headers'], 'Authorization, Content-Type, Origin')
+			assert.equal(headers['Access-Control-Allow-Origin'], 'http://localhost:8080')
 		})
 		const result_02 = app.handleEvent()(req_02, res_02).then(() => {
-			assert.equal(res_02.statusCode, 403)
-			assert.equal(res_02._getData(),'Forbidden - CORS issue. Method \'POST\' is not allowed.')
+			assert.equal(res_02.statusCode, 200)
+			assert.equal(res_01._getData(),'Hello nicolas')
 			const headers = res_02._getHeaders()
 			assert.isOk(headers)
-			assert.equal(headers['Access-Control-Allow-Methods'], 'GET, HEAD, OPTIONS')
-			assert.equal(headers['Access-Control-Allow-Headers'], 'Authorization, Content-Type, Origin')
-			assert.equal(headers['Access-Control-Allow-Origin'], 'http://boris.com, http://localhost:8080')
-			assert.equal(headers['Access-Control-Max-Age'], '1296000')
-		})
-		const result_03 = app.handleEvent()(req_03, res_03).then(() => {
-			assert.equal(res_03.statusCode, 403)
-			assert.equal(res_03._getData(),'Forbidden - CORS issue. Origin \'http://brendan.com\' is not allowed.')
-			const headers = res_03._getHeaders()
-			assert.isOk(headers)
-			assert.equal(headers['Access-Control-Allow-Methods'], 'GET, HEAD, OPTIONS')
-			assert.equal(headers['Access-Control-Allow-Headers'], 'Authorization, Content-Type, Origin')
-			assert.equal(headers['Access-Control-Allow-Origin'], 'http://boris.com, http://localhost:8080')
-			assert.equal(headers['Access-Control-Max-Age'], '1296000')
+			assert.equal(headers['Access-Control-Expose-Headers'], 'Authorization, Content-Type, Origin')
+			assert.equal(headers['Access-Control-Allow-Origin'], 'http://localhost:8080')
 		})
 
-		return Promise.all([result_01, result_02, result_03])
+		return Promise.all([result_01, result_02])
 	}))
-
-/*eslint-disable */
-describe('cors', () => 
-	describe('getRequestOrigin', () => 
-		it(`Should retrieves the request's origin even if it is not explecitely defined (look for referer, host, ...).`, () => {
-			/*eslint-enable */
-			const requests = [
-				httpMocks.createRequest({
-					headers: {
-						origin: 'http://localhost:8080'
-					}
-				}),
-				httpMocks.createRequest({
-					headers: {
-						referer: 'http://localhost:8080'
-					}
-				})]
-
-			requests.forEach(req => {
-				const v = getRequestOrigin(req)
-				assert.equal(v, 'http://localhost:8080')
-			})
-		})))
 
 
 
