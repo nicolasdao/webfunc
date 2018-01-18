@@ -36,34 +36,33 @@ const cors = ({ allowedHeaders, origins, methods, credentials, maxAge }) => {
 		const _allowedHeaders = headers['Access-Control-Allow-Headers']
 		const _maxAge = headers['Access-Control-Max-Age']
 
-		// 1. For all requests, set Origin
+		// 1. Set Origin
 		res.set('Access-Control-Allow-Origin', requestAllowed ? requestOrigin : null)
-		// 2. For all requests, set Credential boolean if it was defined.
+		// 2. Set Credential boolean if it was defined.
 		if (creds)
 			res.set('Access-Control-Allow-Credentials', creds)
-		// 3. For all requests, set Expose-Headers if it was defined.
+		// 3. Set Expose-Headers if it was defined.
 		if (_allowedHeaders)
 			res.set('Access-Control-Expose-Headers', _allowedHeaders)
 
-		// 4. For OPTIONS requests, add more headers
-		const method = req.method && req.method.toUpperCase && req.method.toUpperCase()
-		if (method == 'OPTIONS') {
-			// 4.1. For OPTIONS requests, set Methods
-			res.set('Access-Control-Allow-Methods', headers['Access-Control-Allow-Methods'])
-			// 4.2. For OPTIONS requests, set Allow-Headers if it was defined.
-			if (_allowedHeaders)
-				res.set('Access-Control-Allow-Headers', _allowedHeaders)
-			// 4.3. For OPTIONS requests, set Max-Age if it was defined.
-			if (_maxAge)
-				res.set('Access-Control-Max-Age', _maxAge)
-			if (addOriginToVary && res.headers)
-				vary(res, 'Origin')
+		// 4. Set Methods
+		res.set('Access-Control-Allow-Methods', headers['Access-Control-Allow-Methods'])
+		// 5. Set Allow-Headers if it was defined.
+		if (_allowedHeaders)
+			res.set('Access-Control-Allow-Headers', _allowedHeaders)
+		// 6. Set Max-Age if it was defined.
+		if (_maxAge)
+			res.set('Access-Control-Max-Age', _maxAge)
 
-			res.status(200).send()
-		}
-		else if (addOriginToVary && res.headers)
+		// 7. Set Vary
+		if (addOriginToVary && res.headers)
 			vary(res, 'Origin')
 
+		// 4. For OPTIONS requests, add more headers
+		const method = req.method && req.method.toUpperCase && req.method.toUpperCase()
+		if (method == 'OPTIONS')
+			res.status(200).send()
+		
 		next()
 	}
 }
