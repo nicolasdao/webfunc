@@ -7,11 +7,11 @@
 */
 const { assert } = require('chai')
 const httpMocks = require('node-mocks-http')
-const { app, cors } = require('../src/index')
+const { app } = require('../src/index')
 
 /*eslint-disable */
 describe('app', () => 
-	describe('#handleEvent: 11', () => 
+	describe('#handleEvent: 01', () => 
 		it(`Should support one endpoint definition.`, () => {
 			/*eslint-enable */
 			const req_01 = httpMocks.createRequest({
@@ -35,7 +35,7 @@ describe('app', () =>
 
 /*eslint-disable */
 describe('app', () => 
-	describe('#handleEvent: 12', () => 
+	describe('#handleEvent: 02', () => 
 		it(`Should support multiple endpoints definitions.`, () => {
 			/*eslint-enable */
 			const req_01 = httpMocks.createRequest({
@@ -78,7 +78,7 @@ describe('app', () =>
 
 /*eslint-disable */
 describe('app', () => 
-	describe('#handleEvent: 13', () => 
+	describe('#handleEvent: 03', () => 
 		it(`Should support simple single routing with parameters and querystring.`, () => {
 			/*eslint-enable */
 			const req_01 = httpMocks.createRequest({
@@ -136,7 +136,7 @@ describe('app', () =>
 
 /*eslint-disable */
 describe('app', () => 
-	describe('#handleEvent: 14', () => 
+	describe('#handleEvent: 04', () => 
 		it(`Should support complex routing with parameters and querystring.`, () => {
 			/*eslint-enable */
 			const req_01 = httpMocks.createRequest({
@@ -179,7 +179,7 @@ describe('app', () =>
 
 /*eslint-disable */
 describe('app', () => 
-	describe('#handleEvent: 15', () => 
+	describe('#handleEvent: 05', () => 
 		it(`Should accept any http method with 'app.all'.`, () => {
 			/*eslint-enable */
 			const req_01 = httpMocks.createRequest({
@@ -220,7 +220,7 @@ describe('app', () =>
 
 /*eslint-disable */
 describe('app', () => 
-	describe('#handleEvent: 16', () => 
+	describe('#handleEvent: 06', () => 
 		it(`Should support custom HttpHandler`, () => {
 			/*eslint-enable */
 			const req_01 = httpMocks.createRequest({
@@ -273,7 +273,7 @@ describe('app', () =>
 
 /*eslint-disable */
 describe('app', () => 
-	describe('#handleEvent: 17', () => 
+	describe('#handleEvent: 07', () => 
 		it(`Should support chain of HttpHandlers.`, () => {
 			/*eslint-enable */
 			const req_01 = httpMocks.createRequest({
@@ -312,7 +312,7 @@ describe('app', () =>
 
 /*eslint-disable */
 describe('app', () => 
-	describe('#handleEvent: 18', () => 
+	describe('#handleEvent: 08', () => 
 		it(`Should support any path if no path have been defined in any route.`, () => {
 			/*eslint-enable */
 			const req_01 = httpMocks.createRequest({
@@ -355,7 +355,7 @@ describe('app', () =>
 
 /*eslint-disable */
 describe('app', () => 
-	describe('#handleEvent: 19', () => 
+	describe('#handleEvent: 09', () => 
 		it(`Should support collection of routes for a single response type.`, () => {
 			/*eslint-enable */
 			const req_01 = httpMocks.createRequest({
@@ -398,7 +398,7 @@ describe('app', () =>
 
 /*eslint-disable */
 describe('app', () => 
-	describe('#handleEvent: 20', () => 
+	describe('#handleEvent: 10', () => 
 		it('Should capture the body of a POST request and interpret it as a JSON in the params argument.', () => {
 			/*eslint-enable */
 			const req = httpMocks.createRequest({
@@ -430,7 +430,7 @@ describe('app', () =>
 
 /*eslint-disable */
 describe('app', () => 
-	describe('#handleEvent: 21', () => 
+	describe('#handleEvent: 11', () => 
 		it(`Should not extract any parameters from the payload or the route when the 'paramsMode' property of the now.json config is set to 'none'.`, () => {
 			/*eslint-enable */
 			const req = httpMocks.createRequest({
@@ -466,7 +466,7 @@ describe('app', () =>
 
 /*eslint-disable */
 describe('app', () => 
-	describe('#handleEvent: 22', () => 
+	describe('#handleEvent: 12', () => 
 		it(`Should not extract any route parameters when the 'paramsMode' property of the now.json config is set to 'body'.`, () => {
 			/*eslint-enable */
 			const req = httpMocks.createRequest({
@@ -502,7 +502,7 @@ describe('app', () =>
 
 /*eslint-disable */
 describe('app', () => 
-	describe('#handleEvent: 23', () => 
+	describe('#handleEvent: 13', () => 
 		it(`Should not extract any body parameters when the 'paramsMode' property of the now.json config is set to 'route'.`, () => {
 			/*eslint-enable */
 			const req = httpMocks.createRequest({
@@ -538,7 +538,7 @@ describe('app', () =>
 
 /*eslint-disable */
 describe('app', () => 
-	describe('#handleEvent: 24', () => 
+	describe('#handleEvent: 14', () => 
 		it(`Should add metadata '__transactionId', '__receivedTime' and '__ellapsedMillis()' to the request object.`, () => {
 			/*eslint-enable */
 			const req = httpMocks.createRequest({
@@ -586,7 +586,7 @@ describe('app', () =>
 
 /*eslint-disable */
 describe('app', () => 
-	describe('#handleEvent: 25', () => 
+	describe('#handleEvent: 15', () => 
 		it(`Should support preEvent and postEvent handler.`, () => {
 			/*eslint-enable */
 			const req_01 = httpMocks.createRequest({
@@ -628,7 +628,7 @@ describe('app', () =>
 
 /*eslint-disable */
 describe('app', () => 
-	describe('#handleEvent: 26', () => 
+	describe('#handleEvent: 16', () => 
 		it(`Should support an undetermined number of middleware for a specific endpoint.`, () => {
 			/*eslint-enable */
 			const req_01 = httpMocks.createRequest({
@@ -690,7 +690,7 @@ describe('app', () =>
 
 /*eslint-disable */
 describe('app', () => 
-	describe('#handleEvent: 27', () => 
+	describe('#handleEvent: 17', () => 
 		it(`Should support custom 'params' property name (e.g. from the default req.params to your req.myOwnWhatever ).`, () => {
 			/*eslint-enable */
 			const req_01 = httpMocks.createRequest({
