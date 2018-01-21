@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.13.0-alpha.13"></a>
+# [0.13.0-alpha.13](https://github.com/nicolasdao/webfunc/compare/v0.13.0-alpha.12...v0.13.0-alpha.13) (2018-01-21)
+
+
+### Bug Fixes
+
+* AWS request are all POST ([00c436d](https://github.com/nicolasdao/webfunc/commit/00c436d))
+
+
+
 <a name="0.13.0-alpha.12"></a>
 # [0.13.0-alpha.12](https://github.com/nicolasdao/webfunc/compare/v0.13.0-alpha.11...v0.13.0-alpha.12) (2018-01-21)
 
