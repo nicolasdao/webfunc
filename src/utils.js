@@ -8,6 +8,7 @@
 const getRawBody = require('raw-body')
 const path = require('path')
 const httpMocks = require('node-mocks-http')
+const appendQuery = require('append-query')
 
 /*eslint-disable */
 const utf8ToHex = s => s ? Buffer.from(s).toString('hex') : ''
@@ -132,13 +133,19 @@ const createGCPRequestResponse = (event={}, paramsPropName) => {
 
 const createAWSRequestResponse = (event={}, paramsPropName) => {
 	try {
+		const pathname = path.posix.join('/', event.path || '/')
 		let req = httpMocks.createRequest({
+			method: event.httpMethod || 'GET',
+			headers: event.headers || {},
 			_parsedUrl: {
-				pathname: '/'
+				pathname: pathname
 			}
 		})
 
 		req[paramsPropName] = event
+		req.body = event.body || {}
+		req.query = event.queryStringParameters || {}
+		req.url = appendQuery(pathname, req.query)
 
 		return { req, res: httpMocks.createResponse() }
 	}

@@ -168,7 +168,6 @@ describe('app', () =>
 			app.get('/users/:username/account/:accountId', (req, res) => res.status(200).send(`Hello ${req.params.username} (account: ${req.params.accountId})`))
 			app.get('/company/:name', (req, res) => res.status(200).send(`Hello ${req.params.name} (Hello: ${req.params.hello})`))
 			const result_01 = app.handleEvent()(req_01, res_01).then(() => {
-				console.log(req_01)
 				assert.equal(res_01._getData(),'Hello nicolas (account: 1234)')
 			})
 			const result_02 = app.handleEvent()(req_02, res_02).then(() => {
@@ -757,7 +756,7 @@ describe('app', () =>
 /*eslint-disable */
 describe('app', () => 
 	describe('#createGCPRequestResponse', () => 
-		it(`Should convert a Google event to a request/response object.`, () => {
+		it(`Should convert a Google event to an HTTP request object.`, () => {
 			const body = new Buffer('This is an awesome message').toString('base64')
 			/*eslint-enable */
 			const event = {
@@ -785,7 +784,36 @@ describe('app', () =>
 
 /*eslint-disable */
 describe('app', () => 
-	describe('#createAWSRequestResponse & createAWSResponse', () => 
+	describe('#createAWSRequestResponse', () => 
+		it(`Should convert an AWS event to an HTTP request object.`, () => {
+			/*eslint-enable */
+			const event = {
+				firstName: 'Nic',
+				lastName: 'Dao',
+				httpMethod: 'POST',
+				path: 'users/tony',
+				queryStringParameters: { name: 'Nico' },
+				body: {
+					email: 'nic@neap.co',
+					pwd: '1234'
+				}
+			}
+
+			app.reset()
+			const { req } = app.createAWSRequestResponse(event)
+			assert.equal(req.params.firstName, 'Nic')
+			assert.equal(req.params.lastName, 'Dao')
+			assert.equal(req.method, 'POST')
+			assert.equal(req._parsedUrl.pathname, '/users/tony')
+			assert.equal(req.query.name, 'Nico')
+			assert.equal(req.body.email, 'nic@neap.co')
+			assert.equal(req.body.pwd, '1234')
+			assert.equal(req.url, '/users/tony?name=Nico')
+		})))
+
+/*eslint-disable */
+describe('app', () => 
+	describe('#createAWSResponse', () => 
 		it(`Should convert an AWS event to a request/response object and then convert the response back to an AWS response.`, () => {
 			/*eslint-enable */
 			const event = {
