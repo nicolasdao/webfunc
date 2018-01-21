@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.13.0-alpha.14"></a>
+# [0.13.0-alpha.14](https://github.com/nicolasdao/webfunc/compare/v0.13.0-alpha.13...v0.13.0-alpha.14) (2018-01-21)
+
+
+### Bug Fixes
+
+* Typo in the AWS handler code generation ([12eb792](https://github.com/nicolasdao/webfunc/commit/12eb792))
+
+
+
 <a name="0.13.0-alpha.13"></a>
 # [0.13.0-alpha.13](https://github.com/nicolasdao/webfunc/compare/v0.13.0-alpha.12...v0.13.0-alpha.13) (2018-01-21)
 
