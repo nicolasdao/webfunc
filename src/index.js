@@ -129,12 +129,19 @@ const app = {
 		if (!HOSTINGS[hostingType.toLowerCase()])
 			throw new Error(`Unsupported hosting type '${hostingType}'`)
 
-		const hostCategory = !hostingType || hostingType == 'localhost' || hostingType == 'now' ? 'express' : hostingType
+		let hostCategory = !hostingType || hostingType == 'localhost' || hostingType == 'now' ? 'express' : hostingType
 		const notLocal = hostingType != 'localhost'
 		const startMessage = notLocal
 			? `Ready to receive traffic${!notLocal ? ` on port ${input.port}` : ''}`
 			: `Ready to receive traffic on ${`http://localhost:${input.port}`.bold.italic}`.cyan
 		const secondMsg = notLocal ? '' : 'Press Ctrl+C to stop the server'.cyan
+
+		// Determine what GCP category is setup
+		if (hostCategory == 'gcp') {
+			const activeEnv = getEnv()
+			if (activeEnv.gcp && activeEnv.gcp.trigger && activeEnv.gcp.trigger.type && activeEnv.gcp.trigger.type != 'https')
+				hostCategory = 'gcp_event'
+		}
 
 		// Normal Express Server Setup
 		if (!input.appName) {
@@ -159,11 +166,33 @@ const app = {
 					`
 			case 'gcp':
 				return `exports.handler = ${input.appName}.handleEvent()`
+			case 'gcp_event':
+				return `
+					exports.handler = (event, next) => {	
+						const { req, res } = ${input.appName}.createGCPRequestResponse(event)
+						${input.appName}.handleEvent()(req, res).then(() => next())
+					}`
+			case 'aws':
+				return `
+					exports.handler = (event, context, next) => {	
+						const { req, res } = ${input.appName}.createAWSRequestResponse(event)
+						${input.appName}.handleEvent()(req, res)
+						.then(() => {
+							const awsRes = ${input.appName}.createAWSResponse(event)
+							next(null, awsRes)
+						})
+						.catch(err => {
+							next(err, null)
+						})
+					}`
 			default:
 				throw new Error(`Unsupported hosting type '${hostCategory}'`)
 			}
 		}
-	}
+	},
+	createGCPRequestResponse: event => reqUtil.createGCPRequestResponse(event, ((_config || {}).params || {}).propName || 'params'),
+	createAWSRequestResponse: event => reqUtil.createAWSRequestResponse(event, ((_config || {}).params || {}).propName || 'params'),
+	createAWSResponse: reqUtil.createAWSResponse
 }
 
 /**
@@ -308,7 +337,7 @@ const matchEndpoint = (pathname, httpMethod, endpoints=[]) => (
 		.sort((a, b) => b.winningRoute.match.length - a.winningRoute.match.length)[0] || {}
 ).endpoint
 
-const processEvent = (req, res, config={}, endpoints=[], handlers=[], preEvent, postEvent) => {
+const processEvent = (req, res, config={}, endpoints=[], handlers=[], preEvent, postEvent) => Promise.resolve(null).then(() => {
 	// 0. Create a request identity for tracing purpose
 	req.__receivedTime = Date.now()
 	req.__transactionId = shortid.generate().replace(/-/g, 'r').replace(/_/g, '9')
@@ -388,7 +417,7 @@ const processEvent = (req, res, config={}, endpoints=[], handlers=[], preEvent, 
 			if (!_preEventErr && !_processErr)
 				try { res.status(500).send(`Internal Server Error - Post Processing error: ${err.message}`) } catch(e) { console.error(e.message) } 
 		})
-}
+})
 
 /**
  * The response object, depending on the hosting platform is express or a FaaS, will or will not support certain APIs.

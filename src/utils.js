@@ -6,6 +6,8 @@
  * LICENSE file in the root directory of this source tree.
 */
 const getRawBody = require('raw-body')
+const path = require('path')
+const httpMocks = require('node-mocks-http')
 
 /*eslint-disable */
 const utf8ToHex = s => s ? Buffer.from(s).toString('hex') : ''
@@ -93,8 +95,85 @@ const getParams = req => {
 	})
 }
 
+const createGCPRequestResponse = (event={}, paramsPropName) => {
+	try {
+		const pubsubMessage = event.data || {}
+		const data = pubsubMessage.attributes || {}
+		let body
+		try {
+			/*eslint-disable */
+			body = pubsubMessage.data ? Buffer.from(pubsubMessage.data, 'base64').toString() : 'World'
+		}
+		catch(err) {}
+		/*eslint-enable */
+
+		const resource = event.resource || ''
+
+		let req = httpMocks.createRequest({
+			method: 'POST',
+			headers: {
+				origin: resource
+			},
+			_parsedUrl: {
+				pathname: data.pathname && typeof(data.pathname) == 'string' ? path.posix.join('/', data.pathname) : '/'
+			}
+		})
+
+		req[paramsPropName] = data
+		req.body = body
+
+		return { req, res: httpMocks.createResponse() }
+	}
+	catch(err) {
+		console.error(err)
+		throw err
+	}
+}
+
+const createAWSRequestResponse = (event={}, paramsPropName) => {
+	try {
+		let req = httpMocks.createRequest({
+			method: 'POST',
+			_parsedUrl: {
+				pathname: '/'
+			}
+		})
+
+		req[paramsPropName] = event
+
+		return { req, res: httpMocks.createResponse() }
+	}
+	catch(err) {
+		console.error(err)
+		throw err
+	}
+}
+
+const createAWSResponse = (res={}) => {
+	try {
+		return {
+			statusCode: res.statusCode || 400,
+			headers: res._getHeaders ? res._getHeaders() : {},
+			body: res._getData ? res._getData() : ''
+		}
+	}
+	catch(err) {
+		console.error(err)
+		throw err
+	}
+}
+
+// statusCode: responseCode,
+//         headers: {
+//             "x-custom-header" : "my custom header value"
+//         },
+//         body: JSON.stringify(responseBody)
+
 module.exports = {
 	reqUtil: {
-		getParams
+		getParams,
+		createGCPRequestResponse,
+		createAWSRequestResponse,
+		createAWSResponse
 	}
 }

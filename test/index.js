@@ -7,7 +7,7 @@
 */
 const { assert } = require('chai')
 const httpMocks = require('node-mocks-http')
-const { app } = require('../src/index')
+const { app, cors } = require('../src/index')
 
 /*eslint-disable */
 describe('app', () => 
@@ -28,7 +28,7 @@ describe('app', () =>
 
 			app.reset()
 			app.get('/users', (req, res) => res.status(200).send('Hello User'))
-			return app.handleEvent()(req_01, res_01).then(() => {
+			return app.handleEvent()(req_01, res_01).then(() => {				
 				assert.equal(res_01._getData(),'Hello User')
 			})
 		})))
@@ -168,6 +168,7 @@ describe('app', () =>
 			app.get('/users/:username/account/:accountId', (req, res) => res.status(200).send(`Hello ${req.params.username} (account: ${req.params.accountId})`))
 			app.get('/company/:name', (req, res) => res.status(200).send(`Hello ${req.params.name} (Hello: ${req.params.hello})`))
 			const result_01 = app.handleEvent()(req_01, res_01).then(() => {
+				console.log(req_01)
 				assert.equal(res_01._getData(),'Hello nicolas (account: 1234)')
 			})
 			const result_02 = app.handleEvent()(req_02, res_02).then(() => {
@@ -752,3 +753,68 @@ describe('app', () =>
 
 			return Promise.all([result_01, result_02, result_03])
 		})))
+
+/*eslint-disable */
+describe('app', () => 
+	describe('#createGCPRequestResponse', () => 
+		it(`Should convert a Google event to a request/response object.`, () => {
+			const body = new Buffer('This is an awesome message').toString('base64')
+			/*eslint-enable */
+			const event = {
+				data: {
+					attributes: {
+						pathname: 'users',
+						user: {
+							firstName: 'Nic',
+							lastName: 'Dao'
+						}
+					},
+					data: body
+				},
+				resource: 'projects/super-project/topics/hello'
+			}
+
+			app.reset()
+			const { req } = app.createGCPRequestResponse(event)
+			assert.equal(req.headers.origin, 'projects/super-project/topics/hello', 'The origin should be \'projects/super-project/topics/hello\'.')
+			assert.equal(req.params.user.firstName, 'Nic', 'First name should be \'Nic\'.')
+			assert.equal(req.params.user.lastName, 'Dao', 'Last name should be \'Dao\'.')
+			assert.equal(req._parsedUrl.pathname, '/users', 'Pathname should be \'/users\'.')
+			assert.equal(req.body, 'This is an awesome message', 'body should be \'This is an awesome message\'.')
+		})))
+
+/*eslint-disable */
+describe('app', () => 
+	describe('#createAWSRequestResponse & createAWSResponse', () => 
+		it(`Should convert an AWS event to a request/response object and then convert the response back to an AWS response.`, () => {
+			/*eslint-enable */
+			const event = {
+				firstName: 'Nic',
+				lastName: 'Dao'
+			}
+
+			const corsSetup = cors({
+				origins: ['http://boris.com'],
+				methods: ['GET', 'HEAD', 'OPTIONS', 'POST'],
+				allowedHeaders: ['Authorization', 'Content-Type', 'Origin'],
+				maxAge: 1296000
+			})
+
+			app.reset()
+			const { req, res } = app.createAWSRequestResponse(event)
+			app.all(corsSetup, (req, res) => res.status(200).send(`Hello ${req.params.firstName} ${req.params.lastName}`))
+			return app.handleEvent()(req, res).then(() => {
+				const awsRes = app.createAWSResponse(res)
+				assert.equal(awsRes.statusCode, 200)
+				assert.equal(awsRes.body,'Hello Nic Dao')
+				const headers = awsRes.headers
+				assert.isOk(headers)
+				assert.equal(headers['Access-Control-Expose-Headers'], 'Authorization, Content-Type, Origin')
+				assert.equal(headers['Access-Control-Allow-Origin'], 'null')
+			})
+		})))
+
+
+
+
+
