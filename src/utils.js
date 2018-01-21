@@ -133,7 +133,6 @@ const createGCPRequestResponse = (event={}, paramsPropName) => {
 const createAWSRequestResponse = (event={}, paramsPropName) => {
 	try {
 		let req = httpMocks.createRequest({
-			method: 'POST',
 			_parsedUrl: {
 				pathname: '/'
 			}

@@ -374,13 +374,13 @@ const processEvent = (req, res, config={}, endpoints=[], handlers=[], preEvent, 
 		.then(() => {
 			if (!res.headersSent && !_preEventErr) {
 				// 5.1. Stop if this is a HEAD or OPTIONS request
-				const method = new String(req.method).toLowerCase()
+				const method = new String(req.method || 'GET').toLowerCase()
 				if (method == 'head') 
 					return res.status(200).send()
 
 				// 5.2. Validate the request and make sure that there is an endpoint for it.
 				const pathname = ((req._parsedUrl || {}).pathname || '/').toLowerCase()
-				const httpMethod = (req.method || '').toUpperCase()
+				const httpMethod = (method || '').toUpperCase()
 
 				const endpoint = matchEndpoint(pathname, httpMethod, endpoints)
 
