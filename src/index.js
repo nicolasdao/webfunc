@@ -178,7 +178,7 @@ const app = {
 						const { req, res } = ${input.appName}.createAWSRequestResponse(event)
 						${input.appName}.handleEvent()(req, res)
 						.then(() => {
-							const awsRes = ${input.appName}.createAWSResponse(event)
+							const awsRes = ${input.appName}.createAWSResponse(res)
 							next(null, awsRes)
 						})
 						.catch(err => {
