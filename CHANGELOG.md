@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.13.0-alpha.15"></a>
+# [0.13.0-alpha.15](https://github.com/nicolasdao/webfunc/compare/v0.13.0-alpha.14...v0.13.0-alpha.15) (2018-01-21)
+
+
+### Bug Fixes
+
+* Convert all the valid AWS event property into the HTTP request object ([ee815b7](https://github.com/nicolasdao/webfunc/commit/ee815b7))
+
+
+
 <a name="0.13.0-alpha.14"></a>
 # [0.13.0-alpha.14](https://github.com/nicolasdao/webfunc/compare/v0.13.0-alpha.13...v0.13.0-alpha.14) (2018-01-21)
 
