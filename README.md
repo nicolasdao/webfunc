@@ -1,8 +1,8 @@
 # WebFunc &middot;  [![NPM](https://img.shields.io/npm/v/webfunc.svg?style=flat)](https://www.npmjs.com/package/webfunc) [![Tests](https://travis-ci.org/nicolasdao/webfunc.svg?branch=master)](https://travis-ci.org/nicolasdao/webfunc) [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause) [![Neap](https://neap.co/img/made_by_neap.svg)](#this-is-what-we-re-up-to)
 __*Universal Serverless Web Framework*__. Write code for serverless similar to [Express](https://expressjs.com/) once, deploy everywhere (thanks to the awesome [Zeit Now-CLI](https://zeit.co/now)). Targeted platforms:
 - [__*Zeit Now*__](https://zeit.co/now) (using express under the hood)
-- [__*Google Cloud Functions*__](https://cloud.google.com/functions/) (incl. Firebase Function)
-- [__*AWS Lambdas*__](https://aws.amazon.com/lambda) (COMING SOON...)
+- [__*Google Cloud Functions*__](https://cloud.google.com/functions/) (incl. reacting to __*Pub/Sub events*__ or __*Storage changes*__)
+- [__*AWS Lambdas*__](https://aws.amazon.com/lambda)
 - [__*Azure Functions*__](https://azure.microsoft.com/en-us/services/functions/) (COMING SOON...)
 
 ```js
@@ -28,7 +28,7 @@ Out-of-the-box features include:
 
 > * [Install](#install) 
 > * [How To Use It](#how-to-use-it) 
->   - [Basic](#basic)
+>   - [Basic](#basic---build-once-deploy-everywhere)
 >   - [The request Object](#the-request-object)
 >   - [Creating A REST API](#creating-a-rest-api)
 >   - [Compatible With All Express Middleware](#compatible-with-all-express-middleware)
@@ -59,7 +59,7 @@ npm install webfunc --save
 ```
 
 # How To Use It
-## Basic
+## Basic - Build Once, Deploy Everywhere
 > To deploy your app to any serverless solution, first make sure you have installed [_Zeit Now_](https://zeit.co/now) globally:
 ```
 npm install now -g
@@ -113,12 +113,19 @@ Add a __*now.json*__ file similar to the following:
   }
 }
 ```
-
-The `environment.active = "staging"` indicates that the configuration for your app is inside the `environment.staging` property. There, you can see `"hostingType": "gcp"`. Webfunc uses the `hostingType` property to define how to serve your app (this is indeed different from platform to platform. Trying to deploy a `"hostingType": "gcp"` to Zeit Now will fail).  
-
+Run this command:
 ```
 now gcp
 ```
+
+The `environment.active = "staging"` indicates that the configuration for your app is inside the `environment.staging` property. There, you can see `"hostingType": "gcp"`. Webfunc uses the `hostingType` property to define how to serve your app (this is indeed different from platform to platform. Trying to deploy a `"hostingType": "gcp"` to Zeit Now will fail).  
+
+__*3.D. Deploy to Google Cloud Function For Pub/Sub or Storage Based Triggers or Deploy to AWS Lambda*__
+You will need to enhance the _now-CLI_ capabilities by adding a dev dependency called [__*now-flow.js*__](#dev---better-deployments-with-now-flow). An example if available in section [Google Pub/Sub Topic & Storage Trigger Based Functions](#google-pub/sub-topic-&-storage-trigger-based-functions).
+
+>HIGHLY RECOMMENDED - USE __*now-flow.js*__ TO MANAGE YOUR DEPLOYMENTS  
+>Without [__*now-flow.js*__](#dev---better-deployments-with-now-flow), you won't be able to deploy to AWS or to GCP using a Pub/Sub topic trigger. _now-flow.js_ is not just about adding other deployment options to _webfunc_. It also tremendously helps to [managing environment variables per deployment](#managing-environment-variables-per-deployment)).
+
 ## The request Object
 The first operation made by webfunc when it receives a request is to add 3 properties on the __*request*__ object:
 * `__receivedTime`: Number that milliseconds since epoc when the request reaches the server.
@@ -176,12 +183,12 @@ app.all('/', (req, res) => res.status(200).send('Welcome to this awesome API!'))
 eval(app.listen('app', 4000))
 ``` 
 
-Notice that in all the cases above, the `req.params` argument contains any parameters that are either passed in the route or in the payload. This scenario is so common that webfunc automatically supports that feature. No need of installing any middleware like [body-parser](https://github.com/expressjs/body-parser). Webfunc can even automatically parse __*multipart/form-data*__ content type usually used to upload files (e.g. images, documents, ...). More details under [Uploading Images](#uploading-files--images) in the [Use Cases](#use-cases) section.
+Notice that in all the cases above, the `req.params` argument contains any parameters that are either passed in the route or in the payload. This scenario is so common that webfunc automatically supports that feature. No need to install any middleware like [body-parser](https://github.com/expressjs/body-parser). Webfunc can even automatically parse __*multipart/form-data*__ content type usually used to upload files (e.g. images, documents, ...). More details under [Uploading Images](#uploading-files--images) in the [Use Cases](#use-cases) section.
 
 Based on certain requirements, it might be necessary to disable this behavior. To do so, please refer to [Disabling Body Or Route Parsing](#disabling-body-or-route-parsing) under the [Configuration](#configuration) section.
 
 ## Compatible With All Express Middleware
-That's probably one of the biggest advantage of using webfunc. [Express](https://expressjs.com/) offers countless of open-sourced [middleware](https://expressjs.com/en/resources/middleware.html) that would not be as easily usable in a FaaS environment without webfunc. 
+That's probably one of the biggest advantage of using webfunc. [Express](https://expressjs.com/) offers countless of open-sourced [middleware](https://expressjs.com/en/resources/middleware.html) that would not be as easily usable in a FaaS environment without webfunc. You can for example use the code you're to write in Express to write functions that react to a Google Cloud Pub/Sub topic.
 
 Next, we'll demonstrate 4 different basic scenarios:
 1. [Using An Express Middleware Globally](#using-an-express-middleware-globally)
@@ -315,7 +322,7 @@ Here is an example of a typical _now.json_ file:
 }
 ```
 
-As you can see, the example above demonstrates 3 different types of environment setups: _default_, _staging_, _prod_. You can obviouly define as many as you want, and add whatever you need under those environments. Since the value of the `environment.active` is `"default"` in this example, the value of the _**appConfig**_ object is:
+As you can see, the example above demonstrates 3 different types of environment setups: `"default"`, `"staging"`, `"prod"`. You can obviouly define as many as you want, and add whatever you need under those environments. Since the value of the `environment.active` is `"default"` in this example, the value of the _**appConfig**_ object is:
 ```js
 {
   "hostingType": "localhost",
@@ -327,25 +334,36 @@ As you can see, the example above demonstrates 3 different types of environment 
 ## CORS
 >More details about those headers in the [Annexes](#annexes) section under [A.1. CORS Refresher](#a1-cors-refresher).
 
-Similar to body parsing, CORS (i.e. [Cross-Origin Resource Sharing](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS)) is a feature that is so oftem required that webfunc also supports it out-of-the box. That means that in most cases, the [Express CORS](https://github.com/expressjs/cors) middleware will not be necessary. 
-
-To configure CORS, add the following in your _**now.json**_ file:
+Similar to body parsing, CORS (i.e. [Cross-Origin Resource Sharing](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS)) is a feature that is so often required that webfunc also supports it out-of-the box. That means that in most cases, the [Express CORS](https://github.com/expressjs/cors) middleware will not be necessary. 
 
 ```js
-{
-  "headers": {
-    "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS, POST",
-    "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept",
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Max-Age": "1296000"
-  }
-}
+const { app, cors } = require('webfunc')
+
+// AJAX requests allowed from any domain.
+const globalAccess = cors()
+
+// No AJAX requests allowed except from domain than 'https://example.com'.
+const restrictedAccess = cors({
+  methods: ['GET'],
+  allowedHeaders: ['Authorization', 'Origin', 'X-Requested-With', 'Content-Type', 'Accept'],
+  origins: ['https://example.com']
+})
+
+app.get('/products/:id', globalAccess, (req, res) => res.status(200).send(`This is product ${req.params.id}`))
+// The 'OPTIONS' verb is required to allow preflight requests. Indeed, request with headers like 'Authorization' are not considered
+// simple requests (ref. https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS). The browser will then do what's called a 
+// preflight request using the 'OPTIONS' http method to acquire more data on the server. If the server fails to respond to 
+// that 'OPTIONS' request, the browser will abort the request.
+app.options('/users/:username', restrictedAccess)
+app.get('/users/:username', restrictedAccess, (req, res) => res.status(200).send(`Hello ${req.params.username}`))
+
+eval(app.listen('app', 4000))
 ```
 
 >CORS is a classic source of headache. Though webfunc allows to easily configure any project, it will not prevent you to badly configure a project, and therefore loose a huge amount of time. For that reason, a series of common mistakes have been documented in the [Annexes](#annexes) section under [A.2. CORS Basic Errors](#a2-cors-basic-errors).
 
 ## Disabling Body Or Route Parsing
-Webfunc's default behavior is to parse in a json object both the payload and any variables found in the route. Based on certain requirements, it might be necessary to disable this behavior (e.g. trying to read the payload again in your app might not work after webfunc has parsed it). 
+Webfunc's default behavior is to parse both the payload and any variables found in the route into a JSON object (see [previous example](#multiple-endpoints)). Based on certain requirements, it might be necessary to disable that behavior (e.g. trying to read the payload again in your app might not work after webfunc has parsed it). 
 
 To disable completely or partially that behavior, add a `"params"` property in the __*now.json*__ configuration file in the root of your application as follow: 
 
@@ -533,14 +551,15 @@ const graphqlOptions = {
 }
 
 // The GraphQL api
-app.all(['/', '/graphiql'], graphqlHandler(graphqlOptions), () => null)
+app.all(['/', '/graphiql'], graphqlHandler(graphqlOptions))
 
 eval(app.listen('app', 4000))
 ```
 
 # Tips & Tricks
 ## Dev - Easy Hot Reloading
-While developing on your localhost, we recommend using hot reloading to help you automatically restart your node process after each change. [_node-dev_](https://github.com/fgnass/node-dev) is a lightweight development tools that watches the minimum amount of files in your project and automatically restart the node process each time a file has changed. 
+While developing on your localhost, we recommend using hot re
+loading to help you automatically restart your node process after each change. [_node-dev_](https://github.com/fgnass/node-dev) is a lightweight development tools that watches the minimum amount of files in your project and automatically restart the node process each time a file has changed. 
 ```
 npm install node-dev --save-dev
 ```
@@ -556,49 +575,62 @@ npm start
 ```
 
 ## Dev - Better Deployments With now-flow
-[__*now-flow*__](https://github.com/nicolasdao/now-flow) reduces the issues that arise when deploying to multiple environments (e.g. dev, staging, production, ...) using [Zeit now-CLI](https://zeit.co/now). Simply define your alias and all your environment variables specific to each environment inside your traditional __now.json__, and let NowFlow do the rest. 
+### Overview - Deploy To AWS, Add Google Pub/Sub Topic Trigger Based Functions & Automate Deployments
+As we've see it above, a __*now.json*__ configuration becomes quickly necessary. Almost all projects will end up needing multiple environment configurations (i.e. prod, staging, ...) and  environment variables specific to them (more info in section [Managing Environment Variables Per Deployment](#managing-environment-variables-per-deployment)). Though it is really straightforward to configure the now.json file, it can be annoying as well as error-prone to modify it prior to each deployment (e.g. deploying to the `staging` environment requires to set up the `"active"` property to `"staging"`. Another classic example is to deploy to multiple _gcp_ environments. In that case, you will have to update the `"gcp"` property prior to each deployment). Beside, as of version 9.2.5., __*now-CLI*__ still experiences bugs while deploying to AWS and simply can't deploy Google Functions that can be triggered by Pub/Sub topics.
 
-#### Problem Explained
+For all the reason above, we developed [__*now-flow*__](https://github.com/nicolasdao/now-flow). It is a simple dev dependency that you should add to your project. It controls the _now-CLI_ while enhancing its capabilities. Simply define all your configurations specific to each environment inside your usual __now.json__, and let NowFlow do the rest. 
 
-[__*Zeit now-CLI*__](https://zeit.co/now) allows to deploy serverless applications to its own serverless infrastructure or to the most popular FaaS (i.e. Function as a Service) solutions (e.g. [Google Cloud Functions](https://cloud.google.com/functions/), [AWS Lambdas](https://aws.amazon.com/lambda)). However, a common challenge is to establish a sound strategy to manage multiple environments (e.g. dev, staging, production, ...). Typically, those environments might have a different:
-- `hostingType` (e.g. localhost, now, gcp, aws, ...).
-- `alias` if the application is deployed to [Zeit now-CLI](https://zeit.co/now).
-- `start` script in the package.json.
-- Many other environment specific variables.
+No more deployment then aliasing steps. No more worries that some environment variables have been properly deployed to the right environment. 
 
-The manual solution is to:
-1. Update the `start` script in the _package.json_ specific to your environment if you deploy to Zeit Now (e.g. production: `"start": "NODE_ENV=production node index.js"`, staging: `"start": "NODE_ENV=staging node index.js"`, localhost: `"start": "node-dev index.js"`).
-2. If you're deploying to [Google Cloud Functions](https://cloud.google.com/functions/), you might need to configure the `gcp` property in the _now.json_.
-3. If you're using the [Webfunc](https://github.com/nicolasdao/webfunc) serverless web framework, then you also need to set up the `environment.active` property to the target environment in the _now.json_.
-4. Run the right command (e.g. `now` if deploying to [Zeit Now](https://zeit.co/now), and `now gcp` if deploying to [Google Cloud Functions](https://cloud.google.com/functions/)).
-5. Potentially _alias_ your deployment if your're deploying to [Zeit Now](https://zeit.co/now):
-> - Update the `alias` property of the _now.json_ file to the alias name specific to your environment.
-> - Run `now alias`
+> More details about __*now-flow*__ [here](https://github.com/nicolasdao/now-flow).
 
-This process is obviously proned to errors. It is also tedious if you're deploying often. This is why we created __*now-flow*__. 
+### How To Use It
+#### HTTPS Endpoints
 
-#### Solution - How NowFlow Works?
-Configure your _now.json_ once, and then replace all the manual steps above with a single command similar to `nowflow production`.
-
-__*Example:*__
-
-_now.json_
+__Install it first in your project:__
+```
+npm install now-flow --save-dev
+```
+__Then configure your *now.json* for each of your environment:__
 ```js
 {
   "environment": {
     "active": "default",
     "default": {
-      "hostingType": "localhost"
+      "hostingType": "localhost",
+      "db": {
+        "user": "postgres",
+        "password": "bla_staging_bla_staging"
+      }
     },
     "staging": {
       "hostingType": "gcp",
+      "db": {
+        "user": "postgres",
+        "password": "bla_staging_bla_staging"
+      },
       "gcp": {
         "functionName": "yourapp-test",
         "memory": 128
       }
     },
-    "production": {
+    "uat": {
+      "hostingType": "aws",
+      "db": {
+        "user": "postgres",
+        "password": "bla_staging_bla_staging"
+      },
+      "aws": {
+        "memory": 128,
+        "region": "ap-southeast-2"
+      }
+    },
+    "prod": {
       "hostingType": "now",
+      "db": {
+        "user": "postgres",
+        "password": "bla_prod_bla_prod"
+      },
       "scripts": {
         "start": "NODE_ENV=production node index.js"
       },
@@ -607,31 +639,89 @@ _now.json_
   }
 }
 ```
-
-To deploy the production environment, simply run:
-
-```
-nowflow production 
-```
-
-This will deploy to [Zeit Now](https://zeit.co/now) and make sure that:
-- The _package.json_ that is being deployed will contain the _start_ script `"NODE_ENV=production node index.js"`.
-- The `environment.active` property of the _now.json_ is set to `production`.
-- Once the deployment to [Zeit Now](https://zeit.co/now) is finished, it is automatically aliased to `yourapp-prod`. 
-
-On the contrary, to deploy the staging environment, simply run:
-
-```
-nowflow staging 
+__Add new deployment scripts in your *package.json*:__
+```js
+"scripts": {
+  "deploy:staging": "nowflow staging",
+  "deploy:uat": "nowflow uat",
+  "deploy:prod": "nowflow prod",
+}
 ```
 
-This will deploy to [Google Cloud Functions](https://cloud.google.com/functions/) and make sure that:
-- The `environment.active` property of the _now.json_ is set to `staging`.
-- The _now.json_ contains a `gcp` property identical to the one defined in the staging configuration.
+Now you can deploy to `gcp`, `aws` or `now` using the exact same code:
 
-No more deployment then aliasing steps. No more worries that some environment variables have been properly deployed to the right environment. 
+_Deploying to __gcp__ (make sure you have run `now gcp login` at least once before):_
+```
+npm run deploy:staging
+```
+_Deploying to __aws__ (make sure you have run `now aws login` at least once before):_
+```
+npm run deploy:uat
+```
+_Deploying to __now__ (make sure you have run `now login` at least once before):_
+```
+npm run deploy:prod
+```
 
-> More details about __*now-flow*__ [here](https://github.com/nicolasdao/now-flow).
+#### Google Pub/Sub Topic & Storage Trigger Based Functions
+Simply add configurations similar to the following into the __*now.json*__:
+```js
+{
+  "environment": {
+    "active": "default",
+    "default": {
+      "hostingType": "localhost"
+    },
+    "example1": {
+      "hostingType": "gcp",
+      "gcp": {
+        "functionName": "yourapp-test",
+        "memory": 128,
+        "trigger": {
+          "type": "cloud.pubsub",
+          "topic": "your-google-topic-name"
+        }
+      }
+    },
+    "example2": {
+      "hostingType": "gcp",
+      "gcp": {
+        "functionName": "yourapp-test",
+        "memory": 128,
+        "trigger": {
+          "type": "cloud.storage",
+          "bucket": "your-google-bucket-name"
+        }
+      }
+    }
+  }
+}
+```
+Similar to the previous example, update your _package.json_ as follow:
+```js
+"scripts": {
+  "deploy:example1": "nowflow example1",
+  "deploy:example2": "nowflow example2"
+}
+```
+
+Then deploy using the same commands as in the previous section (e.g. `npm run deploy:example1`).
+
+As promised, the code you will write in your __*index.js*__ will be the same code you are used to writing for express apps:
+```js
+const { app } = require('webfunc')
+
+app.post((req, res) => {
+  console.log(req)
+  console.log(`Hello ${req.params.firstName}`)
+})
+
+eval(app.listen('app', 4000))
+``` 
+
+As for any webfunc app, the parameters passed the request will be in the `req.params` object. 
+
+>IMPORTANT - ONLY USE 'post' OR 'all' METHODS FOR PUB/SUB AND STORAGE BASED FUNCTIONS
 
 # FAQ
 ## What does webfunc use eval() to start the server?
@@ -687,42 +777,42 @@ _COMING SOON..._
 _**WithCredentials & CORS**_
 The following configuration is forbidden:
 ```js
-{
-  "headers": {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Credentials": "true"
-  }
-}
+const { cors } = require('webfunc')
+
+const restrictedAccess = cors({
+  origins: ['*'],
+  credentials: true
+})
 ```
 
 You cannot allow anybody to access a resource(`"Access-Control-Allow-Origin": "*"`) while at the same time allowing anybody to share cookies(`"Access-Control-Allow-Credentials": "true"`). This would be a huge security breach (i.e. [CSRF attach](https://en.wikipedia.org/wiki/Cross-site_request_forgery)). 
 
 For that reason, this configuration, though it allow your resource to be called from the same origin, would fail once your API is called from a different origin. A error similar to the following would be thrown by the browser:
-```
-The value of the 'Access-Control-Allow-Origin' header in the response must not be the wildcard '*' when the request's credentials mode is 'include'.
-```
+`The value of the 'Access-Control-Allow-Origin' header in the response must not be the wildcard '*' when the request's credentials mode is 'include'.`
 
 __*Solutions*__
 
-If you do need to share cookies, you will have to be explicitely specific about the origins that are allowed to do so:
+If you do need to share cookies, you will have to explicitely list the origins that are allowed to do so:
 ```js
-{
-  "headers": {
-    "Access-Control-Allow-Origin": "http://your-allowed-origin.com",
-    "Access-Control-Allow-Credentials": "true"
-  }
-}
+const { cors } = require('webfunc')
+
+const restrictedAccess = cors({
+  origins: ['http://your-allowed-origin.com'],
+  credentials: true
+})
 ```
 
 If you do need to allow access to anybody, then do not allow requests to send cookies:
 ```js
-{
-  "headers": {
-    "Access-Control-Allow-Headers": "Authorization",
-    "Access-Control-Allow-Origin": "*",
-  }
-}
+const { cors } = require('webfunc')
+
+const restrictedAccess = cors({
+  origins: ['*'],
+  allowedHeaders: ['Authorization'],
+  credentials: false
+})
 ```
+
 If you do need to pass authentication token, you will have to pass it using a special header(e.g. Authorization), or pass it in the query string if you want to avoid preflight queries (preflight queries happens in cross-origin requests when special headers are being used). However, passing credentials in the query string are considered a bad practice. 
 
 # Contributing
