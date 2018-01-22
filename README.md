@@ -28,7 +28,7 @@ Out-of-the-box features include:
 
 > * [Install](#install) 
 > * [How To Use It](#how-to-use-it) 
->   - [Basic](#basic---build-once-deploy-everywhere)
+>   - [Basic - Build Once Deploy Everywhere](#basic---build-once-deploy-everywhere)
 >   - [The request Object](#the-request-object)
 >   - [Creating A REST API](#creating-a-rest-api)
 >   - [Compatible With All Express Middleware](#compatible-with-all-express-middleware)
@@ -59,7 +59,7 @@ npm install webfunc --save
 ```
 
 # How To Use It
-## Basic - Build Once, Deploy Everywhere
+## Basic - Build Once Deploy Everywhere
 > To deploy your app to any serverless solution, first make sure you have installed [_Zeit Now_](https://zeit.co/now) globally:
 ```
 npm install now -g
@@ -121,7 +121,8 @@ now gcp
 The `environment.active = "staging"` indicates that the configuration for your app is inside the `environment.staging` property. There, you can see `"hostingType": "gcp"`. Webfunc uses the `hostingType` property to define how to serve your app (this is indeed different from platform to platform. Trying to deploy a `"hostingType": "gcp"` to Zeit Now will fail).  
 
 __*3.D. Deploy to Google Cloud Function For Pub/Sub or Storage Based Triggers or Deploy to AWS Lambda*__
-You will need to enhance the _now-CLI_ capabilities by adding a dev dependency called [__*now-flow.js*__](#dev---better-deployments-with-now-flow). An example if available in section [Google Pub/Sub Topic & Storage Trigger Based Functions](#google-pub/sub-topic-&-storage-trigger-based-functions).
+
+You will need to enhance the _now-CLI_ capabilities by adding a dev dependency called [__*now-flow.js*__](#dev---better-deployments-with-now-flow). An example if available in section [Google Pub/Sub Topic & Storage Trigger Based Functions](#google-pubsub-topic--storage-trigger-based-functions).
 
 >HIGHLY RECOMMENDED - USE __*now-flow.js*__ TO MANAGE YOUR DEPLOYMENTS  
 >Without [__*now-flow.js*__](#dev---better-deployments-with-now-flow), you won't be able to deploy to AWS or to GCP using a Pub/Sub topic trigger. _now-flow.js_ is not just about adding other deployment options to _webfunc_. It also tremendously helps to [managing environment variables per deployment](#managing-environment-variables-per-deployment)).
