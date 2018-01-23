@@ -290,7 +290,6 @@ app.get('/', ...middleware.concat((req, res) =>
 eval(app.listen('app', 4000))
 ```
 
-
 ## Managing Environment Variables Per Deployment
 The following code allows to access the current active environment's variables:
 
