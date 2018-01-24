@@ -842,6 +842,57 @@ describe('app', () =>
 			})
 		})))
 
+/*eslint-disable */
+describe('app', () => 
+	describe('#on', () => 
+		it(`Should intercept events 'onSend', 'onHeaders' and 'onStatus'.`, () => {
+			/*eslint-enable */
+			const req = httpMocks.createRequest({
+				method: 'POST',
+				headers: {
+					origin: 'http://localhost:8080',
+					referer: 'http://localhost:8080'
+				},
+				body: {
+					username: 'nic',
+					password: '1234'
+				},
+				_parsedUrl: {
+					pathname: '/users/create'
+				}
+			})
+			const res = httpMocks.createResponse()
+			let value_01, value_02, value_03, value_04
+			
+			app.reset()
+			app.on('send', (req, res, value) => {
+				value_01 = value
+			})
+			app.on('status', (req, res, value) => {
+				value_02 = value
+			})
+			app.on('headers', (req, res, headerName, headerVal) => {
+				value_03 = headerName
+				value_04 = headerVal
+			})
+			app.post('users/:action', (req, res) => {
+				res.set('x-special', 'magic')
+				res.status(200).send(`Action ${req.params.action}. The secret password of ${req.params.username} is ${req.params.password}`)
+			})
+			const fn = app.handleEvent()
+
+			const correctVal = 'Action create. The secret password of nic is 1234'
+			return fn(req, res).then(() => {
+				assert.isOk(req)
+				assert.equal(value_01, correctVal)
+				assert.equal(value_02, 200)
+				assert.equal(value_03, 'x-special')
+				assert.equal(value_04, 'magic')
+				assert.equal(res.statusCode, 200)
+				assert.equal(res._getData(), correctVal)
+			})
+		})))
+
 
 
 

@@ -29,10 +29,11 @@ Out-of-the-box features include:
 > * [Install](#install) 
 > * [How To Use It](#how-to-use-it) 
 >   - [Basic - Build Once Deploy Everywhere](#basic---build-once-deploy-everywhere)
->   - [The request Object](#the-request-object)
+>   - [The Request Object](#the-request-object)
 >   - [Creating A REST API](#creating-a-rest-api)
 >   - [Compatible With All Express Middleware](#compatible-with-all-express-middleware)
 >   - [Managing Environment Variables Per Deployment](#managing-environment-variables-per-deployment)
+>   - [Listening to the Response Object](#listening-to-the-response-object)
 > * [Configuration](#configuration)
 >   - [CORS](#cors) 
 >   - [Disabling Body Or Route Parsing](#disabling-body-or-route-parsing)
@@ -328,6 +329,26 @@ As you can see, the example above demonstrates 3 different types of environment 
   "hostingType": "localhost",
   "myCustomVar": "Hello Default"
 }
+```
+## Listening to the Response Object
+Webfunc adds support for listeners on the following 3 response events:
+- __*sending*__ a response.
+- __*setting the headers*__ of a response.
+- __*setting the status*__ of a response. 
+
+```js
+const { app } = require('webfunc')
+
+app.on('send', (req, res, val) => console.log(val))
+app.on('headers', (req, res, ...args) => console.log(args))
+app.on('status', (req, res, val) => console.log(val))
+
+app.get('/users/:username', (req, res) => {
+  res.set('x-special', 'magic header')
+  res.status(200).send(`Hello ${req.params.username}`)
+})
+
+eval(app.listen('app', 4000))
 ```
 
 # Configuration

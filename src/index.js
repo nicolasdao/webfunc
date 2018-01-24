@@ -28,6 +28,9 @@ const PARAMSMODE = { 'all': true, 'body': true, 'route': true, 'none': true }
 const getAppConfig = () => fs.existsSync(CONFIGPATH) ? require(CONFIGPATH) : {}
 
 let _config = getAppConfig() // Object
+let _onSend = null // Supposed to be a function similar to (req, res) => ...
+let _onStatus = null // Supposed to be a function similar to (req, res) => ...
+let _onHeaders = null // Supposed to be a function similar to (req, res) => ...
 let _preEvent = () => Promise.resolve(null)
 let _postEvent = () => Promise.resolve(null)
 
@@ -90,6 +93,9 @@ const app = {
 		resetConfig(getAppConfig())
 		_preEvent = () => Promise.resolve(null)
 		_postEvent = () => Promise.resolve(null)
+		_onStatus = null
+		_onSend = null
+		_onHeaders = null
 	},
 	get: (...args) => createEndpoint(args, 'GET'),
 	post: (...args) => createEndpoint(args, 'POST'),
@@ -98,6 +104,23 @@ const app = {
 	head: (...args) => createEndpoint(args, 'HEAD'),
 	options: (...args) => createEndpoint(args, 'OPTIONS'),
 	all: (...args) => createEndpoint(args, null),
+	on: (eventName, fn) => {
+		if (!fn || typeof(fn) != 'function')
+			throw new Error('Wrong argument exception. The second argument of the \'on\' method must exist and must be a function.')
+		switch (eventName) {
+		case 'send':
+			_onSend = fn
+			return 
+		case 'status':
+			_onStatus = fn
+			return 	
+		case 'headers':
+			_onHeaders = fn
+			return 	
+		default:
+			throw new Error(`Wrong argument exception. Value '${eventName}'' of the 'eventName' argument of the 'on' method is not supported.`)
+		} 
+	},
 	get preEvent() {
 		return _preEvent || (() => Promise.resolve(null))
 	},
@@ -342,6 +365,8 @@ const processEvent = (req, res, config={}, endpoints=[], handlers=[], preEvent, 
 	req.__receivedTime = Date.now()
 	req.__transactionId = shortid.generate().replace(/-/g, 'r').replace(/_/g, '9')
 	req.__ellapsedMillis = () => Date.now() - req.__receivedTime
+	extendResponse(req, res)
+
 	let { propName:paramsPropName='params', mode:paramsMode=null } = config.params || {}
 	// Ensure backward compatibility with version 0.12.1-alpha.0
 	if (config.paramsMode && !paramsMode)
@@ -359,10 +384,7 @@ const processEvent = (req, res, config={}, endpoints=[], handlers=[], preEvent, 
 	// 2. Track errors across the workflow
 	let _preEventErr, _processErr
 
-	// 3. Prepare response with required headers and APIs
-	extendResponse(res)
-
-	// 4. Run pre-event processing
+	// 3. Run pre-event processing
 	return preEvent(req, res)
 		.catch(err => {
 			console.error('Error in pre-event processing')
@@ -370,15 +392,15 @@ const processEvent = (req, res, config={}, endpoints=[], handlers=[], preEvent, 
 			try { res.status(500).send(`Internal Server Error - Pre Processing error: ${err.message}`) } catch(e) { console.error(e.message) } 
 			_preEventErr = err
 		})
-		// 5. Run the main request/response processing 
+		// 4. Run the main request/response processing 
 		.then(() => {
 			if (!res.headersSent && !_preEventErr) {
-				// 5.1. Stop if this is a HEAD or OPTIONS request
+				// 4.1. Stop if this is a HEAD or OPTIONS request
 				const method = new String(req.method || 'GET').toLowerCase()
 				if (method == 'head') 
 					return res.status(200).send()
 
-				// 5.2. Validate the request and make sure that there is an endpoint for it.
+				// 4.2. Validate the request and make sure that there is an endpoint for it.
 				const pathname = ((req._parsedUrl || {}).pathname || '/').toLowerCase()
 				const httpMethod = (method || '').toUpperCase()
 
@@ -387,17 +409,17 @@ const processEvent = (req, res, config={}, endpoints=[], handlers=[], preEvent, 
 				if (!endpoint) 
 					return res.status(404).send(`Endpoint '${pathname}' for method ${httpMethod} not found.`)
 
-				// 5.3. Extract all params from that request, including both the url route params and the payload params.
+				// 4.3. Extract all params from that request, including both the url route params and the payload params.
 				const validParamsMode = PARAMSMODE[paramsMode] ? paramsMode : 'all'
 				const paramts = validParamsMode == 'all' || validParamsMode == 'route' ? Object.assign({}, endpoint.winningRoute.parameters) : {}
 				const getParams = validParamsMode == 'all' || validParamsMode == 'body' ? reqUtil.getParams(req) : Promise.resolve({})
 				return getParams.then(parameters => Object.assign(parameters, paramts))
 					.then(parameters => {
-						// 5.4. Add all paramaters to the request object
+						// 4.4. Add all paramaters to the request object
 						Object.assign(req[paramsPropName], parameters || {})
-						// 5.5. Process all global handlers
+						// 4.5. Process all global handlers
 						return executeHandlers(req, res, handlers)
-							// 5.6. Process the endpoint
+							// 4.6. Process the endpoint
 							.then(() => !res.headersSent && endpoint.execute(req, res))
 					})
 			}
@@ -409,7 +431,7 @@ const processEvent = (req, res, config={}, endpoints=[], handlers=[], preEvent, 
 				try { res.status(500).send(`Internal Server Error - Processing error: ${err.message}`) } catch(e) { console.error(e.message) } 
 			_processErr = err
 		})
-		// 6. Run the final post-event processing
+		// 5. Run the final post-event processing
 		.then(() => postEvent(req, res))
 		.catch(err => {
 			console.error('Error in post-event processing')
@@ -424,7 +446,7 @@ const processEvent = (req, res, config={}, endpoints=[], handlers=[], preEvent, 
  * This method makes sure all APIs are available
  * @param  {Object} res Response object
  */
-const extendResponse = res => {
+const extendResponse = (req, res) => {
 	if (!res.set)
 		res.set = res.setHeader
 	if (!res.send)
@@ -433,8 +455,33 @@ const extendResponse = res => {
 			if (res.headersSent == undefined)
 				res.headersSent = true
 		}
+
 	if (!res.status)
 		res.status = code => { res.statusCode = code; return res }
+
+	if (_onSend) {
+		const oldFn = res.send 
+		res.send = (...args) => {
+			_onSend(req, res, ...args)
+			return oldFn(...args)
+		}
+	}
+	if (_onStatus) {
+		const oldFn = res.status 
+		res.status = (...args) => {
+			_onStatus(req, res, ...args)
+			oldFn(...args)
+			return res
+		}
+	}
+
+	if (_onHeaders) {
+		const oldFn = res.set 
+		res.set = (...args) => {
+			_onHeaders(req, res, ...args)
+			return oldFn(...args)
+		}
+	}
 }
 
 module.exports = {
