@@ -459,15 +459,17 @@ const extendResponse = (req, res) => {
 	if (!res.status)
 		res.status = code => { res.statusCode = code; return res }
 
+	// The 'bind' trick is necessary to fix the 'Cannot read property 'req' of undefined' issue
+	// https://stackoverflow.com/questions/41801723/express-js-cannot-read-property-req-of-undefined
 	if (_onSend) {
-		const oldFn = res.send 
+		const oldFn = res.send.bind(res)
 		res.send = (...args) => {
 			_onSend(req, res, ...args)
 			return oldFn(...args)
 		}
 	}
 	if (_onStatus) {
-		const oldFn = res.status 
+		const oldFn = res.status.bind(res)
 		res.status = (...args) => {
 			_onStatus(req, res, ...args)
 			oldFn(...args)
@@ -476,7 +478,7 @@ const extendResponse = (req, res) => {
 	}
 
 	if (_onHeaders) {
-		const oldFn = res.set 
+		const oldFn = res.set.bind(res)
 		res.set = (...args) => {
 			_onHeaders(req, res, ...args)
 			return oldFn(...args)
