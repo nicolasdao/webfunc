@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.13.0-alpha.18"></a>
+# [0.13.0-alpha.18](https://github.com/nicolasdao/webfunc/compare/v0.13.0-alpha.17...v0.13.0-alpha.18) (2018-01-24)
+
+
+### Bug Fixes
+
+* Issue Cannot read property 'req' of undefined ([622628f](https://github.com/nicolasdao/webfunc/commit/622628f))
+
+
+
 <a name="0.13.0-alpha.17"></a>
 # [0.13.0-alpha.17](https://github.com/nicolasdao/webfunc/compare/v0.13.0-alpha.16...v0.13.0-alpha.17) (2018-01-24)
 
