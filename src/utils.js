@@ -122,6 +122,7 @@ const createGCPRequestResponse = (event={}, paramsPropName) => {
 
 		req[paramsPropName] = data
 		req.body = body
+		req.__event = event
 
 		return { req, res: httpMocks.createResponse() }
 	}
@@ -146,6 +147,7 @@ const createAWSRequestResponse = (event={}, paramsPropName) => {
 		req.body = event.body || {}
 		req.query = event.queryStringParameters || {}
 		req.url = appendQuery(pathname, req.query)
+		req.__event = event
 
 		return { req, res: httpMocks.createResponse() }
 	}

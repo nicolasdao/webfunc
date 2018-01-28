@@ -780,6 +780,7 @@ describe('app', () =>
 			assert.equal(req.params.user.lastName, 'Dao', 'Last name should be \'Dao\'.')
 			assert.equal(req._parsedUrl.pathname, '/users', 'Pathname should be \'/users\'.')
 			assert.equal(req.body, 'This is an awesome message', 'body should be \'This is an awesome message\'.')
+			assert.equal(req.__event.data.attributes.user.firstName, 'Nic')
 		})))
 
 /*eslint-disable */
@@ -809,6 +810,7 @@ describe('app', () =>
 			assert.equal(req.body.email, 'nic@neap.co')
 			assert.equal(req.body.pwd, '1234')
 			assert.equal(req.url, '/users/tony?name=Nico')
+			assert.equal(req.__event.queryStringParameters.name, 'Nico')
 		})))
 
 /*eslint-disable */
@@ -862,7 +864,7 @@ describe('app', () =>
 				}
 			})
 			const res = httpMocks.createResponse()
-			let value_01, value_02, value_03, value_04
+			let value_01, value_02, value_03, value_04, value_05
 			
 			app.reset()
 			app.on('send', (req, res, value) => {
@@ -874,6 +876,9 @@ describe('app', () =>
 			app.on('headers', (req, res, headerName, headerVal) => {
 				value_03 = headerName
 				value_04 = headerVal
+			})
+			app.on('received', (req) => {
+				value_05 = req.method
 			})
 			app.post('users/:action', (req, res) => {
 				res.set('x-special', 'magic')
@@ -888,6 +893,7 @@ describe('app', () =>
 				assert.equal(value_02, 200)
 				assert.equal(value_03, 'x-special')
 				assert.equal(value_04, 'magic')
+				assert.equal(value_05, 'POST')
 				assert.equal(res.statusCode, 200)
 				assert.equal(res._getData(), correctVal)
 			})

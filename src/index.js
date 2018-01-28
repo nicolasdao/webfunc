@@ -31,6 +31,7 @@ let _config = getAppConfig() // Object
 let _onSend = null // Supposed to be a function similar to (req, res) => ...
 let _onStatus = null // Supposed to be a function similar to (req, res) => ...
 let _onHeaders = null // Supposed to be a function similar to (req, res) => ...
+let _onReceived = null // Supposed to be a function similar to (req, res) => ...
 let _preEvent = () => Promise.resolve(null)
 let _postEvent = () => Promise.resolve(null)
 
@@ -96,6 +97,7 @@ const app = {
 		_onStatus = null
 		_onSend = null
 		_onHeaders = null
+		_onReceived = null
 	},
 	get: (...args) => createEndpoint(args, 'GET'),
 	post: (...args) => createEndpoint(args, 'POST'),
@@ -116,6 +118,9 @@ const app = {
 			return 	
 		case 'headers':
 			_onHeaders = fn
+			return 	
+		case 'received':
+			_onReceived = fn
 			return 	
 		default:
 			throw new Error(`Wrong argument exception. Value '${eventName}'' of the 'eventName' argument of the 'on' method is not supported.`)
@@ -366,6 +371,9 @@ const processEvent = (req, res, config={}, endpoints=[], handlers=[], preEvent, 
 	req.__transactionId = shortid.generate().replace(/-/g, 'r').replace(/_/g, '9')
 	req.__ellapsedMillis = () => Date.now() - req.__receivedTime
 	extendResponse(req, res)
+
+	if (_onReceived)
+		_onReceived(req, res)
 
 	let { propName:paramsPropName='params', mode:paramsMode=null } = config.params || {}
 	// Ensure backward compatibility with version 0.12.1-alpha.0
