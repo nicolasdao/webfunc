@@ -103,7 +103,7 @@ const createGCPRequestResponse = (event={}, paramsPropName) => {
 		let body
 		try {
 			/*eslint-disable */
-			body = pubsubMessage.data ? Buffer.from(pubsubMessage.data, 'base64').toString() : 'World'
+			body = pubsubMessage.data ? Buffer.from(pubsubMessage.data, 'base64').toString() : undefined
 		}
 		catch(err) {}
 		/*eslint-enable */
