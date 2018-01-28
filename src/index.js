@@ -397,7 +397,7 @@ const processEvent = (req, res, config={}, endpoints=[], handlers=[], preEvent, 
 
 	let _preEventErr, _processErr
 
-	debug(config, 'Start processing the request.')
+	debug(config, 'Start pre-processing the request.')
 	// 1. Run pre-event processing
 	return preEvent(req, res)
 		.catch(err => {
@@ -408,6 +408,7 @@ const processEvent = (req, res, config={}, endpoints=[], handlers=[], preEvent, 
 		})
 		// 2. Run the main request/response processing 
 		.then(() => {
+			debug(config, 'Start processing the request.')
 			if (!res.headersSent && !_preEventErr) {
 				// 3.1. Stop if this is a HEAD or OPTIONS request
 				const method = new String(req.method || 'GET').toLowerCase()
@@ -418,17 +419,21 @@ const processEvent = (req, res, config={}, endpoints=[], handlers=[], preEvent, 
 				const pathname = ((req._parsedUrl || {}).pathname || '/').toLowerCase()
 				const httpMethod = (method || '').toUpperCase()
 
+				debug(config, `Looking for an endpoint with '${httpMethod}' method matching the '${pathname}' pathname.`)
 				const endpoint = matchEndpoint(pathname, httpMethod, endpoints)
 
 				if (!endpoint) {
 					debug(config, 'Could not find any endpoint that matched that request.')
 					return res.status(404).send(`Endpoint '${pathname}' for method ${httpMethod} not found.`)
 				}
+				else
+					debug(config, 'Endpoint found.')
 
 				// 3.3. Extract all params from that request, including both the url route params and the payload params.
 				const validParamsMode = PARAMSMODE[paramsMode] ? paramsMode : 'all'
 				const paramts = validParamsMode == 'all' || validParamsMode == 'route' ? Object.assign({}, endpoint.winningRoute.parameters) : {}
 				const getParams = validParamsMode == 'all' || validParamsMode == 'body' ? reqUtil.getParams(req) : Promise.resolve({})
+				debug(config, `Extracting paramaters from the request object (mode: ${validParamsMode}).`)
 				return getParams.then(parameters => Object.assign(parameters, paramts))
 					.then(parameters => {
 						debug(config, `Adding all the extracted parameters to the req.${paramsPropName} property.`)
@@ -444,6 +449,10 @@ const processEvent = (req, res, config={}, endpoints=[], handlers=[], preEvent, 
 							})
 					})
 			}
+			else if (res.headersSent)
+				debug(config, 'The request pre-processing already yielded a response. Main process aborted.')
+			else 
+				debug(config, 'The request pre-processing yielded an error. Main process aborted.')
 		})
 		.catch(err => {
 			console.error('Error in request/response processing')
