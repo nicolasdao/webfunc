@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.13.0-alpha.24"></a>
+# [0.13.0-alpha.24](https://github.com/nicolasdao/webfunc/compare/v0.13.0-alpha.23...v0.13.0-alpha.24) (2018-01-28)
+
+
+### Bug Fixes
+
+* GCP event with empty body make function timeout ([5c59644](https://github.com/nicolasdao/webfunc/commit/5c59644))
+
+
+
 <a name="0.13.0-alpha.23"></a>
 # [0.13.0-alpha.23](https://github.com/nicolasdao/webfunc/compare/v0.13.0-alpha.22...v0.13.0-alpha.23) (2018-01-28)
 
