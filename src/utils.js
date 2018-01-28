@@ -22,26 +22,32 @@ const HEX_BOUNDARY_TRAIL = utf8ToHex('--')
 const HEX_DBL_CAR_RTN = utf8ToHex('\r\n\r\n')
 const HEX_REGEX_TRAIL_CAR_RTN = new RegExp(HEX_CAR_RTN_02 + '$')
 
-const getParams = req => {
+const getParams = (req, debugFn) => {
+	const debug = debugFn || (() => null)
 	const headers = req.headers || []
 	const contentType = (headers['content-type'] || headers['Content-Type'] || headers['ContentType'] || '')
 	const isMultipart = contentType.match(/form-data|multipart/)
 	const isXwwwFormUrlencoded = contentType.indexOf('x-www-form-urlencoded') >= 0
+	debug(`Extracting request's body (contentType: ${contentType}).`)
 	const getBody = !isMultipart && req.body ? Promise.resolve({ encoded: false, body: req.body}) : getRawBody(req).then(b => ({ encoded: true, body: b}))
 	return getBody.then(bod => {
+		debug('Request\'s body extracted.')
 		let bodyParameters = {}
 		if (bod.body) {
 			// Deal with standard encoding
 			if (!isMultipart) {
+				debug('Processing a non-multipart body.')
 				const body = bod.encoded ? bod.body.toString() : bod.body
 				const bodyType = typeof(body)
 				if (bodyType == 'object') {
+					debug('The body is a native JSON object. Simply assign it to \'req.body\'.')
 					bodyParameters = Object.assign({ body: body }, body)
 					req.body = body
 				}
 				else if (bodyType == 'string') {
 					try {
 						if (isXwwwFormUrlencoded) {
+							debug('The body is a x-www-form-urlencoded string. Trying to parse it to a JSON object before assigning it to \'req.body\'.')
 							bodyParameters = body.split('&').filter(x => x).reduce((acc,x) => {
 								const [k,v] = x.split('=')
 								const key = k ? unescape(k) : null
@@ -54,12 +60,14 @@ const getParams = req => {
 							bodyParameters.body = body
 						}
 						else{
+							debug('The body seems like a string JSON. Trying to parse it to a JSON object before assigning it to \'req.body\'.')
 							const parsedBody = JSON.parse(body)
 							bodyParameters = Object.assign({ body: bod.body }, JSON.parse(body))
 							req.body = parsedBody
 						}
 					}
 					catch(err) {
+						debug('Failed to parse the body to a JSON object. Assigning the raw version to \'req.body\'.')
 						bodyParameters = { body: bod.body }
 						req.body = bod.body
 					}
@@ -67,6 +75,7 @@ const getParams = req => {
 			}
 			// Deal with multipart encoding
 			else {
+				debug('Processing a multipart body.')
 				const bodyHex = bod.body.toString('hex')
 				const boundary = '--' + (contentType.split('boundary=') || [null, ''])[1]
 				const boundaryHex = utf8ToHex(boundary)
@@ -85,11 +94,15 @@ const getParams = req => {
 						return acc
 					}, {})
 
+				debug('Parsing the different fields into a JSON object before assigning it to \'req.body\'.')
 				req.body = Object.assign({}, bodyParameters)
 				bodyParameters.body = bod.body
 			}
 		}
+		else
+			debug('There was no body in the request.')
 
+		debug('Merging the body parameters with the potential query string parameters.')
 		const parameters = Object.assign((bodyParameters || {}), req.query || {})
 
 		return parameters

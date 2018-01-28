@@ -432,7 +432,9 @@ const processEvent = (req, res, config={}, endpoints=[], handlers=[], preEvent, 
 				// 3.3. Extract all params from that request, including both the url route params and the payload params.
 				const validParamsMode = PARAMSMODE[paramsMode] ? paramsMode : 'all'
 				const paramts = validParamsMode == 'all' || validParamsMode == 'route' ? Object.assign({}, endpoint.winningRoute.parameters) : {}
-				const getParams = validParamsMode == 'all' || validParamsMode == 'body' ? reqUtil.getParams(req) : Promise.resolve({})
+				const getParams = validParamsMode == 'all' || validParamsMode == 'body' 
+					? reqUtil.getParams(req, (...args) => debug(config, ...args)) 
+					: Promise.resolve({})
 				debug(config, `Extracting paramaters from the request object (mode: ${validParamsMode}).`)
 				return getParams.then(parameters => Object.assign(parameters, paramts))
 					.then(parameters => {
