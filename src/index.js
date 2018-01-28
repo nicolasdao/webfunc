@@ -365,15 +365,22 @@ const matchEndpoint = (pathname, httpMethod, endpoints=[]) => (
 		.sort((a, b) => b.winningRoute.match.length - a.winningRoute.match.length)[0] || {}
 ).endpoint
 
+const debug = (config={}, ...args) => {
+	if (config.debug)
+		console.log(...args)
+}
 const processEvent = (req, res, config={}, endpoints=[], handlers=[], preEvent, postEvent) => Promise.resolve(null).then(() => {
-	// 0. Create a request identity for tracing purpose
+	debug(config, 'Adding new properties and functionalities on both the \'req\' and \'res\' objects.')
+	// 0. Adding new properties and functionalities on both the 'req' and 'res' objects.
 	req.__receivedTime = Date.now()
 	req.__transactionId = shortid.generate().replace(/-/g, 'r').replace(/_/g, '9')
 	req.__ellapsedMillis = () => Date.now() - req.__receivedTime
 	extendResponse(req, res)
 
-	if (_onReceived)
+	if (_onReceived) {
+		debug(config, 'Executing the \'on.received\' handler.')
 		_onReceived(req, res)
+	}
 
 	let { propName:paramsPropName='params', mode:paramsMode=null } = config.params || {}
 	// Ensure backward compatibility with version 0.12.1-alpha.0
@@ -383,16 +390,15 @@ const processEvent = (req, res, config={}, endpoints=[], handlers=[], preEvent, 
 	if (!req[paramsPropName] || typeof(req[paramsPropName]) != 'object')
 		req[paramsPropName] = {}
 
-	// 1. Make sure the pre and post event methods exist
 	if (!preEvent)
 		preEvent = () => Promise.resolve(null)
 	if (!postEvent)
 		postEvent = () => Promise.resolve(null)
 
-	// 2. Track errors across the workflow
 	let _preEventErr, _processErr
 
-	// 3. Run pre-event processing
+	debug(config, 'Start processing the request.')
+	// 1. Run pre-event processing
 	return preEvent(req, res)
 		.catch(err => {
 			console.error('Error in pre-event processing')
@@ -400,35 +406,42 @@ const processEvent = (req, res, config={}, endpoints=[], handlers=[], preEvent, 
 			try { res.status(500).send(`Internal Server Error - Pre Processing error: ${err.message}`) } catch(e) { console.error(e.message) } 
 			_preEventErr = err
 		})
-		// 4. Run the main request/response processing 
+		// 2. Run the main request/response processing 
 		.then(() => {
 			if (!res.headersSent && !_preEventErr) {
-				// 4.1. Stop if this is a HEAD or OPTIONS request
+				// 3.1. Stop if this is a HEAD or OPTIONS request
 				const method = new String(req.method || 'GET').toLowerCase()
 				if (method == 'head') 
 					return res.status(200).send()
 
-				// 4.2. Validate the request and make sure that there is an endpoint for it.
+				// 3.2. Validate the request and make sure that there is an endpoint for it.
 				const pathname = ((req._parsedUrl || {}).pathname || '/').toLowerCase()
 				const httpMethod = (method || '').toUpperCase()
 
 				const endpoint = matchEndpoint(pathname, httpMethod, endpoints)
 
-				if (!endpoint) 
+				if (!endpoint) {
+					debug(config, 'Could not find any endpoint that matched that request.')
 					return res.status(404).send(`Endpoint '${pathname}' for method ${httpMethod} not found.`)
+				}
 
-				// 4.3. Extract all params from that request, including both the url route params and the payload params.
+				// 3.3. Extract all params from that request, including both the url route params and the payload params.
 				const validParamsMode = PARAMSMODE[paramsMode] ? paramsMode : 'all'
 				const paramts = validParamsMode == 'all' || validParamsMode == 'route' ? Object.assign({}, endpoint.winningRoute.parameters) : {}
 				const getParams = validParamsMode == 'all' || validParamsMode == 'body' ? reqUtil.getParams(req) : Promise.resolve({})
 				return getParams.then(parameters => Object.assign(parameters, paramts))
 					.then(parameters => {
-						// 4.4. Add all paramaters to the request object
+						debug(config, `Adding all the extracted parameters to the req.${paramsPropName} property.`)
+						// 3.4. Add all paramaters to the request object
 						Object.assign(req[paramsPropName], parameters || {})
-						// 4.5. Process all global handlers
+						// 3.5. Process all global handlers
+						debug(config, 'Execute all handlers.')
 						return executeHandlers(req, res, handlers)
-							// 4.6. Process the endpoint
-							.then(() => !res.headersSent && endpoint.execute(req, res))
+							// 3.6. Process the endpoint
+							.then(() => {
+								debug(config, 'Execute main function.')
+								return !res.headersSent && endpoint.execute(req, res)
+							})
 					})
 			}
 		})
