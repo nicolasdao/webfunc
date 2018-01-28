@@ -755,7 +755,7 @@ describe('app', () =>
 
 /*eslint-disable */
 describe('app', () => 
-	describe('#createGCPRequestResponse', () => 
+	describe('#createGCPRequestResponse: #1', () => 
 		it(`Should convert a Google event to an HTTP request object.`, () => {
 			const body = new Buffer('This is an awesome message').toString('base64')
 			/*eslint-enable */
@@ -781,6 +781,39 @@ describe('app', () =>
 			assert.equal(req._parsedUrl.pathname, '/users', 'Pathname should be \'/users\'.')
 			assert.equal(req.body, 'This is an awesome message', 'body should be \'This is an awesome message\'.')
 			assert.equal(req.__event.data.attributes.user.firstName, 'Nic')
+		})))
+
+/*eslint-disable */
+describe('app', () => 
+	describe('#createGCPRequestResponse: #2', () => 
+		it(`Should convert a Google event to an HTTP request object.`, () => {
+			const body = new Buffer('').toString('base64')
+			/*eslint-enable */
+			const event = {
+				data: {
+					attributes: {
+						pathname: 'users/1',
+						user: {
+							firstName: 'Nic',
+							lastName: 'Dao'
+						}
+					},
+					data: body
+				},
+				resource: 'projects/super-project/topics/hello'
+			}
+
+			app.reset()
+			const { req, res } = app.createGCPRequestResponse(event)
+			app.use({ debug: false })
+			app.post('users/:id', (req, res) => res.status(200).send(`Hello ${req.params.user.firstName} ${req.params.user.lastName} (id: ${req.params.id}).`))
+			const fn = app.handleEvent()
+			
+			return fn(req, res).then(() => {
+				assert.isOk(req)
+				assert.equal(res.statusCode, 200)
+				assert.equal(res._getData(), 'Hello Nic Dao (id: 1).')
+			})
 		})))
 
 /*eslint-disable */

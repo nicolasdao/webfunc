@@ -370,7 +370,7 @@ const debug = (config={}, ...args) => {
 		console.log(...args)
 }
 const processEvent = (req, res, config={}, endpoints=[], handlers=[], preEvent, postEvent) => Promise.resolve(null).then(() => {
-	debug(config, 'Adding new properties and functionalities on both the \'req\' and \'res\' objects.')
+	debug(config, '- Adding new properties and functionalities on both the \'req\' and \'res\' objects.')
 	// 0. Adding new properties and functionalities on both the 'req' and 'res' objects.
 	req.__receivedTime = Date.now()
 	req.__transactionId = shortid.generate().replace(/-/g, 'r').replace(/_/g, '9')
@@ -378,7 +378,7 @@ const processEvent = (req, res, config={}, endpoints=[], handlers=[], preEvent, 
 	extendResponse(req, res)
 
 	if (_onReceived) {
-		debug(config, 'Executing the \'on.received\' handler.')
+		debug(config, '- Executing the \'on.received\' handler.')
 		_onReceived(req, res)
 	}
 
@@ -397,7 +397,7 @@ const processEvent = (req, res, config={}, endpoints=[], handlers=[], preEvent, 
 
 	let _preEventErr, _processErr
 
-	debug(config, 'Start pre-processing the request.')
+	debug(config, '- Start pre-processing the request.')
 	// 1. Run pre-event processing
 	return preEvent(req, res)
 		.catch(err => {
@@ -408,7 +408,7 @@ const processEvent = (req, res, config={}, endpoints=[], handlers=[], preEvent, 
 		})
 		// 2. Run the main request/response processing 
 		.then(() => {
-			debug(config, 'Start processing the request.')
+			debug(config, '- Start processing the request.')
 			if (!res.headersSent && !_preEventErr) {
 				// 3.1. Stop if this is a HEAD or OPTIONS request
 				const method = new String(req.method || 'GET').toLowerCase()
@@ -419,42 +419,42 @@ const processEvent = (req, res, config={}, endpoints=[], handlers=[], preEvent, 
 				const pathname = ((req._parsedUrl || {}).pathname || '/').toLowerCase()
 				const httpMethod = (method || '').toUpperCase()
 
-				debug(config, `Looking for an endpoint with '${httpMethod}' method matching the '${pathname}' pathname.`)
+				debug(config, `- Looking for an endpoint with '${httpMethod}' method matching the '${pathname}' pathname.`)
 				const endpoint = matchEndpoint(pathname, httpMethod, endpoints)
 
 				if (!endpoint) {
-					debug(config, 'Could not find any endpoint that matched that request.')
+					debug(config, '- Could not find any endpoint that matched that request.')
 					return res.status(404).send(`Endpoint '${pathname}' for method ${httpMethod} not found.`)
 				}
 				else
-					debug(config, 'Endpoint found.')
+					debug(config, '- Endpoint found.')
 
 				// 3.3. Extract all params from that request, including both the url route params and the payload params.
 				const validParamsMode = PARAMSMODE[paramsMode] ? paramsMode : 'all'
 				const paramts = validParamsMode == 'all' || validParamsMode == 'route' ? Object.assign({}, endpoint.winningRoute.parameters) : {}
+				debug(config, `- Extracting paramaters from the request object (mode: ${validParamsMode}).`)
 				const getParams = validParamsMode == 'all' || validParamsMode == 'body' 
 					? reqUtil.getParams(req, (...args) => debug(config, ...args)) 
 					: Promise.resolve({})
-				debug(config, `Extracting paramaters from the request object (mode: ${validParamsMode}).`)
 				return getParams.then(parameters => Object.assign(parameters, paramts))
 					.then(parameters => {
-						debug(config, `Adding all the extracted parameters to the req.${paramsPropName} property.`)
+						debug(config, `- Adding all the extracted parameters to the req.${paramsPropName} property.`)
 						// 3.4. Add all paramaters to the request object
 						Object.assign(req[paramsPropName], parameters || {})
 						// 3.5. Process all global handlers
-						debug(config, 'Execute all handlers.')
+						debug(config, '- Execute all handlers.')
 						return executeHandlers(req, res, handlers)
 							// 3.6. Process the endpoint
 							.then(() => {
-								debug(config, 'Execute main function.')
+								debug(config, '- Execute main function.')
 								return !res.headersSent && endpoint.execute(req, res)
 							})
 					})
 			}
 			else if (res.headersSent)
-				debug(config, 'The request pre-processing already yielded a response. Main process aborted.')
+				debug(config, '- The request pre-processing already yielded a response. Main process aborted.')
 			else 
-				debug(config, 'The request pre-processing yielded an error. Main process aborted.')
+				debug(config, '- The request pre-processing yielded an error. Main process aborted.')
 		})
 		.catch(err => {
 			console.error('Error in request/response processing')
