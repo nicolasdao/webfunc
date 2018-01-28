@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.13.0-alpha.23"></a>
+# [0.13.0-alpha.23](https://github.com/nicolasdao/webfunc/compare/v0.13.0-alpha.22...v0.13.0-alpha.23) (2018-01-28)
+
+
+### Features
+
+* Add more debug messages ([c54d1d0](https://github.com/nicolasdao/webfunc/commit/c54d1d0))
+
+
+
 <a name="0.13.0-alpha.22"></a>
 # [0.13.0-alpha.22](https://github.com/nicolasdao/webfunc/compare/v0.13.0-alpha.21...v0.13.0-alpha.22) (2018-01-28)
 
