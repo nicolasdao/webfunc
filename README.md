@@ -354,7 +354,7 @@ eval(app.listen('app', 4000))
 
 ## Reacting To Google PubSub Topics
 
-One of the goals of Webfunc was to uniform the APIs for building serverless functions. Serverless functions can react to more than HTTP requests, and in this section, we will demonstrated how to build a deploy a Google Cloud Function that can react to messages published to a Google PubSub topic. This section is broken down in 2 parts:
+One of the goals of Webfunc was to provide a uniform API for building serverless functions. Serverless functions can react to more than HTTP requests, and in this section, we will demonstrate how to build and deploy a Google Cloud Function that can react to messages published to a Google PubSub topic. This section is broken down in 3 parts:
 1. [Intro](#intro) - Here we will show how to test a function locally, deploy it to Google Cloud, and then manually test it by publishing a message on a topic.
 2. [Minimum Message Requirement](#minimum-message-requirement) - In this section, we will briefly explain the requirement for the messages that can be published so that the function can react to them.
 3. [Programmatically Publish To Google PubSub](#programmatically-publish-to-google-pubsub) - Though this is not really relevant to Webfunc, it is still something we expect any coder will eventually do, so we thought that a little help might be useful.
@@ -364,6 +364,7 @@ One of the goals of Webfunc was to uniform the APIs for building serverless func
 >PREREQUISITES:
 >
 >__CREATING A GOOGLE CLOUD PUBSUB TOPIC__
+>
 >Before you can start deploying a webfunc function to Google Cloud that can react to a Google PubSub topic, you will have to do the following:
 >1. Create a Google Cloud Account or logging to your Google Cloud console ([https://console.cloud.google.com](https://console.cloud.google.com)). Don't worry, it is free!
 >2. Create a new project, or select an existing one.
@@ -374,7 +375,7 @@ One of the goals of Webfunc was to uniform the APIs for building serverless func
 >
 >[__*now-flow*__](https://github.com/nicolasdao/now-flow) automates your Zeit Now deployments and will decrease the configuration setup. Simply run `npm install now-flow --save-dev`.
 
-Because Express has become such a familiar tool, our team decided to embrace its API conventions even for function reacting to events other than HTTP requests. If you're interested in seeing an example of how you would build a normal function using the standard Google API, please refer to [this documentation](https://cloud.google.com/functions/docs/tutorials/pubsub). The other reason we found it was very useful to use an Express convention for building any function is testability. Indeed, because Webfunc treats any event as a web request, it is very easy to test your function locally using a standard post containing the event payload. We will demonstrate this by creating a simple email notification function that react to messages dropped on the Google Cloud PubSub topic we created in the prerequiste steps:
+Because Express has become such a familiar tool, our team decided to embrace its API conventions, even for functions reacting to events other than HTTP requests. If you're interested in seeing an example of how you would build a normal function using the standard Google API, please refer to [this documentation](https://cloud.google.com/functions/docs/tutorials/pubsub). The other reason we found it was very useful to use an Express convention for building any function is testability. Indeed, because Webfunc treats any event as a web request, it is very easy to test your function locally using a standard HTTP POST containing the event payload. We will demonstrate this by creating a simple email notification function that reacts to messages dropped on the Google Cloud PubSub topic we created in the prerequiste steps:
 
 1. Configure [now](https://zeit.co/now) to use the Google project we defined in the prerequisite steps: `now gcp login` (once you're logged in, you'll be asked to choose a project in your CLI. Choose the project we created in the prerequisite steps)
 2. Create a new npm project: `npm init`
@@ -513,7 +514,7 @@ As we demonstrated in the example above, the structure of the published message 
   - Click on the __CREATE SERVICE ACCOUNT__ button. There give it a name, select the role _PubSub/PubSub Publisher_ and then tick the _Furnish a new private key_ (select JSON format) checkbox before clicking the CREATE button. 
   - Save that json file under your project and let's rename it `secrets.json` for the sake of this example.
 
-2. Install `@google-cloud/pubsub`: `npm install @google-cloud/pubsub --save`
+2. Install _@google-cloud/pubsub_: `npm install @google-cloud/pubsub --save`
 3. Create a new `publish.js` as follow:
   ```js
   const path = require('path')
