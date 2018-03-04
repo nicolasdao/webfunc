@@ -76,6 +76,7 @@ const resetConfig = (config={}) => {
 
 let _handlers = []
 let _endpoints = []
+let _server = null
 const app = {
 	use: handlerOrConfig => {
 		if (!handlerOrConfig)
@@ -91,6 +92,7 @@ const app = {
 	reset: () => {
 		_handlers = []
 		_endpoints = []
+		_server = null
 		resetConfig(getAppConfig())
 		_preEvent = () => Promise.resolve(null)
 		_postEvent = () => Promise.resolve(null)
@@ -126,6 +128,8 @@ const app = {
 			throw new Error(`Wrong argument exception. Value '${eventName}'' of the 'eventName' argument of the 'on' method is not supported.`)
 		} 
 	},
+	get server() { return _server },
+	set server(s) { _server = s },
 	get preEvent() {
 		return _preEvent || (() => Promise.resolve(null))
 	},
@@ -151,7 +155,7 @@ const app = {
 		}
 	},
 	handleEvent: () => (req, res) => processEvent(req, res, _config, _endpoints, _handlers, _preEvent, _postEvent),
-	listen: (appName, port) => {
+	listen: (appName, port, fn) => {
 		const input = createListenArity(appName, port, 3000)
 		const hostingType = getHostingType()
 		if (!HOSTINGS[hostingType.toLowerCase()])
@@ -174,12 +178,17 @@ const app = {
 		// Normal Express Server Setup
 		if (!input.appName) {
 			const __express__ = require('express')
+			const { createServer: __createServer__ } = require('http')
 			const __server__ = __express__()
 			__server__.all('*', (req, res) => processEvent(req, res, _config, _endpoints, _handlers, _preEvent, _postEvent))
-			__server__.listen(input.port, () => { 
+			const __ws__ = __createServer__(__server__)
+			_server = __ws__
+			__ws__.listen(input.port, () => { 
 				console.log(startMessage)
 				if (secondMsg)
 					console.log(secondMsg)
+				if (fn)
+					fn()
 			})
 		}
 		// Universal Serverless Setup
@@ -188,9 +197,18 @@ const app = {
 			case 'express': 
 				return `
 					const __express__ = require('express')
+					const { createServer: __createServer__ } = require('http')
 					const __server__ = __express__()
 					__server__.all('*', ${input.appName}.handleEvent())
-					__server__.listen(${input.port}, () => { console.log("${startMessage}"); ${secondMsg ? `console.log("${secondMsg}")` : ''}})
+					const __ws__ = __createServer__(__server__)
+					${input.appName}.server = __ws__
+					__ws__.listen(${input.port}, () => { 
+						console.log("${startMessage}")
+						${secondMsg ? `console.log("${secondMsg}")` : ''}
+						${fn ? `
+						const __fn__ = ${fn.toString()}
+						__fn__()` : ''}
+					})
 					`
 			case 'gcp':
 				return `exports.handler = ${input.appName}.handleEvent()`

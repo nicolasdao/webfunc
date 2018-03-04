@@ -1,7 +1,7 @@
 # WebFunc &middot;  [![NPM](https://img.shields.io/npm/v/webfunc.svg?style=flat)](https://www.npmjs.com/package/webfunc) [![Tests](https://travis-ci.org/nicolasdao/webfunc.svg?branch=master)](https://travis-ci.org/nicolasdao/webfunc) [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause) [![Neap](https://neap.co/img/made_by_neap.svg)](#this-is-what-we-re-up-to)
-__*Universal Serverless Web Framework*__. Write code for serverless similar to [Express](https://expressjs.com/) once, deploy everywhere (thanks to the awesome [Zeit Now-CLI](https://zeit.co/now)). Targeted platforms:
+__*Universal Serverless Web Framework*__. Write code for serverless similar to [Express](https://expressjs.com/) once, deploy everywhere (thanks to the awesome [Zeit Now-CLI](https://zeit.co/now)). This also include creating functions that can get triggered by [Google Cloud PubSub topics](https://cloud.google.com/pubsub/docs/overview). Targeted platforms:
 - [__*Zeit Now*__](https://zeit.co/now) (using express under the hood)
-- [__*Google Cloud Functions*__](https://cloud.google.com/functions/) (incl. reacting to __*Pub/Sub events*__ or __*Storage changes*__)
+- [__*Google Cloud Functions*__](https://cloud.google.com/functions/) (incl. reacting to [__*Pub/Sub events*__](reacting-to-google-pubsub-topics) or __*Storage changes*__)
 - [__*AWS Lambdas*__](https://aws.amazon.com/lambda)
 - [__*Azure Functions*__](https://azure.microsoft.com/en-us/services/functions/) (COMING SOON...)
 
@@ -29,11 +29,12 @@ Out-of-the-box features include:
 > * [Install](#install) 
 > * [How To Use It](#how-to-use-it) 
 >   - [Basic - Build Once Deploy Everywhere](#basic---build-once-deploy-everywhere)
->   - [The Request Object](#the-request-object)
+>   - [Webfunc Properties On The Request Object](#webfunc-properties-on-the-request-object)
 >   - [Creating A REST API](#creating-a-rest-api)
 >   - [Compatible With All Express Middleware](#compatible-with-all-express-middleware)
 >   - [Managing Environment Variables Per Deployment](#managing-environment-variables-per-deployment)
->   - [Listening to the Response Object](#listening-to-the-response-object)
+>   - [Intercepting The res.send() Method](#intercepting-the-res.send-method)
+>   - [Reacting To Google PubSub Topics](#reacting-to-google-pubsub-topics)
 > * [Configuration](#configuration)
 >   - [CORS](#cors) 
 >   - [Disabling Body Or Route Parsing](#disabling-body-or-route-parsing)
@@ -128,7 +129,7 @@ You will need to enhance the _now-CLI_ capabilities by adding a dev dependency c
 >HIGHLY RECOMMENDED - USE __*now-flow.js*__ TO MANAGE YOUR DEPLOYMENTS  
 >Without [__*now-flow.js*__](#dev---better-deployments-with-now-flow), you won't be able to deploy to AWS or to GCP using a Pub/Sub topic trigger. _now-flow.js_ is not just about adding other deployment options to _webfunc_. It also tremendously helps to [managing environment variables per deployment](#managing-environment-variables-per-deployment)).
 
-## The request Object
+## Webfunc Properties On The request Object
 The first operation made by webfunc when it receives a request is to add 3 properties on the __*request*__ object:
 * `__receivedTime`: Number that milliseconds since epoc when the request reaches the server.
 * `__transactionId`: String representing a unique identifier (e.g. useful for tracing purposes).
@@ -330,7 +331,7 @@ As you can see, the example above demonstrates 3 different types of environment 
   "myCustomVar": "Hello Default"
 }
 ```
-## Listening to the Response Object
+## Intercepting The res.send() Method
 Webfunc adds support for listeners on the following 3 response events:
 - __*sending*__ a response.
 - __*setting the headers*__ of a response.
@@ -350,6 +351,200 @@ app.get('/users/:username', (req, res) => {
 
 eval(app.listen('app', 4000))
 ```
+
+## Reacting To Google PubSub Topics
+
+One of the goals of Webfunc was to uniform the APIs for building serverless functions. Serverless functions can react to more than HTTP requests, and in this section, we will demonstrated how to build a deploy a Google Cloud Function that can react to messages published to a Google PubSub topic. This section is broken down in 2 parts:
+1. [Intro](#intro) - Here we will show how to test a function locally, deploy it to Google Cloud, and then manually test it by publishing a message on a topic.
+2. [Minimum Message Requirement](#minimum-message-requirement) - In this section, we will briefly explain the requirement for the messages that can be published so that the function can react to them.
+3. [Programmatically Publish To Google PubSub](#programmatically-publish-to-google-pubsub) - Though this is not really relevant to Webfunc, it is still something we expect any coder will eventually do, so we thought that a little help might be useful.
+
+#### Intro
+
+>PREREQUISITES:
+>
+>__CREATING A GOOGLE CLOUD PUBSUB TOPIC__
+>Before you can start deploying a webfunc function to Google Cloud that can react to a Google PubSub topic, you will have to do the following:
+>1. Create a Google Cloud Account or logging to your Google Cloud console ([https://console.cloud.google.com](https://console.cloud.google.com)). Don't worry, it is free!
+>2. Create a new project, or select an existing one.
+>3. Enable billing on both Google Cloud Function and Google Cloud PubSub (simply click on those items in the menu and if the billing has not been turned on, then a pop up will appear with a simple button "enable billing". Those services are free unless you exceed the free quota).
+>4. Browse to Google PubSub and create your first topic called 'hello-webfunc'.
+>
+>__INSTALL NOW-FLOW FOR EASIER DEPLOYMENTS TO GOOGLE CLOUD__
+>
+>[__*now-flow*__](https://github.com/nicolasdao/now-flow) automates your Zeit Now deployments and will decrease the configuration setup. Simply run `npm install now-flow --save-dev`.
+
+Because Express has become such a familiar tool, our team decided to embrace its API conventions even for function reacting to events other than HTTP requests. If you're interested in seeing an example of how you would build a normal function using the standard Google API, please refer to [this documentation](https://cloud.google.com/functions/docs/tutorials/pubsub). The other reason we found it was very useful to use an Express convention for building any function is testability. Indeed, because Webfunc treats any event as a web request, it is very easy to test your function locally using a standard post containing the event payload. We will demonstrate this by creating a simple email notification function that react to messages dropped on the Google Cloud PubSub topic we created in the prerequiste steps:
+
+1. Configure [now](https://zeit.co/now) to use the Google project we defined in the prerequisite steps: `now gcp login` (once you're logged in, you'll be asked to choose a project in your CLI. Choose the project we created in the prerequisite steps)
+2. Create a new npm project: `npm init`
+3. Install _nodemailer_ to send a dummy email: `npm install nodemailer --save`
+4. Create a new `index.js` as follow:
+  ```js
+  const { app } = require('webfunc')
+  const nodemailer = require('nodemailer');
+
+  app.post('/sayhi', (req, res) => {
+    // STEP 1. Get payload
+    const { to, subject, message } = req.params
+
+    // STEP 2. Send email
+    // Generate test SMTP service account from ethereal.email
+    // Only needed if you don't have a real mail account for testing
+    nodemailer.createTestAccount((err, account) => {
+      // create reusable transporter object using the default SMTP transport
+      let transporter = nodemailer.createTransport({
+        host: 'smtp.ethereal.email',
+        port: 587,
+        secure: false, // true for 465, false for other ports
+        auth: {
+          user: account.user, // generated ethereal user
+          pass: account.pass // generated ethereal password
+        }
+      })
+
+      // setup email data with unicode symbols
+      let mailOptions = {
+        from: '"Webfunc 👻" <webfunc-example@googlepubsub.com>', // sender address
+        to: to,
+        subject: subject,
+        html: message
+      }
+
+      // send mail with defined transport object
+      transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+          console.error(error)
+          res.status(500).send(error)
+        }
+        else {
+          const msg = `Message sent: ${info.messageId}\nPreview URL: ${nodemailer.getTestMessageUrl(info)}`
+          console.log(msg)
+          res.status(200).send(msg)
+        }
+      })
+    })
+  })
+
+  eval(app.listen('app', 4000))
+  ```
+
+>IMPORTANT: When it comes to create a webfunc function reacting to events other than HTTP requests, only POST  methods are allowed.
+
+5. Start the server locally to start testing this code: `node index.js`
+6. Test this code locally: 
+  ```
+  curl -X POST -H 'Content-Type: application/json' -d '{"to":"hello@webfunc.co","subject":"PubSub with Webfunc", "message": "<b>PubSub with Webfunc is easy mate!!!</b>"}' http://localhost:4000/sayhi
+  ```
+   
+  This will return a message similar to:
+  ```
+  Message sent: <6846cab2-a1fc-6310-cbba-d85159acf1cd@googlepubsub.com>
+  Preview URL: https://ethereal.email/message/WpuwmIPHUAoowF06WpufewfwpxLDDPAAAAAYyFpXXAobCBPcRN5IvxKV0
+  ```
+
+  Copy/paster the Preview URL in your browser to visualise your test email.
+
+
+What the above achieved is nothing different from what we've been demonstrating previously. Let's deploy this code to a Google Cloud Function that should be responding to messages published to the topic we created in the prerequisite steps above:
+
+1. Create a new `now.json` file as follow:
+  ```js
+  {
+    "environment": {
+      "active": "default",
+      "default": {
+        "hostingType": "localhost"
+      },
+      "prod": {
+        "hostingType": "gcp",
+        "gcp": {
+          "functionName": "webfunc-pubsub",
+          "memory": 128,
+          "trigger": {
+            "type": "cloud.pubsub",
+            "topic": "hello-webfunc"
+          }
+        }
+      }
+    }
+  }
+  ```
+
+  This config file defines a production environment `prod` that contains the details of the Google Cloud Function we want to deploy as well as the PubSub topic we want it to react to (i.e. `hello-webfunc` created in the prerequisite steps).
+
+2. Add a deployment script in the `package.json` as follow:
+  ```js
+  "scripts": {
+    "deploy": "nowflow prod"
+  }
+  ```
+
+3. Deploy your function: `npm run deploy`
+
+  >WARNING: There seems to be a bug the first time you deploy. A `failed deployment` error might happen when in reality the deployment was successful. Double-check that your function has been created in your [Google Function console](https://console.cloud.google.com/functions).
+
+4. Publish a message to the `hello-webfunc` topic to see if this function reacts to it:
+  - Go to the [Google PubSub console](https://console.cloud.google.com/cloudpubsub).
+  - Select the `hello-webfunc` topic.
+  - Click on the __PUBLISH MESSAGE__ button.
+  - Add the following 4 key/value pairs and then press __Publish__:
+
+  | Key      | Value                                         | 
+  | :------- |:--------------------------------------------- | 
+  | to       | whatever@gmail.com                            |
+  | subject  | Testing Webfunc PubSub                        |
+  | message  | `<h1>Hi there</h1><p>Webfunc is awesome!</p>` |
+  | pathname | sayhi                                         |
+
+  >IMPORTANT - Notice that we need to add a new field called `pathname`. This is what allows to target a specific endpoint (in this case `app.post('/sayhi', (req, res) => { ... })`).
+
+5. Verify that this worked by checking the Google Function log. There, you should see the `Preview URL` and then browse there to verify that everything is working fine.
+
+#### Minimum Message Requirement
+
+As we demonstrated in the example above, the structure of the published message can be anything __BUT IT MUST AT LEAST CONTAIN A *pathname* property. That `pathname` property__ is required to allow webfunc to identify which endpoint it needs to route that message to. 
+
+#### Programmatically Publish To Google PubSub
+
+1. Get a JSON file containing a private key that allows to publish to the Google PubSub topic:
+  - Log to your Google Cloud project.
+  - Browse to the Service Accounts section under _IAM & admin/Service accounts_.
+  - Click on the __CREATE SERVICE ACCOUNT__ button. There give it a name, select the role _PubSub/PubSub Publisher_ and then tick the _Furnish a new private key_ (select JSON format) checkbox before clicking the CREATE button. 
+  - Save that json file under your project and let's rename it `secrets.json` for the sake of this example.
+
+2. Install `@google-cloud/pubsub`: `npm install @google-cloud/pubsub --save`
+3. Create a new `publish.js` as follow:
+  ```js
+  const path = require('path')
+
+  const GOOGLE_PROJECT = 'your-google-project-name'
+  const TOPIC_NAME = 'hello-webfunc'
+  const SECRETS_PATH = path.join(process.cwd(), './secrets.json')
+
+  const pubsub = require('@google-cloud/pubsub')({
+    projectId: GOOGLE_PROJECT,
+    keyFilename: SECRETS_PATH
+  })
+
+  const topic = pubsub.topic(TOPIC_NAME)
+  const publisher = topic.publisher()
+  const emptyBuffer = Buffer.from('')
+
+  const publish = (data={}) => new Promise((onSuccess, onFailure) => publisher.publish(emptyBuffer, data, (err, res) => err ? onFailure(err) : onSuccess(res)))
+
+  publish({
+    to: 'hello@webfunc.com',
+    subject: 'Webfunc ♥ Google PubSub',
+    message: '<h1>Love Story</h1><b>Webfunc and Google PubSub rock together.</b>',
+    pathname: 'sayhi'
+  })
+  .then(() => console.log(`Great!!! Message sent!`))
+  .catch(err => console.error(`Dammit! Somthing went wrong:\n${err.message}\n${err.stack}`))
+  ```
+
+4. Excute this code: `node publish.js`
+
 
 # Configuration
 ## CORS
