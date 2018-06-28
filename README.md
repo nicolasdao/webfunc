@@ -31,6 +31,7 @@ Out-of-the-box features include:
 >   - [Basic - Build Once Deploy Everywhere](#basic---build-once-deploy-everywhere)
 >   - [Passing Parameters To Your HTTP Endpoint](#passing-parameters-to-your-http-endpoint)
 >   - [Webfunc Properties On The Request Object](#webfunc-properties-on-the-request-object)
+>   - [Deploying To Google Functions or AWS](#deploying-to-google-functions-or-aws)
 > * [Examples](#examples) 
 >   - [Creating A REST API](#creating-a-rest-api)
 >   - [Compatible With All Express Middleware](#compatible-with-all-express-middleware)
