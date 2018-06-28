@@ -56,6 +56,13 @@ Out-of-the-box features include:
 
 
 # Install
+> Prerequisites: To run your function outside of your local machine, you will need to install Zeit Now.
+> The lastest stable version of now that works is @9.0.0. We're currently working on fixing the issues with more recent versions of now.
+
+```
+npm install now@9.0.0 -g
+```
+
 ```
 npm install webfunc --save
 ```
