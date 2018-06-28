@@ -31,7 +31,7 @@ Out-of-the-box features include:
 >   - [Basic - Build Once Deploy Everywhere](#basic---build-once-deploy-everywhere)
 >   - [Passing Parameters To Your HTTP Endpoint](#passing-parameters-to-your-http-endpoint)
 >   - [Webfunc Properties On The Request Object](#webfunc-properties-on-the-request-object)
-> * [Examples](#how-to-use-it) 
+> * [Examples](#examples) 
 >   - [Creating A REST API](#creating-a-rest-api)
 >   - [Compatible With All Express Middleware](#compatible-with-all-express-middleware)
 >   - [Managing Environment Variables Per Deployment](#managing-environment-variables-per-deployment)
@@ -112,7 +112,8 @@ Add a __*now.json*__ file similar to the following:
 {
   "gcp": {
     "memory": 128,
-    "functionName": "webfunctest"
+    "functionName": "webfunctest",
+    "timeout": "100s"
   },
   "environment":{
     "active": "staging",
@@ -130,7 +131,10 @@ Run this command:
 now gcp
 ```
 
-The `environment.active = "staging"` indicates that the configuration for your app is inside the `environment.staging` property. There, you can see `"hostingType": "gcp"`. Webfunc uses the `hostingType` property to define how to serve your app (this is indeed different from platform to platform. Trying to deploy a `"hostingType": "gcp"` to Zeit Now will fail).  
+The `environment.active = "staging"` indicates that the configuration for your app is inside the `environment.staging` property. There, you can see `"hostingType": "gcp"`. Webfunc uses the `hostingType` property to define how to serve your app (this is indeed different from platform to platform. Trying to deploy a `"hostingType": "gcp"` to Zeit Now will fail). 
+
+>NOTE: Weird timeout convention
+> Notice that the timeout used in for gcp is in seconds not millisends. Also, you have to specify the unit at the end: `"timeout": "100s"`.
 
 __*3.D. Deploy to Google Cloud Function For Pub/Sub or Storage Based Triggers or Deploy to AWS Lambda*__
 
@@ -152,6 +156,32 @@ The first operation made by webfunc when it receives a request is to add 3 prope
 * `__transactionId`: String representing a unique identifier (e.g. useful for tracing purposes).
 * `__ellapsedMillis`: Function with no arguments returning the number of milliseconds ellapsed since `__receivedTime`.
 
+## Deploying To Google Functions or AWS
+> IMPORTANT: Before deploying to Google Functions (GCP), YOU'LL HAVE TO ENABLE BILLING under the specific project hosting your function. Simply browse to your account ([https://console.cloud.google.com/](https://console.cloud.google.com/)), click on the _Cloud Functions_, and then click on _Enable Billing_.
+
+You will need to enhance the _now-CLI_ capabilities by adding a dev dependency called [__*now-flow.js*__](#dev---better-deployments-with-now-flow). An example if available in section [Google Pub/Sub Topic & Storage Trigger Based Functions](#google-pubsub-topic--storage-trigger-based-functions).
+
+Before deploying to GCP or AWS, you'll have to login first using:
+
+```
+now gcp login
+```
+
+or
+
+```
+now aws login
+```
+
+After using one of the above command, you'll be prompt to select a project within your GCP or AWS account. Once selected, your function will be deployed withing that project. 
+
+To change to another project, re-rerun the commands above.
+
+>HIGHLY RECOMMENDED - USE __*now-flow.js*__ TO MANAGE YOUR DEPLOYMENTS  
+>Without [__*now-flow.js*__](#dev---better-deployments-with-now-flow), you won't be able to deploy to AWS or to GCP using a Pub/Sub topic trigger. _now-flow.js_ is not just about adding other deployment options to _webfunc_. It also tremendously helps to [managing environment variables per deployment](#managing-environment-variables-per-deployment)).
+
+
+# Examples
 ## Creating A REST API
 >A REST api is cool but GraphQL is even cooler. Check out how you can create a [GraphQL api](#graphql) in less than 2 minutes [__*here*__](#graphql).
 ### Single Endpoint
