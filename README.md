@@ -56,12 +56,14 @@ Out-of-the-box features include:
 
 
 # Install
-> Prerequisites: To run your function outside of your local machine, you will need to install Zeit Now.
+## Prerequisites
+> To run your function outside of your local machine, you will need to install Zeit Now.
 > The lastest stable version of now that works is @9.0.0. We're currently working on fixing the issues with more recent versions of now.
 
 ```
 npm install now@9.0.0 -g
 ```
+## Install Webfunc
 
 ```
 npm install webfunc --save
@@ -135,6 +137,13 @@ You will need to enhance the _now-CLI_ capabilities by adding a dev dependency c
 
 >HIGHLY RECOMMENDED - USE __*now-flow.js*__ TO MANAGE YOUR DEPLOYMENTS  
 >Without [__*now-flow.js*__](#dev---better-deployments-with-now-flow), you won't be able to deploy to AWS or to GCP using a Pub/Sub topic trigger. _now-flow.js_ is not just about adding other deployment options to _webfunc_. It also tremendously helps to [managing environment variables per deployment](#managing-environment-variables-per-deployment)).
+
+## Passing Parameters To Your HTTP Endpoint
+Whether your passing parameters in the URL route, the querystring, or the HTTP body, webfunc will parse those arguments and store them into as a JSON in the `req.params` property. Here is an example of a GET to the following URL: _https://yourapp.com/users/frank?lastname=fitzerald_
+
+```js
+app.get('/users/:username', (req, res) => res.status(200).send(`Hello ${req.params.username} ${req.params.lastname}`))
+```
 
 ## Webfunc Properties On The request Object
 The first operation made by webfunc when it receives a request is to add 3 properties on the __*request*__ object:
