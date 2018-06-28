@@ -29,20 +29,21 @@ Out-of-the-box features include:
 > * [Install](#install) 
 > * [How To Use It](#how-to-use-it) 
 >   - [Basic - Build Once Deploy Everywhere](#basic---build-once-deploy-everywhere)
+>   - [Passing Parameters To Your HTTP Endpoint](#passing-parameters-to-your-http-endpoint)
 >   - [Webfunc Properties On The Request Object](#webfunc-properties-on-the-request-object)
+> * [Examples](#how-to-use-it) 
 >   - [Creating A REST API](#creating-a-rest-api)
 >   - [Compatible With All Express Middleware](#compatible-with-all-express-middleware)
 >   - [Managing Environment Variables Per Deployment](#managing-environment-variables-per-deployment)
 >   - [Intercepting The res.send() Method](#intercepting-the-res.send-method)
 >   - [Reacting To Google PubSub Topics](#reacting-to-google-pubsub-topics)
+>   - [Authentication](#authentication) 
+>   - [Uploading Files & Images](#uploading-files--images)
+>   - [GraphQL](#graphql)
 > * [Configuration](#configuration)
 >   - [CORS](#cors) 
 >   - [Disabling Body Or Route Parsing](#disabling-body-or-route-parsing)
 >   - [Customizing The req.params Property](#customizing-the-reqparams-property)
-> * [Use Cases](#use-cases)
->   - [Authentication](#authentication) 
->   - [Uploading Files & Images](#uploading-files--images)
->   - [GraphQL](#graphql)
 > * [Tips & Tricks](#tips--tricks)
 >   - [Dev - Easy Hot Reloading](#dev---easy-hot-reloading)
 >   - [Dev - Better Deployments With now-flow](#dev---better-deployments-with-now-flow)
@@ -562,69 +563,6 @@ As we demonstrated in the example above, the structure of the published message 
 
 4. Excute this code: `node publish.js`
 
-
-# Configuration
-## CORS
->More details about those headers in the [Annexes](#annexes) section under [A.1. CORS Refresher](#a1-cors-refresher).
-
-Similar to body parsing, CORS (i.e. [Cross-Origin Resource Sharing](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS)) is a feature that is so often required that webfunc also supports it out-of-the box. That means that in most cases, the [Express CORS](https://github.com/expressjs/cors) middleware will not be necessary. 
-
-```js
-const { app, cors } = require('webfunc')
-
-// AJAX requests allowed from any domain.
-const globalAccess = cors()
-
-// No AJAX requests allowed except from domain than 'https://example.com'.
-const restrictedAccess = cors({
-  methods: ['GET'],
-  allowedHeaders: ['Authorization', 'Origin', 'X-Requested-With', 'Content-Type', 'Accept'],
-  origins: ['https://example.com']
-})
-
-app.get('/products/:id', globalAccess, (req, res) => res.status(200).send(`This is product ${req.params.id}`))
-// The 'OPTIONS' verb is required to allow preflight requests. Indeed, request with headers like 'Authorization' are not considered
-// simple requests (ref. https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS). The browser will then do what's called a 
-// preflight request using the 'OPTIONS' http method to acquire more data on the server. If the server fails to respond to 
-// that 'OPTIONS' request, the browser will abort the request.
-app.options('/users/:username', restrictedAccess)
-app.get('/users/:username', restrictedAccess, (req, res) => res.status(200).send(`Hello ${req.params.username}`))
-
-eval(app.listen('app', 4000))
-```
-
->CORS is a classic source of headache. Though webfunc allows to easily configure any project, it will not prevent you to badly configure a project, and therefore loose a huge amount of time. For that reason, a series of common mistakes have been documented in the [Annexes](#annexes) section under [A.2. CORS Basic Errors](#a2-cors-basic-errors).
-
-## Disabling Body Or Route Parsing
-Webfunc's default behavior is to parse both the payload and any variables found in the route into a JSON object (see [previous example](#multiple-endpoints)). Based on certain requirements, it might be necessary to disable that behavior (e.g. trying to read the payload again in your app might not work after webfunc has parsed it). 
-
-To disable completely or partially that behavior, add a `"params"` property in the __*now.json*__ configuration file in the root of your application as follow: 
-
-_Example of a now.json config that disable the payload parsing only:_
-```js
-{
-  "params": { mode: "route" }
-}
-```
-
-That _mode_ property accepts 4 modes:
-- __*all*__: (default) Both the payload and the route variables are extracted.
-- __*route*__: Only the variables from the route are extracted. The payload is completely ignored.
-- __*body*__: Only the payload is parsed. The route variables are completely ignored.
-- __*none*__: Neither the payload nor the route variables are extracted.
-
-If the _params_ property or the _mode_ are not defined in the _now.json_, then the default mode is _all_.
-
-## Customizing The req.params Property
-If the `params` property conflicts with some middleware or other 3rd party systems, you can change that property name. Just configure the __*now.json*__ as follow:
-```js
-{
-  "params": { propName: "somethingElse" }
-}
-```
-The configuration above with replace `req.params` to `req.somethingElse`. 
-
-# Use Cases
 ## Authentication 
 Authentication using webfunc is left to you. That being said, here is a quick example on how that could work using the awesome [passport](http://passportjs.org/) package. The following piece of code for Google Cloud Functions exposes a _signin_ POST endpoint that expects an email and a password and that returns a JWT token. Passing that JWT token in the _Authorization_ header using the _bearer_ scheme will allow access to the _/_ endpoint.
 
@@ -788,6 +726,67 @@ app.all(['/', '/graphiql'], graphqlHandler(graphqlOptions))
 
 eval(app.listen('app', 4000))
 ```
+
+# Configuration
+## CORS
+>More details about those headers in the [Annexes](#annexes) section under [A.1. CORS Refresher](#a1-cors-refresher).
+
+Similar to body parsing, CORS (i.e. [Cross-Origin Resource Sharing](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS)) is a feature that is so often required that webfunc also supports it out-of-the box. That means that in most cases, the [Express CORS](https://github.com/expressjs/cors) middleware will not be necessary. 
+
+```js
+const { app, cors } = require('webfunc')
+
+// AJAX requests allowed from any domain.
+const globalAccess = cors()
+
+// No AJAX requests allowed except from domain than 'https://example.com'.
+const restrictedAccess = cors({
+  methods: ['GET'],
+  allowedHeaders: ['Authorization', 'Origin', 'X-Requested-With', 'Content-Type', 'Accept'],
+  origins: ['https://example.com']
+})
+
+app.get('/products/:id', globalAccess, (req, res) => res.status(200).send(`This is product ${req.params.id}`))
+// The 'OPTIONS' verb is required to allow preflight requests. Indeed, request with headers like 'Authorization' are not considered
+// simple requests (ref. https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS). The browser will then do what's called a 
+// preflight request using the 'OPTIONS' http method to acquire more data on the server. If the server fails to respond to 
+// that 'OPTIONS' request, the browser will abort the request.
+app.options('/users/:username', restrictedAccess)
+app.get('/users/:username', restrictedAccess, (req, res) => res.status(200).send(`Hello ${req.params.username}`))
+
+eval(app.listen('app', 4000))
+```
+
+>CORS is a classic source of headache. Though webfunc allows to easily configure any project, it will not prevent you to badly configure a project, and therefore loose a huge amount of time. For that reason, a series of common mistakes have been documented in the [Annexes](#annexes) section under [A.2. CORS Basic Errors](#a2-cors-basic-errors).
+
+## Disabling Body Or Route Parsing
+Webfunc's default behavior is to parse both the payload and any variables found in the route into a JSON object (see [previous example](#multiple-endpoints)). Based on certain requirements, it might be necessary to disable that behavior (e.g. trying to read the payload again in your app might not work after webfunc has parsed it). 
+
+To disable completely or partially that behavior, add a `"params"` property in the __*now.json*__ configuration file in the root of your application as follow: 
+
+_Example of a now.json config that disable the payload parsing only:_
+```js
+{
+  "params": { mode: "route" }
+}
+```
+
+That _mode_ property accepts 4 modes:
+- __*all*__: (default) Both the payload and the route variables are extracted.
+- __*route*__: Only the variables from the route are extracted. The payload is completely ignored.
+- __*body*__: Only the payload is parsed. The route variables are completely ignored.
+- __*none*__: Neither the payload nor the route variables are extracted.
+
+If the _params_ property or the _mode_ are not defined in the _now.json_, then the default mode is _all_.
+
+## Customizing The req.params Property
+If the `params` property conflicts with some middleware or other 3rd party systems, you can change that property name. Just configure the __*now.json*__ as follow:
+```js
+{
+  "params": { propName: "somethingElse" }
+}
+```
+The configuration above with replace `req.params` to `req.somethingElse`. 
 
 # Tips & Tricks
 ## Dev - Easy Hot Reloading
