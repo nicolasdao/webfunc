@@ -10,6 +10,7 @@ const readline = require('readline')
 const inquirer = require('inquirer')
 const stripAnsi = require('strip-ansi')
 const ansiEscapes = require('ansi-escapes')
+const { exec } = require('child_process')
 
 const eraseLines = n => ansiEscapes.eraseLines(n)
 
@@ -121,14 +122,27 @@ const promptList = ({
 	})
 }
 
+const execCommand = command => new Promise((success, failure) => {
+	exec(command, { stdio: 'inherit' }, (e, stdout, stderr) => {
+		if (e) {
+			console.log(error(`Failed to execute command '${command}'. Details: ${e}`))
+			console.log(error(stderr))
+			failure()
+		} else
+			success()
+	})
+})
+
 module.exports = {
 	aborted,
 	bold,
 	cmd,
 	highlight,
 	info,
+	debugInfo: info,
 	link,
 	error,
 	askQuestion,
-	promptList
+	promptList,
+	exec: execCommand
 }
