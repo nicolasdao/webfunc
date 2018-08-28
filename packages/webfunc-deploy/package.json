@@ -31,8 +31,10 @@
   },
   "dependencies": {
     "ansi-escapes": "^3.1.0",
+    "archiver": "^3.0.0",
     "axios": "^0.18.0",
     "commander": "^2.17.1",
+    "convert-stream": "^1.0.2",
     "fs-extra": "^7.0.0",
     "glob": "^7.1.2",
     "inquirer": "^6.2.0",
