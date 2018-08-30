@@ -5,7 +5,7 @@
  * This source code is licensed under the BSD-style license found in the
  * LICENSE file in the root directory of this source tree.
 */
-const { error, info, link, promptList, bold } = require('../../utils/console')
+const { error, info, link, promptList, bold, debugInfo } = require('../../utils/console')
 const getToken = require('./getToken')
 const authConfig = require('../../utils/authConfig')
 const gcp = require('./gcp')
@@ -14,7 +14,7 @@ const getProjects = (options={ debug:false, show:false }) => getToken({ debug: (
 	const { debug, show } = options || {}
 
 	if (debug)
-		console.log(info('Retrieving project now...'))
+		console.log(debugInfo('Retrieving project now...'))
 
 	if (!token) {
 		console.log(error('Failed to retrieve projects from Google Cloud Platform. Could not access OAuth token required for safe authentication.'))
@@ -29,7 +29,7 @@ const getProjects = (options={ debug:false, show:false }) => getToken({ debug: (
 		}))
 
 		if (debug)
-			console.log(info(`Projects successfully retrieved. Found ${projects.length} projects.`))
+			console.log(debugInfo(`Projects successfully retrieved. Found ${projects.length} projects.`))
 
 		if (projects.length == 0) {
 			console.log(error(`The current Google Cloud Account does not have any project yet. Login to ${link('https://console.cloud.google.com/')} and create at least one project then try again.`))
@@ -73,17 +73,17 @@ const selectProject = (options={ debug:false, current: null }) => getProjects(op
 		})
 })
 
-const getCurrentProject = () => authConfig.get().then((config={}) => (config.gcp || {}).project)
+const getCurrentProject = () => authConfig.get().then((config={}) => (config.google || {}).project)
 
 const updateCurrentProject = (options={ debug:false }) => authConfig.get(options).then((config={}) => {
 	const { debug } = options || {}
 	
 	if (debug)
-		config.gcp && config.gcp.project 
-			? console.log(info('Updating current project.')) 
-			: console.log(info('No project was currently set up locally. Setting one up now...'))
+		config.google && config.google.project 
+			? console.log(debugInfo('Updating current project.')) 
+			: console.log(debugInfo('No project was currently set up locally. Setting one up now...'))
 
-	const currentProjectId = (config.gcp || {}).project
+	const currentProjectId = (config.google || {}).project
 	return selectProject(Object.assign(options, { current: currentProjectId }))
 		.then(project => {
 			if (!project) {
@@ -92,10 +92,10 @@ const updateCurrentProject = (options={ debug:false }) => authConfig.get(options
 			}
 
 			if (debug)
-				console.log(info('New project successfully selected. Saving it locally now...'))
+				console.log(debugInfo('New project successfully selected. Saving it locally now...'))
 
-			config.gcp = Object.assign(config.gcp || {}, { project })
-			return authConfig.update(config)
+			config.google = Object.assign(config.google || {}, { project })
+			return authConfig.update(config).then(() => config.google)
 		})
 })
 

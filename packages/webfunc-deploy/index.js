@@ -12,16 +12,17 @@
 
 const program = require('commander')
 const { cmd, info } = require('./src/utils/console')
-const { login } = require('./src/utils/account')
-const project = require('./src/utils/project')
+const { login } = require('./src/providers/google/account')
+const project = require('./src/providers/google/project')
+const deploy = require('./src')
 
 program
 	.version('1.0.0')
 	.command('login [provider]')
-	.usage(`Login to your Google Cloud (${cmd('webfunc login gcp')}) or AWS (${cmd('webfunc login aws')}) account. Default is 'gcp' (${cmd('webfunc login')}). `)
+	.usage(`Login to your Google Cloud (${cmd('webfunc login google')}) or AWS (${cmd('webfunc login aws')}) account. Default is 'google' (${cmd('webfunc login')}). `)
 	.option('-d, --debug', 'Show debugging messages.')
-	.action((provider='gcp', options) => {
-		if (provider == 'gcp')
+	.action((provider='google', options) => {
+		if (provider == 'google')
 			return login(options)
 				.then(() => {
 					console.log(info('Awesome! You\'re now logged in.'))
@@ -38,4 +39,17 @@ program
 		return project.updateCurrent(options)
 	})
 
+program
+	.command('deploy [provider]')
+	.usage('Deploy nodejs project to the specified cloud provider (i.e., either Google Cloud or AWS). Default provider is \'google\'')
+	.option('-d, --debug', 'Show debugging messages.')
+	.action((provider='google', options) => {
+		return deploy(provider, options)
+	})
+
 program.parse(process.argv)
+
+
+
+
+

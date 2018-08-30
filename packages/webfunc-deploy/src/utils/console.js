@@ -5,7 +5,8 @@
  * This source code is licensed under the BSD-style license found in the
  * LICENSE file in the root directory of this source tree.
 */
-const { bold, gray, cyan, red, underline } = require('chalk')
+const { bold, gray, cyan, red, underline, green } = require('chalk')
+const ora2 = require('ora')
 const readline = require('readline')
 const inquirer = require('inquirer')
 const stripAnsi = require('strip-ansi')
@@ -28,6 +29,8 @@ const getLength = string => {
 
 const highlight = text => bold.underline(text)
 const info = (...msgs) => `${gray('>')} ${msgs.join('\n')}`
+const debugInfo = (...msgs) => `${green('> DEBUG')} ${msgs.join('\n')}`
+const success = info
 const cmd = text => `${gray('`')}${cyan(text)}${gray('`')}`
 const link = text => underline(text)
 const aborted = msg => `${red('> Aborted!')} ${msg}`
@@ -133,16 +136,49 @@ const execCommand = command => new Promise((success, failure) => {
 	})
 })
 
+const wait = (msg, timeOut = 300, ora = ora2) => {
+	let running = false
+	let spinner
+	let stopped = false
+
+	setTimeout(() => {
+		if (stopped) return
+    
+		spinner = ora(gray(msg))
+		spinner.color = 'gray'
+		spinner.start()
+    
+		running = true
+	}, timeOut)
+
+	const cancel = () => {
+		stopped = true
+		if (running) {
+			spinner.stop()
+			process.stderr.write(eraseLines(1))
+			running = false
+		}
+		process.removeListener('nowExit', cancel)
+	}
+
+	process.on('nowExit', cancel)
+	return cancel
+}
+
+module.exports = wait
+
 module.exports = {
 	aborted,
+	askQuestion,
 	bold,
 	cmd,
+	debugInfo: debugInfo,
+	error,
+	exec: execCommand,
 	highlight,
 	info,
-	debugInfo: info,
 	link,
-	error,
-	askQuestion,
 	promptList,
-	exec: execCommand
+	success,
+	wait
 }

@@ -8,7 +8,7 @@
 
 const { createServer } = require('http')
 const { parse: parseUrl } = require('url')
-const { info, aborted, error, askQuestion } = require('../../utils/console')
+const { info, aborted, error, askQuestion, debugInfo } = require('../../utils/console')
 const authConfig = require('../../utils/authConfig')
 const gcp = require('./gcp')
 
@@ -19,8 +19,8 @@ const SCOPES = [
 ]
 const PORTS = [8085, 8086, 8087, 8088, 8089, 8090, 8091]
 
-const saveCredentials = creds => authConfig.get().then(config => {
-	config.gcp = Object.assign(config.gcp || {}, creds)
+const saveGoogleCredentials = creds => authConfig.get().then(config => {
+	config.google = Object.assign(config.google || {}, creds)
 	return authConfig.update(config)
 })
 
@@ -54,7 +54,7 @@ const retrieveAndStore_GCP_Credentials = (req, res) => Promise.resolve(null).the
 
 	// #03 - Get a GCP Access Token
 	if (code)
-		return gcp.token.get({
+		return gcp.oAuthToken.get({
 			code,
 			client_id: CLIENT_ID,
 			client_secret: CLIENT_SECRET,
@@ -72,12 +72,15 @@ const retrieveAndStore_GCP_Credentials = (req, res) => Promise.resolve(null).the
 					expiresAt: now.setSeconds(now.getSeconds() + data.expires_in)
 				}
 
-				return saveCredentials(credentials).then(() => {
+				return saveGoogleCredentials(credentials).then(() => {
 					setCredentialsRetrieved(true)
 					return
 				})
 			}
 		})
+}).catch(e => {
+	console.log(error('Something went wrong while processing response from the Google Cloud Platform consent page.', e.message, e.stack))
+	process.exit(1)
 })
 
 const server = createServer(retrieveAndStore_GCP_Credentials)
@@ -115,12 +118,12 @@ const askUserPermission = (options={ debug:false }) => askQuestion(info('We need
 			process.exit(1)
 		} else {
 			if (debug)
-				console.log(info('Starting server to process response from GCP consent page...'))
+				console.log(debugInfo('Starting server to process response from GCP consent page...'))
 
 			return startServer()
 				.then(port => {
 					if (debug)
-						console.log(info(`Server successfully started. Listening on port ${port} and waiting for user's consent...`))
+						console.log(debugInfo(`Server successfully started. Listening on port ${port} and waiting for user's consent...`))
 
 					return gcp.consent.request({
 						client_id: CLIENT_ID,
@@ -131,7 +134,7 @@ const askUserPermission = (options={ debug:false }) => askQuestion(info('We need
 				.then(() => authConfig.get())
 				.then(creds => {
 					server.close()
-					return creds.gcp
+					return creds.google
 				})
 				.catch(e => {
 					server.close()
@@ -148,14 +151,14 @@ const getUpToDateCreds = (creds, options={ debug:false }) => {
 	const { debug } = options || {}
 	if (Date.now() < creds.expiresAt) {
 		if (debug)
-			console.log(info('The OAuth token is still valid. No need to refresh it.'))
+			console.log(debugInfo('The OAuth token is still valid. No need to refresh it.'))
 		return Promise.resolve(creds)
 	} 
 
 	if (debug)
-		console.log(info('The OAuth token is not valid anymore. Refreshing it now...'))
+		console.log(debugInfo('The OAuth token is not valid anymore. Refreshing it now...'))
 
-	return gcp.token.refresh({
+	return gcp.oAuthToken.refresh({
 		refresh_token: creds.refreshToken,
 		client_id: CLIENT_ID,
 		client_secret: CLIENT_SECRET
@@ -165,7 +168,7 @@ const getUpToDateCreds = (creds, options={ debug:false }) => {
 			return null
 		} else {
 			if (debug)
-				console.log(info('OAuth token successfully refreshed.'))
+				console.log(debugInfo('OAuth token successfully refreshed.'))
 			const now = new Date()
 			const credentials = {
 				accessToken: data.access_token,
@@ -174,31 +177,31 @@ const getUpToDateCreds = (creds, options={ debug:false }) => {
 				expiresAt: now.setSeconds(now.getSeconds() + data.expires_in)
 			}
 
-			return saveCredentials(credentials).then(() => credentials)
+			return saveGoogleCredentials(credentials).then(() => credentials)
 		}
 	})
 }
 
-const getToken = (options = { refresh: false, debug: false }) => authConfig.get().then(creds => {
+const getToken = (options = { refresh: false, debug: false }) => authConfig.get().then(config => {
 	const { refresh, debug } = options || {}
-	const notNeedToAskTokenPermission = !refresh && creds && creds.gcp && creds.gcp.refreshToken 
+	const noNeedToAskTokenPermission = !refresh && config && config.google && config.google.refreshToken 
 
 	if (debug) {
-		console.log(info('Retrieving GCP OAuth token.'))
-		if (notNeedToAskTokenPermission)
-			console.log(info('Token found in local storage.')) 
+		console.log(debugInfo('Retrieving GCP OAuth token.'))
+		if (noNeedToAskTokenPermission)
+			console.log(debugInfo('Token found in local storage.')) 
 		else {
 			if (refresh)
-				console.log(info('Asking for permissiom now...')) 
+				console.log(debugInfo('Asking for permissiom now...')) 
 			else
-				console.log(info('No token found in local storage. Asking for permissiom now...')) 
+				console.log(debugInfo('No token found in local storage. Asking for permissiom now...')) 
 		}
 	}
 
 	setCredentialsRetrieved(false)
-	return (notNeedToAskTokenPermission ? Promise.resolve({ gcp: creds.gcp, old: true }) : askUserPermission().then(gcp => ({ gcp, old: false })))
-		.then(({ gcp, old }) => old ? getUpToDateCreds(gcp, { debug }) : gcp)
-		.then(gcp => gcp.accessToken)
+	return (noNeedToAskTokenPermission ? Promise.resolve({ google: config.google, old: true }) : askUserPermission(options).then(google => ({ google, old: false })))
+		.then(({ google, old }) => old ? getUpToDateCreds(google, options) : google)
+		.then(google => google.accessToken)
 		.catch(e => {
 			console.log(error(`Failed to retrieve GCP OAuth token.\nError: ${e.message}\nStack trace: ${e.stack}`))
 			process.exit(1)

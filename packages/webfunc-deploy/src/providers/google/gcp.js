@@ -6,15 +6,20 @@
  * LICENSE file in the root directory of this source tree.
 */
 const axios = require('axios')
+const fetch = require('node-fetch')
 const opn = require('opn')
 const { encode: encodeQuery, stringify: formUrlEncode } = require('querystring')
-const { info, highlight, cmd, link, debugInfo } = require('../../utils/console')
+const { info, highlight, cmd, link, debugInfo, bold } = require('../../utils/console')
 const { promise } = require('../../utils/index')
 
+// OAUTH
 const OAUTH_TOKEN_URL = 'https://www.googleapis.com/oauth2/v4/token'
 const GCP_CONSENT_PAGE = 'https://accounts.google.com/o/oauth2/v2/auth'
+// RESOURCE MANAGER
 const LIST_PROJECTS_URL = 'https://cloudresourcemanager.googleapis.com/v1/projects'
+// BUCKET
 const CREATE_BUCKET_URL = 'https://www.googleapis.com/storage/v1/b?project='
+const UPLOAD_TO_BUCKET_URL = 'https://www.googleapis.com/upload/storage/v1/b'
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -180,8 +185,8 @@ const listProjects = (token, options={ debug:false }) => Promise.resolve(null).t
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 const createBucket = (name, projectId, token, options={ debug:false }) => Promise.resolve(null).then(() => {
-	showDebug(`Creating a new bucket in Google Cloud Platform's project ${projectId}.`, options)
 	validateRequiredParams({ name, token })
+	showDebug(`Creating a new bucket called ${bold(name)} in Google Cloud Platform's project ${bold(projectId)}.`, options)
 
 	const request = axios.create({
 		headers: {
@@ -192,7 +197,44 @@ const createBucket = (name, projectId, token, options={ debug:false }) => Promis
 
 	return request.post(`${CREATE_BUCKET_URL}${projectId}`, { name }).then(res => {
 		if (res && res.status == 409)
-			console.log(info(`Bucket ${name} already exists.`))
+			showDebug(`Bucket ${bold(name)} already exists.`, options)
+	}).catch(e => {
+		if ((e.message || '').indexOf('409') >= 0)
+			showDebug(`Bucket ${bold(name)} already exists.`, options)
+		else
+			throw e
+	})
+})
+
+const uploadZipFileToBucket = (zip, bucket, token, options={ debug:false }) => Promise.resolve(null).then(() => {
+	const { name: zipName, file: zipFile  } = zip || {}
+	const { name: bucketName, projectId } = bucket || {}
+	validateRequiredParams({ zipName, zipFile, bucketName, projectId, token })
+	showDebug(`Uploading a new zip file to Google Cloud Platform's project ${bold(bucket.projectId)} in bucket ${bold(bucket.name)}.`, options)
+
+	const query = `uploadType=media&name=${encodeURIComponent(zip.name)}&project=${encodeURIComponent(bucket.projectId)}`
+	const uri = `${UPLOAD_TO_BUCKET_URL}/${encodeURIComponent(bucket.name)}/o`
+	const fullUri = `${uri}?${query}`
+
+	// const request = axios.create({
+	// 	headers: {
+	// 		'Content-Type': 'application/zip',
+	// 		'Content-Length': zip.file.length,
+	// 		Authorization: `Bearer ${token}`
+	// 	}
+	// })
+
+	// //maxContentLength: 100*1024*1024,
+	// return request.post(fullUri, zip.file, { maxBodyLength: 10000*1024*1024 })
+	
+	return fetch(fullUri, {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/zip',
+			'Content-Length': zip.file.length,
+			Authorization: `Bearer ${token}`
+		},
+		body: zip.file
 	})
 })
 
@@ -216,7 +258,8 @@ module.exports = {
 		list: listProjects
 	},
 	bucket: {
-		create: createBucket
+		create: createBucket,
+		uploadZip: uploadZipFileToBucket
 	}
 }
 

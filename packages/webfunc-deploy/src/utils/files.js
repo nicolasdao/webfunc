@@ -7,7 +7,7 @@
 */
 
 const fs = require('fs-extra')
-const { join } = require('path')
+const { join, sep } = require('path')
 const { homedir } = require('os')
 const _glob = require('glob')
 const archiver = require('archiver')
@@ -109,7 +109,7 @@ const zipFolderToBuffer = (src, options={ debug:false }) => fs.exists(src).then(
 	if (debug) 
 		console.log(debugInfo(`Starting to zip folder \n${src}.`))
 
-	const archive = archiver('zip')
+	const archive = archiver('zip', { zlib: { level: 9 } })
 	const buffer = toBuffer(archive)
 
 	archive.on('warning', err => {
@@ -120,7 +120,8 @@ const zipFolderToBuffer = (src, options={ debug:false }) => fs.exists(src).then(
 		throw err
 	})
 
-	archive.directory(src)
+	const despath = (src.split(sep).slice(-1) || [])[0]
+	archive.directory(src, despath)
 	archive.finalize()
 	return buffer
 		.then(v => {
