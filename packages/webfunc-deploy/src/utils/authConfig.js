@@ -15,11 +15,11 @@ const CONFIGFILE = join(homedir(), '.webfunc.json')
 const getAuthConfig = (options={ debug:false }) => Promise.resolve(null).then(() => {
 	const { debug } = options || {}
 	if (debug)
-		console.log(info('Retrieving GCP config file stored in local storage.'))
+		console.log(info('Retrieving \'.webfunc.json\' config file stored in local storage.'))
 
 	return file.exists(CONFIGFILE).then(() => file.read(CONFIGFILE)).then(c => {
 		if (debug)
-			console.log(info('Found a GCP config file stored locally.'))
+			console.log(info('Found a \'.webfunc.json\' config file stored locally.'))
 		try {
 			if (c) {
 				const config = JSON.parse(c) || {}
@@ -33,7 +33,7 @@ const getAuthConfig = (options={ debug:false }) => Promise.resolve(null).then(()
 		}
 	}).catch(() => {
 		if (debug)
-			console.log(info('No GCP config file has been stored locally yet.'))
+			console.log(info('No \'.webfunc.json\' config file has been stored locally yet.'))
 		return {}
 	})
 })

@@ -5,14 +5,12 @@
  * This source code is licensed under the BSD-style license found in the
  * LICENSE file in the root directory of this source tree.
 */
-const opn = require('opn')
-const axios = require('axios')
+
 const { createServer } = require('http')
 const { parse: parseUrl } = require('url')
-const { encode: encodeQuery, stringify: formUrlEncode } = require('querystring')
-const { info, highlight, cmd, link, aborted, error, askQuestion } = require('./console')
-const authConfig = require('./authConfig')
-const { promise } = require('./index')
+const { info, aborted, error, askQuestion } = require('../../utils/console')
+const authConfig = require('../../utils/authConfig')
+const gcp = require('./gcp')
 
 const CLIENT_ID = '429438303487-0gh70ga2469aqrfhf134ei4ph8p24bia.apps.googleusercontent.com'
 const CLIENT_SECRET = '2Uz-BIRBYlCaFTL4qvkTzJmo'
@@ -55,24 +53,13 @@ const retrieveAndStore_GCP_Credentials = (req, res) => Promise.resolve(null).the
 	}
 
 	// #03 - Get a GCP Access Token
-	if (code) {
-
-		const body = formUrlEncode({
+	if (code)
+		return gcp.token.get({
 			code,
 			client_id: CLIENT_ID,
 			client_secret: CLIENT_SECRET,
-			redirect_uri: `http://${req.headers.host}`,
-			grant_type: 'authorization_code'
-		})
-
-		const request = axios.create({
-			headers: {
-				'content-type': 'application/x-www-form-urlencoded',
-				'content-length': body.length
-			}
-		})
-
-		return request.post('https://www.googleapis.com/oauth2/v4/token', body).then(({ status, data }) => {
+			redirect_uri: `http://${req.headers.host}`
+		}).then(({ status, data }) => {
 			if (status !== 200) {
 				console.log(error(`Got unexpected status code from Google: ${status}`))
 				return 
@@ -91,7 +78,6 @@ const retrieveAndStore_GCP_Credentials = (req, res) => Promise.resolve(null).the
 				})
 			}
 		})
-	}
 })
 
 const server = createServer(retrieveAndStore_GCP_Credentials)
@@ -136,26 +122,12 @@ const askUserPermission = (options={ debug:false }) => askQuestion(info('We need
 					if (debug)
 						console.log(info(`Server successfully started. Listening on port ${port} and waiting for user's consent...`))
 
-					const query = {
+					return gcp.consent.request({
 						client_id: CLIENT_ID,
 						redirect_uri: `http://localhost:${port}`,
-						response_type: 'code',
-						scope: SCOPES.join(' '),
-						access_type: 'offline',
-						prompt: 'consent'
-					}
-					const googleConsentScreenUrl = `https://accounts.google.com/o/oauth2/v2/auth?${encodeQuery(query)}`
-					if(process.platform === 'darwin' || process.platform === 'win32') {
-						opn(googleConsentScreenUrl)
-						console.log(info('A Google Accounts login window has been opened in your default browser. Please log in there and check back here afterwards.'))
-					} else {
-						console.log(info(
-							`We'll need you to grant us access to provision functions on your ${highlight('Google Cloud Platform')} account in order to comunicate with their API.`,
-							`To provision a dedicated set of tokens for ${cmd('now')}, Go to ${link(googleConsentScreenUrl)} and grant access to Now.`
-						))
-					}
+						scope: SCOPES.join(' ')
+					}, credentialsRetrieved, CONSENT_TIMEOUT, options)
 				})
-				.then(() => promise.wait(credentialsRetrieved, CONSENT_TIMEOUT)) 
 				.then(() => authConfig.get())
 				.then(creds => {
 					server.close()
@@ -183,39 +155,28 @@ const getUpToDateCreds = (creds, options={ debug:false }) => {
 	if (debug)
 		console.log(info('The OAuth token is not valid anymore. Refreshing it now...'))
 
-	const body = formUrlEncode({
+	return gcp.token.refresh({
 		refresh_token: creds.refreshToken,
 		client_id: CLIENT_ID,
-		client_secret: CLIENT_SECRET,
-		grant_type: 'refresh_token'
-	})
+		client_secret: CLIENT_SECRET
+	}, options).then(({ status, data }) => {
+		if (status !== 200) {
+			console.log(error(`Got unexpected status code from Google: ${status}`))
+			return null
+		} else {
+			if (debug)
+				console.log(info('OAuth token successfully refreshed.'))
+			const now = new Date()
+			const credentials = {
+				accessToken: data.access_token,
+				expiresIn: data.expires_in,
+				refreshToken: creds.refreshToken,
+				expiresAt: now.setSeconds(now.getSeconds() + data.expires_in)
+			}
 
-	const request = axios.create({
-		headers: {
-			'content-type': 'application/x-www-form-urlencoded',
-			'content-length': body.length
+			return saveCredentials(credentials).then(() => credentials)
 		}
 	})
-
-	return request.post('https://www.googleapis.com/oauth2/v4/token', body)
-		.then(({ status, data }) => {
-			if (status !== 200) {
-				console.log(error(`Got unexpected status code from Google: ${status}`))
-				return null
-			} else {
-				if (debug)
-					console.log(info('OAuth token successfully refreshed.'))
-				const now = new Date()
-				const credentials = {
-					accessToken: data.access_token,
-					expiresIn: data.expires_in,
-					refreshToken: creds.refreshToken,
-					expiresAt: now.setSeconds(now.getSeconds() + data.expires_in)
-				}
-
-				return saveCredentials(credentials).then(() => credentials)
-			}
-		})
 }
 
 const getToken = (options = { refresh: false, debug: false }) => authConfig.get().then(creds => {

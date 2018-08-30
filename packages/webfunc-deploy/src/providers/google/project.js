@@ -5,10 +5,10 @@
  * This source code is licensed under the BSD-style license found in the
  * LICENSE file in the root directory of this source tree.
 */
-const axios = require('axios')
-const { error, info, link, promptList, bold } = require('./console')
+const { error, info, link, promptList, bold } = require('../../utils/console')
 const getToken = require('./getToken')
-const authConfig = require('./authConfig')
+const authConfig = require('../../utils/authConfig')
+const gcp = require('./gcp')
 
 const getProjects = (options={ debug:false, show:false }) => getToken({ debug: (options || {}).debug }).then(token => {
 	const { debug, show } = options || {}
@@ -21,14 +21,7 @@ const getProjects = (options={ debug:false, show:false }) => getToken({ debug: (
 		process.exit(1)
 	}
 
-	const request = axios.create({
-		headers: {
-			Accept: 'application/json',
-			Authorization: `Bearer ${token}`
-		}
-	})
-
-	return request.get('https://cloudresourcemanager.googleapis.com/v1/projects').then(({ data }) => {
+	return gcp.project.list(token, options).then(({ data }) => {
 		const projects = ((data || {}).projects || []).map(p => ({
 			name: `${p.name} (${p.projectId})`,
 			value: p.projectId,

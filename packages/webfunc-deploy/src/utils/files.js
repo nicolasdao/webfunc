@@ -157,11 +157,14 @@ const zipNodejsProject = (src, options={ debug:false }) => {
 		})
 }
 
-zipNodejsProject(process.cwd(), { debug:true })
+//zipNodejsProject(process.cwd(), { debug:true })
 
 //cloneNodejsProject(process.cwd(), { debug:true })
 //.then(dst => dst ? deleteFolder(dst, { debug:true }) : null)
 
+module.exports = {
+	zipToBuffer: zipNodejsProject
+}
 
 
 
