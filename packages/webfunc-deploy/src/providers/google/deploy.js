@@ -42,7 +42,7 @@ const deploy = (options={ debug:false }) => Promise.resolve(null).then(() => {
 				projectId: config.project
 			})))
 	}).then(({ token, projectId }) => {
-		const bucket = { name: 'webfunc_test', projectId }
+		const bucket = { name: 'webfunc-test', projectId }
 		let zip = { name: `hello_${Date.now()}.zip` }
 		//////////////////////////////
 		// 3. Zip project 

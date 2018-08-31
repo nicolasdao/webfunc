@@ -5,7 +5,6 @@
  * This source code is licensed under the BSD-style license found in the
  * LICENSE file in the root directory of this source tree.
 */
-const axios = require('axios')
 const fetch = require('node-fetch')
 const opn = require('opn')
 const { encode: encodeQuery, stringify: formUrlEncode } = require('querystring')
@@ -66,14 +65,24 @@ const getOAuthToken = ({ code, client_id, client_secret, redirect_uri }, options
 		redirect_uri,
 		grant_type: 'authorization_code'
 	})
-	const request = axios.create({
+
+	return fetch(OAUTH_TOKEN_URL, {
+		method: 'POST',
 		headers: {
 			'content-type': 'application/x-www-form-urlencoded',
 			'content-length': body.length
-		}
-	})
+		},
+		body
+	}).then(res => res.json().then(data => ({ status: res.status, data })))
+
+	// const request = axios.create({
+	// 	headers: {
+	// 		'content-type': 'application/x-www-form-urlencoded',
+	// 		'content-length': body.length
+	// 	}
+	// })
 	
-	return request.post(OAUTH_TOKEN_URL, body)
+	// return request.post(OAUTH_TOKEN_URL, body)
 })
 
 const refreshOAuthToken = ({ refresh_token, client_id, client_secret }, options={ debug:false }) => {
@@ -86,14 +95,23 @@ const refreshOAuthToken = ({ refresh_token, client_id, client_secret }, options=
 		grant_type: 'refresh_token',
 	})
 
-	const request = axios.create({
+	return fetch(OAUTH_TOKEN_URL, {
+		method: 'POST',
 		headers: {
 			'content-type': 'application/x-www-form-urlencoded',
 			'content-length': body.length
-		}
-	})
+		},
+		body
+	}).then(res => res.json().then(data => ({ status: res.status, data })))
 
-	return request.post(OAUTH_TOKEN_URL, body)
+	// const request = axios.create({
+	// 	headers: {
+	// 		'content-type': 'application/x-www-form-urlencoded',
+	// 		'content-length': body.length
+	// 	}
+	// })
+
+	// return request.post(OAUTH_TOKEN_URL, body)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -158,14 +176,14 @@ const requestConsent = ({ client_id, redirect_uri, scope }, stopFn, timeout, opt
 const listProjects = (token, options={ debug:false }) => Promise.resolve(null).then(() => {
 	showDebug('Requesting a list of all projects from Google Cloud Platform.', options)
 	validateRequiredParams({ token })
-	const request = axios.create({
+
+	return fetch(LIST_PROJECTS_URL, {
+		method: 'GET',
 		headers: {
 			Accept: 'application/json',
 			Authorization: `Bearer ${token}`
 		}
-	})
-
-	return request.get(LIST_PROJECTS_URL)
+	}).then(res => res.json().then(data => ({ status: res.status, data })))
 })
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -188,14 +206,21 @@ const createBucket = (name, projectId, token, options={ debug:false }) => Promis
 	validateRequiredParams({ name, token })
 	showDebug(`Creating a new bucket called ${bold(name)} in Google Cloud Platform's project ${bold(projectId)}.`, options)
 
-	const request = axios.create({
+	// const request = axios.create({
+	// 	headers: {
+	// 		'Content-Type': 'application/json',
+	// 		Authorization: `Bearer ${token}`
+	// 	}
+	// })
+
+	return fetch(`${CREATE_BUCKET_URL}${projectId}`, {
+		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
 			Authorization: `Bearer ${token}`
-		}
-	})
-
-	return request.post(`${CREATE_BUCKET_URL}${projectId}`, { name }).then(res => {
+		},
+		body: JSON.stringify({ name })
+	}).then(res => res.json().then(data => ({ status: res.status, data }))).then(res => {
 		if (res && res.status == 409)
 			showDebug(`Bucket ${bold(name)} already exists.`, options)
 	}).catch(e => {
@@ -204,6 +229,16 @@ const createBucket = (name, projectId, token, options={ debug:false }) => Promis
 		else
 			throw e
 	})
+
+	// return request.post(`${CREATE_BUCKET_URL}${projectId}`, { name }).then(res => {
+	// 	if (res && res.status == 409)
+	// 		showDebug(`Bucket ${bold(name)} already exists.`, options)
+	// }).catch(e => {
+	// 	if ((e.message || '').indexOf('409') >= 0)
+	// 		showDebug(`Bucket ${bold(name)} already exists.`, options)
+	// 	else
+	// 		throw e
+	// })
 })
 
 const uploadZipFileToBucket = (zip, bucket, token, options={ debug:false }) => Promise.resolve(null).then(() => {
@@ -216,17 +251,6 @@ const uploadZipFileToBucket = (zip, bucket, token, options={ debug:false }) => P
 	const uri = `${UPLOAD_TO_BUCKET_URL}/${encodeURIComponent(bucket.name)}/o`
 	const fullUri = `${uri}?${query}`
 
-	// const request = axios.create({
-	// 	headers: {
-	// 		'Content-Type': 'application/zip',
-	// 		'Content-Length': zip.file.length,
-	// 		Authorization: `Bearer ${token}`
-	// 	}
-	// })
-
-	// //maxContentLength: 100*1024*1024,
-	// return request.post(fullUri, zip.file, { maxBodyLength: 10000*1024*1024 })
-	
 	return fetch(fullUri, {
 		method: 'POST',
 		headers: {
