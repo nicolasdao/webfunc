@@ -5,7 +5,7 @@
  * This source code is licensed under the BSD-style license found in the
  * LICENSE file in the root directory of this source tree.
 */
-
+const _fs = require('fs')
 const fs = require('fs-extra')
 const { join, sep } = require('path')
 const { homedir } = require('os')
@@ -15,6 +15,7 @@ const { toBuffer } = require('convert-stream')
 const { error, exec, debugInfo, cmd } = require('./console')
 
 const TEMP_FOLDER = join(homedir(), 'temp/webfunc')
+const FILES_BLACK_LIST = [/\.DS_Store$/]
 
 const createTempFolder = () => fs.ensureDir(TEMP_FOLDER)
 	.catch(() => {
@@ -28,15 +29,16 @@ const glob = (pattern, options) => new Promise((success, failure) => _glob(patte
 		success(files)
 }))
 
-const cloneNodejsProject = (src='', options={ debug:false }) => createTempFolder().then(() => {
-	const { debug } = options || {}
+const cloneNodejsProject = (src='', options={ debug:false, build:false }) => createTempFolder().then(() => {
+	const { debug, build } = options || {}
 	const dst = join(TEMP_FOLDER, Date.now().toString())
 
 	if (debug) 
 		console.log(debugInfo(`Copying content of folder \n${src} \nto temporary location \n${dst}`))
 
 	return glob(join(src, '**/*.*'), { ignore: '**/node_modules/**' }).then(files => glob(join(src, '**/.*'), { ignore: '**/node_modules/**' }).then(dot_files => {
-		const all_files = [...(files || []), ...(dot_files || [])]
+		const all_files = [...(files || []), ...(dot_files || [])].filter(f => !FILES_BLACK_LIST.some(ff => f.match(ff)))
+		const filesCount = all_files.length
 		
 		if (debug)
 			console.log(debugInfo(`Found ${all_files.length} files under folder \n${src}\nCopying them now...`))
@@ -59,20 +61,23 @@ const cloneNodejsProject = (src='', options={ debug:false }) => createTempFolder
 			const npmCommand = `npm install --prefix ${dst}`
 
 			if (debug)
-				console.log(debugInfo(`Files successfully copied to \n${dst}\nExecuting command \n${cmd(npmCommand)}`))
+				console.log(debugInfo(`Files successfully copied to \n${dst}${build ? `\nExecuting command ${cmd(npmCommand)}` : ''}`))
 
-			return exec(npmCommand)
-				.then(() => {
-					if (debug)
-						console.log(debugInfo('Command successfully executed.'))
-				})
-				.catch(() => {
-					if (debug)
-						console.log(debugInfo('Command failed.'))
+			if (!build)
+				return { filesCount, dst }
+			else
+				return exec(npmCommand)
+					.then(() => {
+						if (debug)
+							console.log(debugInfo('Command successfully executed.'))
+					})
+					.catch(() => {
+						if (debug)
+							console.log(debugInfo('Command failed.'))
 
-					throw new Error(`Command ${npmCommand} failed.`)
-				})
-				.then(() => dst)
+						throw new Error(`Command ${npmCommand} failed.`)
+					})
+					.then(() => ({ filesCount, dst }))
 		})
 	}))
 })
@@ -121,7 +126,7 @@ const zipFolderToBuffer = (src, options={ debug:false }) => fs.exists(src).then(
 	})
 
 	const despath = (src.split(sep).slice(-1) || [])[0]
-	archive.directory(src, despath)
+	archive.directory(src, '/')
 	archive.finalize()
 	return buffer
 		.then(v => {
@@ -142,15 +147,15 @@ const zipNodejsProject = (src, options={ debug:false }) => {
 		console.log(debugInfo(`Starting to zip nodejs project located under\n${src}`))
 
 	return cloneNodejsProject(src, options)
-		.then(dst => zipFolderToBuffer(dst, options).then(buffer => ({ buffer, tempFolder: dst })))
-		.then(({ buffer, tempFolder }) => {
+		.then(({ filesCount, dst }) => zipFolderToBuffer(dst, options).then(buffer => ({ filesCount, buffer, tempFolder: dst })))
+		.then(({ filesCount, buffer, tempFolder }) => {
 			if (debug) {
 				const sizeMb = (buffer.length / 1024 / 1024).toFixed(2)
 				console.log(debugInfo(`The nodejs project located under\n${src}\nhas been successfully zipped to buffer (size: ${sizeMb}MB)`))
 			}
 
 			return deleteFolder(tempFolder, options)
-				.then(() => buffer)
+				.then(() => ({ filesCount, buffer }))
 		})
 		.catch(e => {
 			console.log(error(`Failed to zip nodejs project located under\n${src}`))
@@ -158,13 +163,18 @@ const zipNodejsProject = (src, options={ debug:false }) => {
 		})
 }
 
-//zipNodejsProject(process.cwd(), { debug:true })
+const fileExists = p => new Promise((onSuccess, onFailure) => _fs.exists(p, exists => exists ? onSuccess(p) : onFailure(p)))
 
-//cloneNodejsProject(process.cwd(), { debug:true })
-//.then(dst => dst ? deleteFolder(dst, { debug:true }) : null)
+const readFile = filePath => new Promise((onSuccess, onFailure) => _fs.readFile(filePath, 'utf8', (err, data) => err ? onFailure(err) : onSuccess(data)))
+
+const writeToFile = (filePath, stringContent) => new Promise((onSuccess, onFailure) => _fs.writeFile(filePath, stringContent, err => 
+	err ? onFailure(err) : onSuccess()))
 
 module.exports = {
-	zipToBuffer: zipNodejsProject
+	zipToBuffer: zipNodejsProject,
+	exists: fileExists,
+	write: writeToFile,
+	read: readFile
 }
 
 

@@ -1,5 +1,3 @@
-
-
 /**
  * Copyright (c) 2018, Neap Pty Ltd.
  * All rights reserved.
@@ -9,80 +7,102 @@
 */
 
 const gcp = require('./gcp')
-const { login } = require('./account')
-const getToken = require('./getToken')
-const authConfig = require('../../utils/authConfig')
-const { askQuestion, bold, cmd, info, error, wait, success } = require('../../utils/console')
+const { error, wait, success, link, bold } = require('../../utils/console')
 const { zipToBuffer } = require('../../utils/files')
+const { identity, promise, date }  = require('../../utils')
+const utils = require('./utils')
 
-const deploy = (options={ debug:false }) => Promise.resolve(null).then(() => {
+const deploy = (options={ debug:false, projectPath:null }) => Promise.resolve(null).then(() => {
 	//////////////////////////////
-	// 1. Show current project
+	// 1. Show current project and help the user to confirm that's the right one.
 	//////////////////////////////
-	// 1.1. Get current OAuth config file
-	return authConfig.get().then((config={}) => (config.google || {})).then(config => {
-		const { project: projectId, accessToken, refreshToken } = config
-		// If there is no OAuth config for Google yet, then prompt the user to consent.
-		if (!projectId || !accessToken || !refreshToken) {
-			console.log(info('You don\'t have any Google OAuth saved yet. Requesting consent now...'))
-			return login(options)
-		} else // Otherwise, carry on
-			return config
-	}).then(config => { // 1.2. Prompt to confirm that the hosting destination is correct.
-		const questionLine1 = info(`You're about to deploy a nodejs project to Google Cloud Platform project ${bold(config.project)}.`)
-		const questionLine2 = info(`If that project is not the right one, then abort this deployment and run ${cmd('webfunc switch')}.`)
-		const questionLine3 = info('Proceed to deployment? [y/n] ')
-		return askQuestion(`${questionLine1}\n${questionLine2}\n${questionLine3}`)
-			.then(answer => { if (answer == 'n') process.exit(1)})
+	return utils.project.confirm(options).then(({ token, projectId }) => {
+		const bucket = { name: `webfunc-deployment-${date.timestamp({ short:false })}-${identity.new()}${identity.new()}`.toLowerCase(), projectId }
+		let zip = { name: 'webfunc-app.zip' }
 		//////////////////////////////
-		// 2. Retrieve OAuth token
+		// 2. Zip project 
 		//////////////////////////////
-			.then(() => getToken().then(token => ({
-				token,
-				projectId: config.project
-			})))
-	}).then(({ token, projectId }) => {
-		const bucket = { name: 'webfunc-test', projectId }
-		let zip = { name: `hello_${Date.now()}.zip` }
-		//////////////////////////////
-		// 3. Zip project 
-		//////////////////////////////
-		const zippingDone = wait('Rebuilding project and then zipping it...')
-		return zipToBuffer(process.cwd(), options).then(zipFile => {
+		const zippingDone = wait('Zipping project...')
+		return zipToBuffer(options.projectPath || process.cwd(), options).then(({ filesCount, buffer }) => {
 			zippingDone()
-			console.log(success('Project rebuilt and zipped.'))
-			zip.file = zipFile
+			console.log(success(`Nodejs app(${filesCount} files) zipped.`))
+			zip.file = buffer
+			zip.filesCount = filesCount
 		}).catch(e => { zippingDone(); throw e })
-		//////////////////////////////
-		// 4. Create bucket
-		//////////////////////////////
+			//////////////////////////////
+			// 3. Create bucket
+			//////////////////////////////
 			.then(() => {
-				const bucketCreationDone = wait('Checking that the bucket exists (will create one if it doesn\'t)...')
+				const bucketCreationDone = wait('Creating new deployment bucket')
 				return gcp.bucket.create(bucket.name, bucket.projectId, token, options)
 					.then(() => {
 						bucketCreationDone()
-						console.log(success('Google Cloud Bucket ready.'))
+						console.log(success(`Google Cloud bucket ${bold(bucket.name)} created.`))
 					})
 					.catch(e => { bucketCreationDone(); throw e })
 			})
-		//////////////////////////////
-		// 5. Upload zip to bucket
-		//////////////////////////////
+			//////////////////////////////
+			// 4. Upload zip to bucket
+			//////////////////////////////
 			.then(() => {
 				const zipSize = (zip.file.length/1024/1024).toFixed(2)
 				const start = Date.now()
-				const uploadDone = wait(`Uploading zipped project (${zipSize}MB) to bucket...`)
+				const uploadDone = wait(`Uploading nodejs app (${zipSize}MB) to bucket`)
 				return gcp.bucket.uploadZip(zip, bucket, token, options)
 					.then(() => {
 						uploadDone()
-						console.log(success(`Project (${zipSize}MB) uploaded in ${((Date.now() - start)/1000).toFixed(2)} seconds.`))
+						console.log(success(`Nodejs app (${zipSize}MB) uploaded in ${((Date.now() - start)/1000).toFixed(2)} seconds to bucket ${bold(bucket.name)}.`))
 					})
 					.catch(e => { uploadDone(); throw e })
 			})
-			.then(() => console.log('File uploaded'))
+			//////////////////////////////
+			// 5. Deploying project
+			//////////////////////////////
+			.then(() => {
+				const deploymentDone = wait('Deploying your nodejs app')
+				return gcp.app.deploy({ bucket, zip }, token, options).then(({ data }) => {
+					if (!data.operationId) {
+						const msg = 'Unexpected response. Could not determine the operationId used to check the deployment status.'
+						console.log(error(msg))
+						throw new Error(msg)
+					}
+					return { deploymentDone, operationId: data.operationId }
+				})
+			})
+			////////////////////////////////////
+			// 6. Checking deployment status
+			////////////////////////////////////
+			.then(({ deploymentDone, operationId }) => promise.check(
+				() => gcp.app.getOperationStatus(operationId, bucket.projectId, token, options).catch(e => {
+					console.log(error(`Unable to verify deployment status. Manually check the status of your build here: ${link(`https://console.cloud.google.com/cloud-build/builds?project=${bucket.projectId}`)}`))
+					throw e
+				}), 
+				({ data }) => {
+					if (data && data.done) {
+						deploymentDone()
+						return true
+					}
+					else if (data && data.message) {
+						console.log(error('Failed to deploy. Though your project was successfully uploaded to Google Cloud Platform, an error occured during the deployment to App Engine. Details:', JSON.stringify(data, null, '  ')))
+						throw new Error('Deployment failed.')
+					} else 
+						return false
+				})
+			).then(({ data }) => {
+				console.log(success(`Nodejs app successfully deployed in project ${bold(bucket.projectId)}'s App Engine.`))
+				console.log(data)
+			})
+
 	}).catch(e => {
-		console.log(error(e))
+		console.log(error('Deployment failed!', e.message, e.stack))
+		throw e
 	})
 })
 
+deploy({ debug:false, projectPath: '/Users/nicolasdao/Documents/projects/temp/app' })
+
+
 module.exports = deploy
+
+
+

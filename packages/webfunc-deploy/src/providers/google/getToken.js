@@ -16,6 +16,7 @@ const CLIENT_ID = '429438303487-0gh70ga2469aqrfhf134ei4ph8p24bia.apps.googleuser
 const CLIENT_SECRET = '2Uz-BIRBYlCaFTL4qvkTzJmo'
 const SCOPES = [
 	'https://www.googleapis.com/auth/cloud-platform',
+	'https://www.googleapis.com/auth/appengine.admin'
 ]
 const PORTS = [8085, 8086, 8087, 8088, 8089, 8090, 8091]
 
@@ -29,6 +30,9 @@ const credentialsRetrieved = () => _credentialsRetrieved
 const setCredentialsRetrieved = v => _credentialsRetrieved = v
 
 const retrieveAndStore_GCP_Credentials = (req, res) => Promise.resolve(null).then(() => {
+	const { debug } = server.options || { debug: false }
+	if (debug)
+		console.log(debugInfo('Response received from the Google Consent page.'))
 	// #01 - Extracting the code sent from GCP via the query string.
 	const { query: { error: _error, code } } = parseUrl(req.url, true)
 	
@@ -59,11 +63,13 @@ const retrieveAndStore_GCP_Credentials = (req, res) => Promise.resolve(null).the
 			client_id: CLIENT_ID,
 			client_secret: CLIENT_SECRET,
 			redirect_uri: `http://${req.headers.host}`
-		}).then(({ status, data }) => {
+		}, server.options).then(({ status, data }) => {
 			if (status !== 200) {
 				console.log(error(`Got unexpected status code from Google: ${status}`))
 				return 
 			} else {
+				if (debug)
+					console.log(debugInfo('OAuth token receive from Google Cloud Platform. Saving it locally.'))
 				const now = new Date()
 				const credentials = {
 					accessToken: data.access_token,
@@ -84,30 +90,27 @@ const retrieveAndStore_GCP_Credentials = (req, res) => Promise.resolve(null).the
 })
 
 const server = createServer(retrieveAndStore_GCP_Credentials)
-const serverListen = (server, port) => new Promise((success, failure) => {
+const serverListen = (server, port, options={ debug:false }) => new Promise((success, failure) => {
 	try {
+		server.options = options
 		server.on('error', e => failure(e))
+		server.on('close', () => server.options = { debug:false })
 		server.listen(port, success)
 	} catch (e) {
 		failure(e)
 	}
 })
-const startServer = (ports) => {
-	ports = ports || [...PORTS]
-	if (ports.length == 0) {
+const startServer = (options={ debug:false }) => {
+	options.ports = options.ports || [...PORTS]
+	if (options.ports.length == 0) {
 		console.log(error(`Failed to start the node server responsible for receiving and processing the user's GCP consent response. The following ports are all allocated:\n    ${PORTS.join(',')}\nTry to free on of those ports so the server can run.`))
 		process.exit(1)
 	}
-	const port = ports.shift()
-	return serverListen(server, port)
+	const port = options.ports.shift()
+	return serverListen(server, port, options)
 		.then(() => port)
-		.catch(() => startServer(ports))
+		.catch(() => startServer(options))
 }
-
-// const startServer = () => new Promise(success => {
-// 	//server.listen(PORTS[0], success)
-// 	serverListen(server, PORTS[0]).then(() => success())
-// })
 
 const CONSENT_TIMEOUT = 5 * 60 * 1000 // wait for 5 min until the user has consented
 const askUserPermission = (options={ debug:false }) => askQuestion(info('We need access to your Google Cloud Platform account to proceed further. Do you want to proceed? [y/n] '))
@@ -120,7 +123,7 @@ const askUserPermission = (options={ debug:false }) => askQuestion(info('We need
 			if (debug)
 				console.log(debugInfo('Starting server to process response from GCP consent page...'))
 
-			return startServer()
+			return startServer(options)
 				.then(port => {
 					if (debug)
 						console.log(debugInfo(`Server successfully started. Listening on port ${port} and waiting for user's consent...`))
