@@ -9,6 +9,7 @@ const fetch = require('node-fetch')
 const { error } = require('./console')
 
 const getData = (url, headers={}, options={ verbose:true }) => Promise.resolve(null).then(() => {
+	if (options.verbose === undefined) options.verbose = true
 	return fetch(url, { method: 'GET', headers })
 		.then(res => res.json().then(data => ({ status: res.status, data })))
 		.then(res => {
@@ -23,7 +24,23 @@ const getData = (url, headers={}, options={ verbose:true }) => Promise.resolve(n
 })
 
 const postData = (url, headers={}, body, options={ verbose:true }) => Promise.resolve(null).then(() => {
+	if (options.verbose === undefined) options.verbose = true
 	return fetch(url, { method: 'POST', headers, body })
+		.then(res => res.json().then(data => ({ status: res.status, data })))
+		.then(res => {
+			if (res && res.data && res.data.error) {
+				const e = JSON.stringify(Object.assign(res.data.error, { status: res.status }), null, '  ')
+				if (options.verbose)
+					console.log(error(' ', e))
+				throw new Error(e)
+			} else
+				return res
+		})
+})
+
+const patchData = (url, headers={}, body, options={ verbose:true }) => Promise.resolve(null).then(() => {
+	if (options.verbose === undefined) options.verbose = true
+	return fetch(url, { method: 'PATCH', headers, body })
 		.then(res => res.json().then(data => ({ status: res.status, data })))
 		.then(res => {
 			if (res && res.data && res.data.error) {
@@ -38,5 +55,6 @@ const postData = (url, headers={}, body, options={ verbose:true }) => Promise.re
 
 module.exports = {
 	'get': getData,
-	post: postData
+	post: postData,
+	patch: patchData
 }

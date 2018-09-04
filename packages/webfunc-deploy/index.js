@@ -36,7 +36,7 @@ program
 	.usage('Switch to another project in your current cloud account (i.e., either Google Cloud or AWS). ')
 	.option('-d, --debug', 'Show debugging messages.')
 	.action((options) => {
-		return project.updateCurrent(options)
+		return project.updateCurrent(options).then(() => process.exit(1))
 	})
 
 program

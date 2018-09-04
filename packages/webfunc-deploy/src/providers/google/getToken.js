@@ -152,7 +152,7 @@ const askUserPermission = (options={ debug:false }) => askQuestion(info('We need
 
 const getUpToDateCreds = (creds, options={ debug:false }) => {
 	const { debug } = options || {}
-	if (Date.now() < creds.expiresAt) {
+	if ((Date.now() + 5 * 60 * 1000) < creds.expiresAt) {
 		if (debug)
 			console.log(debugInfo('The OAuth token is still valid. No need to refresh it.'))
 		return Promise.resolve(creds)

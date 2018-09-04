@@ -1,7 +1,15 @@
 
+# Rolling Back
+- Browse to [https://console.cloud.google.com/appengine/versions?project=neapers-92845&serviceId=web-api](https://console.cloud.google.com/appengine/versions?project=neapers-92845&serviceId=web-api).
+- Select your version.
+- Click the __MIGRATE TRAFFIC__ button.
+
 # How To
 ## How to deploy a nodejs to App Engine?
 - [Deploying Your Apps with the Admin API](https://cloud.google.com/appengine/docs/admin-api/deploying-overview)
+
+## How to swap traffic between versions?
+- [Migrating and Splitting Traffic with the Admin API](https://cloud.google.com/appengine/docs/admin-api/migrating-splitting-traffic)
 
 ## How to build an app.yaml or an app.json file?
 ### General

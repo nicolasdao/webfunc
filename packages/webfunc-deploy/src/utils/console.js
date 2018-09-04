@@ -31,6 +31,7 @@ const highlight = text => bold.underline(text)
 const info = (...msgs) => `${gray('>')} ${msgs.join('\n')}`
 const debugInfo = (...msgs) => `${green('> DEBUG')} ${msgs.join('\n')}`
 const success = info
+const question = info
 const cmd = text => `${gray('`')}${cyan(text)}${gray('`')}`
 const link = text => underline(text)
 const aborted = msg => `${red('> Aborted!')} ${msg}`
@@ -46,7 +47,21 @@ const error = (...input) => {
 		}
 	}
 
-	return `${red('> Error!')} ${messages.join('\n')}`
+	return `${red('> ERROR!')} ${messages.join('\n')}`
+}
+const warn = (...input) => {
+	let messages = input
+
+	if (typeof input[0] === 'object') {
+		const {slug, message} = input[0]
+		messages = [ message ]
+
+		if (slug) {
+			messages.push(`> More details: https://webfunc/${slug}`)
+		}
+	}
+
+	return `${red('> WARN!')} ${messages.join('\n')}`
 }
 
 const askQuestion = question => {
@@ -180,5 +195,7 @@ module.exports = {
 	link,
 	promptList,
 	success,
-	wait
+	wait,
+	question,
+	warn
 }

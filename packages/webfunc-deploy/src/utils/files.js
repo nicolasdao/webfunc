@@ -7,15 +7,16 @@
 */
 const _fs = require('fs')
 const fs = require('fs-extra')
-const { join, sep } = require('path')
+const { join, basename } = require('path')
 const { homedir } = require('os')
 const _glob = require('glob')
 const archiver = require('archiver')
 const { toBuffer } = require('convert-stream')
-const { error, exec, debugInfo, cmd } = require('./console')
+const { error, exec, debugInfo, cmd, bold, link } = require('./console')
 
 const TEMP_FOLDER = join(homedir(), 'temp/webfunc')
-const FILES_BLACK_LIST = [/\.DS_Store$/]
+const FILES_BLACK_LIST = ['.DS_Store']
+const FILES_REQUIRED_LIST = ['package.json', 'app.js']
 
 const createTempFolder = () => fs.ensureDir(TEMP_FOLDER)
 	.catch(() => {
@@ -37,8 +38,14 @@ const cloneNodejsProject = (src='', options={ debug:false, build:false }) => cre
 		console.log(debugInfo(`Copying content of folder \n${src} \nto temporary location \n${dst}`))
 
 	return glob(join(src, '**/*.*'), { ignore: '**/node_modules/**' }).then(files => glob(join(src, '**/.*'), { ignore: '**/node_modules/**' }).then(dot_files => {
-		const all_files = [...(files || []), ...(dot_files || [])].filter(f => !FILES_BLACK_LIST.some(ff => f.match(ff)))
+		const all_files = [...(files || []), ...(dot_files || [])].filter(f => !FILES_BLACK_LIST.some(file => basename(f) == file))
 		const filesCount = all_files.length
+
+		const missingFiles = FILES_REQUIRED_LIST.filter(file => !all_files.some(f => basename(f) == file))
+		if (missingFiles.length > 0) {
+			console.log(error(`Invalid nodejs project. To deploy the project located under ${link(src)} to Google App Engine, you need to add the following missing files: ${missingFiles.map(x => bold(x)).join(', ')}`))
+			throw new Error('Invalid nodejs project.')
+		}
 		
 		if (debug)
 			console.log(debugInfo(`Found ${all_files.length} files under folder \n${src}\nCopying them now...`))
@@ -125,7 +132,6 @@ const zipFolderToBuffer = (src, options={ debug:false }) => fs.exists(src).then(
 		throw err
 	})
 
-	const despath = (src.split(sep).slice(-1) || [])[0]
 	archive.directory(src, '/')
 	archive.finalize()
 	return buffer

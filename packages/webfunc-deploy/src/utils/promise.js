@@ -8,18 +8,19 @@
 
 const delay = timeout => new Promise(onSuccess => setTimeout(onSuccess, timeout))
 
-const wait = (stopWaiting, timeout=300000, start) => Promise.resolve(null).then(() => {
+const wait = (stopWaiting, options) => Promise.resolve(null).then(() => {
 	const now = Date.now()
-	if (!start)
-		start = now
+	const { timeout=300000, start=now, interval=2000 } = options || {}
 	
 	if ((now - start) > timeout)
 		throw new Error('timeout')
 	
-	if (stopWaiting())
-		return
-	else
-		return delay(2000).then(() => wait(stopWaiting, timeout, start))
+	return Promise.resolve(null).then(() => stopWaiting()).then(stop => {
+		if (stop)
+			return
+		else
+			return delay(interval).then(() => wait(stopWaiting, { timeout, start, interval }))
+	})
 })
 
 const check = (request, verify, interval=4000, timeOut=300000) => request().then(resp => Promise.resolve(verify(resp)).then(result => {

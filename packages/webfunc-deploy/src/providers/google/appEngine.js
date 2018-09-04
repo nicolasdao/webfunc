@@ -26,26 +26,8 @@ const create = (options={ debug:false }) => Promise.resolve(null).then(() => {
 				}
 			}
 		}
-		return gcp.app.deploy(app, projectId, token, options).then(({ data }) => {
-			const operationId = data.operationId
-			console.log(info('Deployment started...'))
-			return gcp.app.getOperationStatus(operationId, projectId, token, options).then(({ data }) => {
-				console.log('CHECK STATUS: ', data)
-				return promise.delay(5000)
-					.then(() => gcp.app.getOperationStatus(operationId, projectId, token, options))
-			}).then(({ data }) => {
-				console.log('CHECK STATUS: ', data)
-				return promise.delay(5000)
-					.then(() => gcp.app.getOperationStatus(operationId, projectId, token, options))
-			}).then(({ data }) => {
-				console.log('CHECK STATUS: ', data)
-				return promise.delay(5000)
-					.then(() => gcp.app.getOperationStatus(operationId, projectId, token, options))
-			}).then(({ data }) => {
-				console.log('CHECK STATUS: ', data)
-				return promise.delay(5000)
-					.then(() => gcp.app.getOperationStatus(operationId, projectId, token, options))
-			})
+		return gcp.app.listServiceVersions('web-api', projectId, token, options).then(({ data }) => {
+			console.log(data)
 		})
 	}).catch(e => {
 		console.log(error('Deployment failed!', e.message, e.stack))
@@ -65,20 +47,32 @@ const create = (options={ debug:false }) => Promise.resolve(null).then(() => {
 
 // const update = 
 
-// git clone https://github.com/GoogleCloudPlatform/nodejs-getting-started.git $TUTORIALDIR
-
+// cp.8508563561489435884
 const options = { debug: true }
 utils.project.confirm(options)
-	.then(({ token, projectId }) => gcp.app.getOperationStatus('ceb1454c-cea8-44fb-bc48-8c563693f5fc', projectId, token, options))
+	.then(({ token, projectId }) => gcp.project.billing.isEnabled(projectId, token, options)).then(r => {
+		if (r)
+			console.log('BILLING OK')
+		else
+			console.log('BILLING KO')
+		return { data: {} }
+	})
+	// .then(({ token, projectId }) => gcp.project.get('neapers-92845', token, { debug: true, verbose: false }))
+	// .then(({ token, projectId }) => gcp.app.getOperationStatus(projectId, '8508563561489435884', token, options))
+	//.then(({ token, projectId }) => gcp.app.service.version.migrateAllTraffic('web-api', 'v8', projectId, token, options))
+	//.then(({ token, projectId }) => gcp.app.domain.list(projectId, token, options))
 	.then(({ data }) => {
 		console.log(data)
+	})
+	.catch(e => {
+		console.log(error('Boom'), e.message, e.stack)
 	})
 
 //create({ debug:true })
 
 // const options = { debug: true }
 // utils.project.confirm(options)
-// 	.then(({ token, projectId }) => gcp.app.getOperationStatus('7489a7c8-5047-487a-94f7-3a2810727310', projectId, token, options))
+// 	.then(({ token, projectId }) => gcp.app.getOperationStatus(projectId, '7489a7c8-5047-487a-94f7-3a2810727310', token, options))
 // 	.then(({ data }) => {
 // 		console.log(data)
 // 	})

@@ -8,22 +8,29 @@
 const opn = require('opn')
 const { encode: encodeQuery, stringify: formUrlEncode } = require('querystring')
 const fetch = require('../../utils/fetch')
-const { info, highlight, cmd, link, debugInfo, bold } = require('../../utils/console')
-const { promise } = require('../../utils/index')
+const { info, highlight, cmd, link, debugInfo, bold, error } = require('../../utils/console')
+const { promise, identity } = require('../../utils/index')
 
 // OAUTH
 const OAUTH_TOKEN_URL = () => 'https://www.googleapis.com/oauth2/v4/token'
 const GCP_CONSENT_PAGE = query => `https://accounts.google.com/o/oauth2/v2/auth?${query}`
 // RESOURCE MANAGER
-const LIST_PROJECTS_URL = () => 'https://cloudresourcemanager.googleapis.com/v1/projects'
+const PROJECTS_URL = (projectId) => `https://cloudresourcemanager.googleapis.com/v1/projects${projectId ? `/${projectId}` : ''}`
+// BILLING
+const BILLING_PAGE = projectId => `https://console.cloud.google.com/billing/linkedaccount?project=${projectId}&folder&organizationId`
+const BILLING_INFO_URL = projectId => `https://cloudbilling.googleapis.com/v1/projects/${projectId}/billingInfo`
 // BUCKET
 const CREATE_BUCKET_URL = projectId => `https://www.googleapis.com/storage/v1/b?project=${projectId}`
 const UPLOAD_TO_BUCKET_URL = (bucketName, fileName, projectId) => `https://www.googleapis.com/upload/storage/v1/b/${encodeURIComponent(bucketName)}/o?uploadType=media&name=${encodeURIComponent(fileName)}&project=${encodeURIComponent(projectId)}`
 // APP ENGINE
 const APP_DETAILS_URL = projectId => `https://appengine.googleapis.com/v1/apps/${projectId}`
 const CREATE_APP_URL = () => 'https://appengine.googleapis.com/v1/apps'
-const DEPLOY_APP_URL = projectId => `https://appengine.googleapis.com/v1/apps/${projectId}/services/default/versions`
+const APP_SERVICE_URL = (projectId, service) => `https://appengine.googleapis.com/v1/apps/${projectId}/services/${service}`
+const APP_SERVICE_VERSION_URL = (projectId, service, version) => `${APP_SERVICE_URL(projectId, service)}/versions${version ? `/${version}` : ''}`
+const DEPLOY_APP_URL = (projectId, service='default') => APP_SERVICE_VERSION_URL(projectId, service)
 const OPS_STATUS_URL = (projectId, operationId) => `https://appengine.googleapis.com/v1/apps/${projectId}/operations/${operationId}`
+const MIGRATE_ALL_TRAFFIC = (projectId, service='default') => `https://appengine.googleapis.com/v1/apps/${projectId}/services/${service}/?updateMask=split`
+const DOMAINS_URL = (projectId) => `https://appengine.googleapis.com/v1/apps/${projectId}/domainMappings`
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -135,7 +142,8 @@ const requestConsent = ({ client_id, redirect_uri, scope }, stopFn, timeout, opt
 		throw new Error(`Can't browse to consent screen from platform ${process.platform} (currently supported platforms: 'darwin', 'win32').`)
 	}
 })
-	.then(() => promise.wait(stopFn, timeout)) 
+	.then(() => promise.wait(stopFn, { timeout })) 
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -148,18 +156,118 @@ const requestConsent = ({ client_id, redirect_uri, scope }, stopFn, timeout, opt
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////
+//////											START - BILLING APIS
+//////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+const setUpProjectBilling = (projectId, stopFn, timeout=300000, options={ debug:false }) => Promise.resolve(null).then(() => {
+	validateRequiredParams({ projectId, stopFn, timeout })
+	showDebug('Opening default browser on the Google Cloud Platform project billing setup page.', options)
+	const billingPage = BILLING_PAGE(projectId)
+
+	if(process.platform === 'darwin' || process.platform === 'win32') 
+		opn(billingPage)
+	else {
+		console.log(info(
+			`We'll need you to enable billing on your ${highlight('Google Cloud Platform')} account for project ${bold(projectId)} in order to be able to deploy code on App Engine.`,
+			`Go to ${link(billingPage)} to enable billing.`
+		))
+		throw new Error(`Can't browse to the billing page from platform ${process.platform} (currently supported platforms: 'darwin', 'win32').`)
+	}
+})
+	.then(() => promise.wait(stopFn, { timeout, interval:10000 })) 
+
+const getProjectBillingInfo = (projectId, token, options={ debug:false }) => Promise.resolve(null).then(() => {
+	validateRequiredParams({ projectId, token })
+	showDebug('Requesting a project billing info from Google Cloud Platform.', options)
+
+	return fetch.get(BILLING_INFO_URL(projectId), {
+		Accept: 'application/json',
+		Authorization: `Bearer ${token}`
+	})
+})
+
+/**
+ * This API is a hack to test whether or not billing has been enabled on a project without having to 
+ * require access to the user's billing API. If the billing API fails with a '403 - The project to be billed is associated with an absent billing account.',
+ * then this means the billing is not enabled.
+ * @param  {[type]} projectId [description]
+ * @param  {[type]} token     [description]
+ * @param  {Object} options   [description]
+ * @return {[type]}           [description]
+ */
+const testBillingEnabled = (projectId, token, options={ debug:false }) => Promise.resolve(null).then(() => {
+	validateRequiredParams({ projectId, token })
+	showDebug('Testing if billing is enabled by creating a dummy bucket on Google Cloud Platform.', options)
+
+	return createBucket(`webfunc-bucket-healthcheck-${identity.new()}`.toLowerCase(), projectId, token, { debug: options.debug, verbose: false })
+		.then(() => true)
+		.catch(e => {
+			try {
+				const er = JSON.parse(e.message)
+				if (er.code == 403 && (er.message || '').toLowerCase().indexOf('absent billing account') >= 0)
+					return false
+				else
+					throw e	
+			} catch(_e) { (() => {
+				console.log(error(`Failed to determine whether or not billing is enabled on project ${bold(projectId)}. Go to ${link(BILLING_PAGE(projectId))} to enable billing in order to deploy code.`))
+				throw e
+			})(_e) }
+		})
+}) 
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////
+//////											END - BILLING APIS
+//////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////
 //////											START - PROJECT APIS
 //////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+const getProjects = (projectId, token, options={ debug:false, verbose:true }) => Promise.resolve(null).then(() => {
+	if (options.verbose === undefined) options.verbose = true
+	validateRequiredParams({ projectId, token })
+	showDebug('Requesting a project from Google Cloud Platform.', options)
+
+	return fetch.get(PROJECTS_URL(projectId), {
+		Accept: 'application/json',
+		Authorization: `Bearer ${token}`
+	}, { verbose: options.verbose })
+})
+
 const listProjects = (token, options={ debug:false }) => Promise.resolve(null).then(() => {
 	showDebug('Requesting a list of all projects from Google Cloud Platform.', options)
 	validateRequiredParams({ token })
 
-	return fetch.get(LIST_PROJECTS_URL(), {
+	return fetch.get(PROJECTS_URL(), {
 		Accept: 'application/json',
 		Authorization: `Bearer ${token}`
+	})
+})
+
+const createProject = (name, projectId, token, options={ debug:false }) => Promise.resolve(null).then(() => {
+	validateRequiredParams({ name, projectId, token })
+	showDebug(`Creating a new project on Google Cloud Platform called ${bold(name)} (id: ${bold(projectId)}).`, options)
+
+	return fetch.post(PROJECTS_URL(), {
+		Accept: 'application/json',
+		Authorization: `Bearer ${token}`
+	}, JSON.stringify({
+		name,
+		projectId
+	})).then(res => {
+		if (res.data && res.data.name)
+			res.data.operationId = res.data.name.split('/').slice(-1)[0]
+		return res
 	})
 })
 
@@ -179,14 +287,15 @@ const listProjects = (token, options={ debug:false }) => Promise.resolve(null).t
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-const createBucket = (name, projectId, token, options={ debug:false }) => Promise.resolve(null).then(() => {
+const createBucket = (name, projectId, token, options={ debug:false, verbose:true }) => Promise.resolve(null).then(() => {
+	if (options.verbose === undefined) options.verbose = true
 	validateRequiredParams({ name, token })
 	showDebug(`Creating a new bucket called ${bold(name)} in Google Cloud Platform's project ${bold(projectId)}.`, options)
 
 	return fetch.post(CREATE_BUCKET_URL(projectId), {
 		'Content-Type': 'application/json',
 		Authorization: `Bearer ${token}`
-	}, JSON.stringify({ name }))
+	}, JSON.stringify({ name }), options)
 		.then(res => {
 			if (res && res.status == 409)
 				showDebug(`Bucket ${bold(name)} already exists.`, options)
@@ -252,6 +361,16 @@ const getAppDetails = (projectId, token, options={ debug:false }) => Promise.res
 	return fetch.get(APP_DETAILS_URL(projectId), {
 		'Content-Type': 'application/json',
 		Authorization: `Bearer ${token}`
+	}, { verbose: false }).catch(e => {
+		try {
+			const er = JSON.parse(e.message)
+			if (er.code == 404)
+				return { status: 404, data: null }
+			/*eslint-disable */
+		} catch(err) {
+			/*eslint-enable */
+			throw e
+		}
 	})
 })
 
@@ -267,15 +386,20 @@ const createApp = (projectId, regionId, token, options={ debug:false }) => valid
 	JSON.stringify({ 
 		id: projectId,
 		locationId: regionId
-	}))
+	})).then(res => {
+		if (res.data && res.data.name)
+			res.data.operationId = res.data.name.split('/').slice(-1)[0]
+		return res
+	})
 })
 
-const deployApp = (source, token, options={ debug:false }) => Promise.resolve(null).then(() => {
+const deployApp = (source, service, token, options={ debug:false }) => Promise.resolve(null).then(() => {
 	const { bucket, zip } = source || {}
-	validateRequiredParams({ bucketName: bucket.name, projectId: bucket.projectId, zipName: zip.name, zipFilesCount: zip.filesCount, token })
+	const { name:serviceName='default' , version } = service || {}
+	validateRequiredParams({ bucketName: bucket.name, projectId: bucket.projectId, zipName: zip.name, zipFilesCount: zip.filesCount, version, token })
 
 	const appJson = {
-		id: 'v1',
+		id: version,
 		runtime: 'nodejs8',
 		deployment: {
 			zip: {
@@ -287,7 +411,7 @@ const deployApp = (source, token, options={ debug:false }) => Promise.resolve(nu
 
 	showDebug(`Deploying service to Google Cloud Platform's project ${bold(bucket.projectId)}.\n${JSON.stringify(appJson, null, ' ')}`, options)
 
-	return fetch.post(DEPLOY_APP_URL(bucket.projectId), {
+	return fetch.post(DEPLOY_APP_URL(bucket.projectId, serviceName), {
 		'Content-Type': 'application/json',
 		Authorization: `Bearer ${token}`
 	},
@@ -298,7 +422,7 @@ const deployApp = (source, token, options={ debug:false }) => Promise.resolve(nu
 	})
 })
 
-const checkOperationStatus = (operationId, projectId, token, options={ debug:false }) => Promise.resolve(null).then(() => {
+const checkOperationStatus = (projectId, operationId, token, options={ debug:false }) => Promise.resolve(null).then(() => {
 	validateRequiredParams({ operationId, projectId, token })
 	showDebug(`Requesting operation status from Google Cloud Platform's project ${bold(projectId)}.`, options)
 
@@ -315,6 +439,86 @@ const checkOperationStatus = (operationId, projectId, token, options={ debug:fal
 			return { status: 200, data: err }
 		else
 			throw e
+	})
+})
+
+// https://cloud.google.com/appengine/docs/admin-api/reference/rest/v1/apps.services.versions/list
+const listServiceVersions = (projectId, service, token, options={ debug:false }) => Promise.resolve(null).then(() => {
+	validateRequiredParams({ service, projectId, token })
+	showDebug(`Requesting list of all version for service ${bold(service)} Google Cloud Platform's App Engine ${bold(projectId)}.`, options)
+
+	return fetch.get(APP_SERVICE_VERSION_URL(projectId, service) + '?pageSize=200', {
+		'Content-Type': 'application/json',
+		Authorization: `Bearer ${token}`
+	})
+})
+
+const getServiceVersion = (projectId, service, version, token, options={ debug:false }) => Promise.resolve(null).then(() => {
+	validateRequiredParams({ service, projectId, version, token })
+	showDebug(`Requesting version ${bold(version)} from service ${bold(service)} for Google Cloud Platform's App Engine ${bold(projectId)}.`, options)
+
+	return fetch.get(APP_SERVICE_VERSION_URL(projectId, service, version), {
+		'Content-Type': 'application/json',
+		Authorization: `Bearer ${token}`
+	})
+})
+
+const getService = (projectId, service, token, options={ debug:false }) => Promise.resolve(null).then(() => {
+	validateRequiredParams({ service, projectId, token })
+	showDebug(`Requesting service ${bold(service)} for Google Cloud Platform's App Engine ${bold(projectId)}.`, options)
+
+	return fetch.get(APP_SERVICE_URL(projectId, service), {
+		'Content-Type': 'application/json',
+		Authorization: `Bearer ${token}`
+	})
+})
+
+// https://cloud.google.com/appengine/docs/admin-api/reference/rest/v1/apps.domainMappings/list
+const listDomains = (projectId, token, options={ debug:false }) => Promise.resolve(null).then(() => {
+	validateRequiredParams({ projectId, token })
+	showDebug(`Requesting all the domains for Google Cloud Platform's project ${bold(projectId)}.`, options)
+
+	return fetch.get(DOMAINS_URL(projectId), {
+		'Content-Type': 'application/json',
+		Authorization: `Bearer ${token}`
+	})
+})
+
+// https://cloud.google.com/appengine/docs/admin-api/reference/rest/v1/apps.services.versions/delete
+// const deleteServiceVersion = (operationId, projectId, token, options={ debug:false }) => Promise.resolve(null).then(() => {
+// 	validateRequiredParams({ operationId, projectId, token })
+// 	showDebug(`Requesting operation status from Google Cloud Platform's project ${bold(projectId)}.`, options)
+
+// 	return fetch.get(OPS_STATUS_URL(projectId, operationId), {
+// 		'Content-Type': 'application/json',
+// 		Authorization: `Bearer ${token}`
+// 	}, { verbose: false }).catch(e => {
+// 		let err 
+// 		try {
+// 			err = JSON.parse(e.message)
+// 		} catch(er) { err = e }
+
+// 		if (err.status == 200) 
+// 			return { status: 200, data: err }
+// 		else
+// 			throw e
+// 	})
+// })
+
+const migrateAllTraffic = (projectId, service, version, token, options={ debug:false }) => Promise.resolve(null).then(() => {
+	validateRequiredParams({ service, version, projectId, token })
+	showDebug(`Requesting operation status from Google Cloud Platform's project ${bold(projectId)}.`, options)
+
+	let allocations = {}
+	allocations[version] = 1
+
+	return fetch.patch(MIGRATE_ALL_TRAFFIC(projectId, service), {
+		'Content-Type': 'application/json',
+		Authorization: `Bearer ${token}`
+	}, JSON.stringify({ split: { allocations } })).then(res => {
+		if (res.data && res.data.name)
+			res.data.operationId = res.data.name.split('/').slice(-1)[0]
+		return res
 	})
 })
 
@@ -335,7 +539,14 @@ module.exports = {
 		request: requestConsent
 	},
 	project: {
-		list: listProjects
+		'get': getProjects,
+		list: listProjects, 
+		create: createProject,
+		billing: {
+			'get': getProjectBillingInfo,
+			isEnabled: testBillingEnabled,
+			enable: setUpProjectBilling
+		}
 	},
 	bucket: {
 		create: createBucket,
@@ -346,7 +557,18 @@ module.exports = {
 		create: createApp,
 		getRegions: getAppRegions,
 		deploy: deployApp,
-		getOperationStatus: checkOperationStatus
+		getOperationStatus: checkOperationStatus,
+		service: {
+			'get': getService,
+			version: {
+				list: listServiceVersions,
+				migrateAllTraffic: migrateAllTraffic,
+				'get': getServiceVersion
+			}
+		},
+		domain: {
+			list: listDomains
+		}
 	}
 }
 
