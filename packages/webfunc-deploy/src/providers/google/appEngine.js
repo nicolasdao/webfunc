@@ -50,19 +50,19 @@ const create = (options={ debug:false }) => Promise.resolve(null).then(() => {
 // cp.8508563561489435884
 const options = { debug: true }
 utils.project.confirm(options)
-	.then(({ token, projectId }) => gcp.project.billing.isEnabled(projectId, token, options)).then(r => {
-		if (r)
-			console.log('BILLING OK')
-		else
-			console.log('BILLING KO')
-		return { data: {} }
-	})
-	// .then(({ token, projectId }) => gcp.project.get('neapers-92845', token, { debug: true, verbose: false }))
+	// .then(({ token, projectId }) => gcp.project.billing.isEnabled(projectId, token, options)).then(r => {
+	// 	if (r)
+	// 		console.log('BILLING OK')
+	// 	else
+	// 		console.log('BILLING KO')
+	// 	return { data: {} }
+	// })
+	.then(({ token, projectId }) => gcp.project.get('neapers-92845www', token, { debug: true, verbose: false }))
 	// .then(({ token, projectId }) => gcp.app.getOperationStatus(projectId, '8508563561489435884', token, options))
 	//.then(({ token, projectId }) => gcp.app.service.version.migrateAllTraffic('web-api', 'v8', projectId, token, options))
 	//.then(({ token, projectId }) => gcp.app.domain.list(projectId, token, options))
 	.then(({ data }) => {
-		console.log(data)
+		console.log('RESULT: ', data)
 	})
 	.catch(e => {
 		console.log(error('Boom'), e.message, e.stack)

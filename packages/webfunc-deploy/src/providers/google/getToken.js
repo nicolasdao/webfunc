@@ -21,6 +21,11 @@ const SCOPES = [
 const PORTS = [8085, 8086, 8087, 8088, 8089, 8090, 8091]
 
 const saveGoogleCredentials = creds => authConfig.get().then(config => {
+	config.google = creds
+	return authConfig.update(config)
+})
+
+const updateGoogleCredentials = creds => authConfig.get().then(config => {
 	config.google = Object.assign(config.google || {}, creds)
 	return authConfig.update(config)
 })
@@ -180,7 +185,7 @@ const getUpToDateCreds = (creds, options={ debug:false }) => {
 				expiresAt: now.setSeconds(now.getSeconds() + data.expires_in)
 			}
 
-			return saveGoogleCredentials(credentials).then(() => credentials)
+			return updateGoogleCredentials(credentials).then(() => credentials)
 		}
 	})
 }

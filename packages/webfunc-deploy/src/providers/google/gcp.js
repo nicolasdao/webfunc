@@ -201,7 +201,8 @@ const testBillingEnabled = (projectId, token, options={ debug:false }) => Promis
 	validateRequiredParams({ projectId, token })
 	showDebug('Testing if billing is enabled by creating a dummy bucket on Google Cloud Platform.', options)
 
-	return createBucket(`webfunc-bucket-healthcheck-${identity.new()}`.toLowerCase(), projectId, token, { debug: options.debug, verbose: false })
+	const bucketName = `webfunc-bucket-healthcheck-${identity.new()}`.toLowerCase()
+	return createBucket(bucketName, projectId, token, { debug: options.debug, verbose: false })
 		.then(() => true)
 		.catch(e => {
 			try {
@@ -233,15 +234,26 @@ const testBillingEnabled = (projectId, token, options={ debug:false }) => Promis
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-const getProjects = (projectId, token, options={ debug:false, verbose:true }) => Promise.resolve(null).then(() => {
-	if (options.verbose === undefined) options.verbose = true
+const getProjects = (projectId, token, options={ debug:false, verbose:false }) => Promise.resolve(null).then(() => {
+	const opts = Object.assign({ debug:false, verbose:false }, options)
 	validateRequiredParams({ projectId, token })
-	showDebug('Requesting a project from Google Cloud Platform.', options)
+	showDebug('Requesting a project from Google Cloud Platform.', opts)
 
 	return fetch.get(PROJECTS_URL(projectId), {
 		Accept: 'application/json',
 		Authorization: `Bearer ${token}`
-	}, { verbose: options.verbose })
+	}, { verbose: opts.verbose })
+	.catch(e => {
+		try {
+			const er = JSON.parse(e.message)
+			if (er.code == 403 || er.code == 404)
+				return { status: er.code, data: null, message: er.message }
+			else
+				throw e
+		} catch(_e) {(() => {
+			throw e
+		})(_e)}
+	})
 })
 
 const listProjects = (token, options={ debug:false }) => Promise.resolve(null).then(() => {
@@ -288,17 +300,17 @@ const createProject = (name, projectId, token, options={ debug:false }) => Promi
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 const createBucket = (name, projectId, token, options={ debug:false, verbose:true }) => Promise.resolve(null).then(() => {
-	if (options.verbose === undefined) options.verbose = true
+	const opts = Object.assign({ debug:false, verbose:true }, options)
 	validateRequiredParams({ name, token })
-	showDebug(`Creating a new bucket called ${bold(name)} in Google Cloud Platform's project ${bold(projectId)}.`, options)
+	showDebug(`Creating a new bucket called ${bold(name)} in Google Cloud Platform's project ${bold(projectId)}.`, opts)
 
 	return fetch.post(CREATE_BUCKET_URL(projectId), {
 		'Content-Type': 'application/json',
 		Authorization: `Bearer ${token}`
-	}, JSON.stringify({ name }), options)
+	}, JSON.stringify({ name }), opts)
 		.then(res => {
 			if (res && res.status == 409)
-				showDebug(`Bucket ${bold(name)} already exists.`, options)
+				showDebug(`Bucket ${bold(name)} already exists.`, opts)
 			return res
 		})
 })
@@ -483,27 +495,6 @@ const listDomains = (projectId, token, options={ debug:false }) => Promise.resol
 		Authorization: `Bearer ${token}`
 	})
 })
-
-// https://cloud.google.com/appengine/docs/admin-api/reference/rest/v1/apps.services.versions/delete
-// const deleteServiceVersion = (operationId, projectId, token, options={ debug:false }) => Promise.resolve(null).then(() => {
-// 	validateRequiredParams({ operationId, projectId, token })
-// 	showDebug(`Requesting operation status from Google Cloud Platform's project ${bold(projectId)}.`, options)
-
-// 	return fetch.get(OPS_STATUS_URL(projectId, operationId), {
-// 		'Content-Type': 'application/json',
-// 		Authorization: `Bearer ${token}`
-// 	}, { verbose: false }).catch(e => {
-// 		let err 
-// 		try {
-// 			err = JSON.parse(e.message)
-// 		} catch(er) { err = e }
-
-// 		if (err.status == 200) 
-// 			return { status: 200, data: err }
-// 		else
-// 			throw e
-// 	})
-// })
 
 const migrateAllTraffic = (projectId, service, version, token, options={ debug:false }) => Promise.resolve(null).then(() => {
 	validateRequiredParams({ service, version, projectId, token })

@@ -23,7 +23,7 @@ const getProjects = (options={ debug:false, show:false }) => getToken({ debug: (
 	}
 
 	return gcp.project.list(token, options).then(({ data }) => {
-		const projects = ((data || {}).projects || []).map(p => ({
+		const projects = ((data || {}).projects || []).filter(p => p && p.lifecycleState == 'ACTIVE').map(p => ({
 			name: `${p.name} (${p.projectId})`,
 			value: p.projectId,
 			short: p.name				
@@ -31,11 +31,6 @@ const getProjects = (options={ debug:false, show:false }) => getToken({ debug: (
 
 		if (debug)
 			console.log(debugInfo(`Projects successfully retrieved. Found ${projects.length} projects.`))
-
-		if (projects.length == 0) {
-			console.log(error(`The current Google Cloud Account does not have any project yet. Login to ${link('https://console.cloud.google.com/')} and create at least one project then try again.`))
-			process.exit(1)
-		}
 
 		if (show) {
 			if (projects.length == 0)
@@ -153,33 +148,35 @@ const createNewProject = (token, options={ debug:false }) => {
 				// 3. Enable billing
 				.then(() => {
 					console.log(info(`You must enable billing before you can deploy code to ${bold(projectId)}`))
-					return askQuestion(question('Do you want to enable billing now (Y/n)?')).then(answer => {
-						if (answer == 'n') {
-							console.log(warn(`Though your project has been successfully created, you won't be able to deploy any code until billing is enabled.\nThis is a Google Cloud policy (more info at ${link('https://support.google.com/cloud/answer/6158867')}).\nTo enable billing on project ${bold(projectId)}, browse to ${link(`https://console.cloud.google.com/billing/linkedaccount?project=${projectId}&folder&organizationId`)}.`))
-							return projectId
-						}
-						const instructionDone = wait(`You're going to be redirected to your Google Cloud Platform account in a few seconds.\nOnce you've enabled billing for project ${bold(projectId)}, come back here to finalize the process.`)
-						let billingDone
-						return promise.delay(8000).then(() => {
-							instructionDone()
-							billingDone = wait(`Waiting for confirmation that billing has been enabled for project ${bold(projectId)}`)
-							return gcp.project.billing.enable(projectId, () => gcp.project.billing.isEnabled(projectId, token, options), 600000, options)
-						})
-							.then(() => {
-								billingDone()
-								console.log(success(`Billing successfully enabled. You're ready to deploy code.`))
-								return projectId
-							})
-							.catch(e => {
-								billingDone()
-								console.log(error(e.message, e.stack))
-								throw e
-							})
-					})
+					return enableBilling(projectId, token, options)
 				})
 		})
 	})
 }
+
+const enableBilling = (projectId, token, options) => askQuestion(question('Do you want to enable billing now (Y/n)?')).then(answer => {
+	if (answer == 'n') {
+		console.log(warn(`Though your project has been successfully created, you won't be able to deploy any code until billing is enabled.\nThis is a Google Cloud policy (more info at ${link('https://support.google.com/cloud/answer/6158867')}).\nTo enable billing on project ${bold(projectId)}, browse to ${link(`https://console.cloud.google.com/billing/linkedaccount?project=${projectId}&folder&organizationId`)}.`))
+		return projectId
+	}
+	const instructionDone = wait(`You're going to be redirected to your Google Cloud Platform account in a few seconds.\nOnce you've enabled billing for project ${bold(projectId)}, come back here to finalize the process.`)
+	let billingDone
+	return promise.delay(8000).then(() => {
+		instructionDone()
+		billingDone = wait(`Waiting for confirmation that billing has been enabled for project ${bold(projectId)}`)
+		return gcp.project.billing.enable(projectId, () => gcp.project.billing.isEnabled(projectId, token, options), 600000, options)
+	})
+		.then(() => {
+			billingDone()
+			console.log(success('Billing successfully enabled. You\'re ready to deploy code.'))
+			return projectId
+		})
+		.catch(e => {
+			billingDone()
+			console.log(error(e.message, e.stack))
+			throw e
+		})
+})
 
 module.exports = {
 	getAll: getProjects,
