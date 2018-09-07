@@ -20,13 +20,17 @@ const SCOPES = [
 ]
 const PORTS = [8085, 8086, 8087, 8088, 8089, 8090, 8091]
 
-const saveGoogleCredentials = creds => authConfig.get().then(config => {
+const saveGoogleCredentials = (creds, debug) => authConfig.get().then(config => {
+	if (debug)
+		console.log(debugInfo(`Saving new Google credentials locally: ${JSON.stringify(creds)}`))
 	config.google = creds
 	return authConfig.update(config)
 })
 
-const updateGoogleCredentials = creds => authConfig.get().then(config => {
+const updateGoogleCredentials = (creds, debug) => authConfig.get().then(config => {
 	config.google = Object.assign(config.google || {}, creds)
+	if (debug)
+		console.log(debugInfo(`Updating new Google credentials locally: ${JSON.stringify(config.google)}`))
 	return authConfig.update(config)
 })
 
@@ -83,7 +87,7 @@ const retrieveAndStore_GCP_Credentials = (req, res) => Promise.resolve(null).the
 					expiresAt: now.setSeconds(now.getSeconds() + data.expires_in)
 				}
 
-				return saveGoogleCredentials(credentials).then(() => {
+				return saveGoogleCredentials(credentials, debug).then(() => {
 					setCredentialsRetrieved(true)
 					return
 				})
@@ -118,7 +122,7 @@ const startServer = (options={ debug:false }) => {
 }
 
 const CONSENT_TIMEOUT = 5 * 60 * 1000 // wait for 5 min until the user has consented
-const askUserPermission = (options={ debug:false }) => askQuestion(info('We need access to your Google Cloud Platform account to proceed further. Do you want to proceed? [y/n] '))
+const askUserPermission = (options={ debug:false }) => askQuestion(info('We need access to your Google Cloud Platform account to proceed further. Do you want to proceed (Y/n)? '))
 	.then(answer => {
 		const { debug } = options
 		if (answer && answer.toLowerCase().trim() == 'n') {
@@ -185,7 +189,7 @@ const getUpToDateCreds = (creds, options={ debug:false }) => {
 				expiresAt: now.setSeconds(now.getSeconds() + data.expires_in)
 			}
 
-			return updateGoogleCredentials(credentials).then(() => credentials)
+			return updateGoogleCredentials(credentials, debug).then(() => credentials)
 		}
 	})
 }

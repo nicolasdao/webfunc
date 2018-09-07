@@ -104,7 +104,10 @@ const enterProjectName = () => askQuestion(question('Enter a project name: ')).t
 	if (!projectName) {
 		console.log(info('The project name is required.'))
 		return enterProjectName()
-	} else
+	} else if (projectName.replace(/\s/g,'').length < 5) {
+		console.log(info('The project name must contain at least 5 characters excluding spaces.'))
+		return enterProjectName()
+	} else 
 		return projectName
 })
 
@@ -115,7 +118,7 @@ const createNewProject = (token, options={ debug:false }) => {
 	}
 	// 1. Collect input from user
 	return enterProjectName().then(projectName => {
-		const projectId = `${projectName.toLowerCase().trim().replace(/\s+/g,'-')}-${identity.new()}`.toLowerCase()
+		const projectId = `${projectName.toLowerCase().trim().replace(/\s+/g,'-')}-${identity.new({ short: true })}`.toLowerCase()
 		return askQuestion(question(`Are you sure you want to create a new project called ${bold(projectName)} (id: ${bold(projectId)}) (Y/n)? `)).then(answer => {
 			if (answer == 'n')
 				process.exit(1)
@@ -146,43 +149,51 @@ const createNewProject = (token, options={ debug:false }) => {
 					throw e
 				})
 				// 3. Enable billing
-				.then(() => {
-					console.log(info(`You must enable billing before you can deploy code to ${bold(projectId)}`))
-					return enableBilling(projectId, token, options)
-				})
+				.then(() => enableBilling(projectId, token, options).then(res => res.projectId))
 		})
 	})
 }
 
-const enableBilling = (projectId, token, options) => askQuestion(question('Do you want to enable billing now (Y/n)?')).then(answer => {
-	if (answer == 'n') {
-		console.log(warn(`Though your project has been successfully created, you won't be able to deploy any code until billing is enabled.\nThis is a Google Cloud policy (more info at ${link('https://support.google.com/cloud/answer/6158867')}).\nTo enable billing on project ${bold(projectId)}, browse to ${link(`https://console.cloud.google.com/billing/linkedaccount?project=${projectId}&folder&organizationId`)}.`))
-		return projectId
-	}
-	const instructionDone = wait(`You're going to be redirected to your Google Cloud Platform account in a few seconds.\nOnce you've enabled billing for project ${bold(projectId)}, come back here to finalize the process.`)
-	let billingDone
-	return promise.delay(8000).then(() => {
-		instructionDone()
-		billingDone = wait(`Waiting for confirmation that billing has been enabled for project ${bold(projectId)}`)
-		return gcp.project.billing.enable(projectId, () => gcp.project.billing.isEnabled(projectId, token, options), 600000, options)
+const enableBilling = (projectId, token, options) => {
+	console.log(info(`You must enable billing before you can deploy code to ${bold(projectId)}`))
+	return askQuestion(question('Do you want to enable billing now (Y/n)?')).then(answer => {
+		if (answer == 'n') {
+			console.log(warn(`You won't be able to deploy any code until billing is enabled.\nThis is a Google Cloud policy (more info at ${link('https://support.google.com/cloud/answer/6158867')}).\nTo enable billing on project ${bold(projectId)}, browse to ${link(`https://console.cloud.google.com/billing/linkedaccount?project=${projectId}&folder&organizationId`)}.`))
+			return { projectId, answer }
+		}
+		const instructionDone = wait('Redirecting you to your Google Account to enable billing.\nCome back here when it\'s done')
+		return promise.delay(6000)
+			.then(() => {
+				instructionDone()
+				return gcp.project.billing.goToSetupPage(projectId, options)
+					.then(billingPage => askQuestion(question(`Great to see you back. Have you enabled billing on project ${bold(projectId)} (Y/n)? `)).then(answer => ({ billingPage, answer })))
+			})
+			.then(({ billingPage, answer }) => {
+				if (answer == 'n') {
+					console.log(warn(`Not enabling billing on project ${bold(projectId)} will prevent to deploy any code to its App Engine.`))
+					console.log(info(`To enable billing, go to ${link(billingPage)}`))
+					return askQuestion(question('Are you sure you want to continue (Y/n)? '))
+						.then(a => {
+							if (a == 'n')
+								process.exit(1)
+						})
+				}
+				return answer
+			})
+			.then(answer => ({ projectId, answer }))
+			.catch(e => {
+				console.log(error(e.message, e.stack))
+				throw e
+			})
 	})
-		.then(() => {
-			billingDone()
-			console.log(success('Billing successfully enabled. You\'re ready to deploy code.'))
-			return projectId
-		})
-		.catch(e => {
-			billingDone()
-			console.log(error(e.message, e.stack))
-			throw e
-		})
-})
+}
 
 module.exports = {
 	getAll: getProjects,
 	current: getCurrentProject,
 	updateCurrent: updateCurrentProject,
-	create: createNewProject
+	create: createNewProject,
+	enableBilling
 }
 
 

@@ -25,7 +25,7 @@ const UPLOAD_TO_BUCKET_URL = (bucketName, fileName, projectId) => `https://www.g
 // APP ENGINE
 const APP_DETAILS_URL = projectId => `https://appengine.googleapis.com/v1/apps/${projectId}`
 const CREATE_APP_URL = () => 'https://appengine.googleapis.com/v1/apps'
-const APP_SERVICE_URL = (projectId, service) => `https://appengine.googleapis.com/v1/apps/${projectId}/services/${service}`
+const APP_SERVICE_URL = (projectId, service) => `https://appengine.googleapis.com/v1/apps/${projectId}/services${service ? `/${service}` : ''}`
 const APP_SERVICE_VERSION_URL = (projectId, service, version) => `${APP_SERVICE_URL(projectId, service)}/versions${version ? `/${version}` : ''}`
 const DEPLOY_APP_URL = (projectId, service='default') => APP_SERVICE_VERSION_URL(projectId, service)
 const OPS_STATUS_URL = (projectId, operationId) => `https://appengine.googleapis.com/v1/apps/${projectId}/operations/${operationId}`
@@ -163,6 +163,11 @@ const requestConsent = ({ client_id, redirect_uri, scope }, stopFn, timeout, opt
 
 const setUpProjectBilling = (projectId, stopFn, timeout=300000, options={ debug:false }) => Promise.resolve(null).then(() => {
 	validateRequiredParams({ projectId, stopFn, timeout })
+	return redirectToBillingPage(projectId, options)
+}).then(() => promise.wait(stopFn, { timeout, interval:10000 })) 
+
+const redirectToBillingPage = (projectId, options={ debug:false }) => Promise.resolve(null).then(() => {
+	validateRequiredParams({ projectId })
 	showDebug('Opening default browser on the Google Cloud Platform project billing setup page.', options)
 	const billingPage = BILLING_PAGE(projectId)
 
@@ -175,8 +180,9 @@ const setUpProjectBilling = (projectId, stopFn, timeout=300000, options={ debug:
 		))
 		throw new Error(`Can't browse to the billing page from platform ${process.platform} (currently supported platforms: 'darwin', 'win32').`)
 	}
+
+	return billingPage
 })
-	.then(() => promise.wait(stopFn, { timeout, interval:10000 })) 
 
 const getProjectBillingInfo = (projectId, token, options={ debug:false }) => Promise.resolve(null).then(() => {
 	validateRequiredParams({ projectId, token })
@@ -234,29 +240,34 @@ const testBillingEnabled = (projectId, token, options={ debug:false }) => Promis
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-const getProjects = (projectId, token, options={ debug:false, verbose:false }) => Promise.resolve(null).then(() => {
+const getProject = (projectId, token, options={ debug:false, verbose:false }) => Promise.resolve(null).then(() => {
 	const opts = Object.assign({ debug:false, verbose:false }, options)
 	validateRequiredParams({ projectId, token })
-	showDebug('Requesting a project from Google Cloud Platform.', opts)
+	showDebug(`Requesting a project ${bold(projectId)} from Google Cloud Platform using token ${token}.`, opts)
 
 	return fetch.get(PROJECTS_URL(projectId), {
 		Accept: 'application/json',
 		Authorization: `Bearer ${token}`
 	}, { verbose: opts.verbose })
-	.catch(e => {
-		try {
-			const er = JSON.parse(e.message)
-			if (er.code == 403 || er.code == 404)
-				return { status: er.code, data: null, message: er.message }
-			else
+		.catch(e => {
+			try {
+				const er = JSON.parse(e.message)
+				if (er.code == 403 || er.code == 404)
+					return { status: er.code, data: null, message: er.message }
+				else
+					throw e
+			} catch(_e) {(() => {
 				throw e
-		} catch(_e) {(() => {
-			throw e
-		})(_e)}
-	})
+			})(_e)}
+		})
+		.then(res => {
+			const r = res || {}
+			showDebug(`Response received:\nStatus: ${r.status}\nData: ${r.data}`, opts)
+			return res
+		})
 })
 
-const listProjects = (token, options={ debug:false }) => Promise.resolve(null).then(() => {
+const listProjects = (token, options={ debug:false,  }) => Promise.resolve(null).then(() => {
 	showDebug('Requesting a list of all projects from Google Cloud Platform.', options)
 	validateRequiredParams({ token })
 
@@ -454,12 +465,22 @@ const checkOperationStatus = (projectId, operationId, token, options={ debug:fal
 	})
 })
 
+const listServices = (projectId, token, options={ debug:false }) => Promise.resolve(null).then(() => {
+	validateRequiredParams({ projectId, token })
+	showDebug(`Requesting list of services from Google Cloud Platform's App Engine ${bold(projectId)}.`, options)
+
+	return fetch.get(APP_SERVICE_URL(projectId), {
+		'Content-Type': 'application/json',
+		Authorization: `Bearer ${token}`
+	})
+})
+
 // https://cloud.google.com/appengine/docs/admin-api/reference/rest/v1/apps.services.versions/list
 const listServiceVersions = (projectId, service, token, options={ debug:false }) => Promise.resolve(null).then(() => {
 	validateRequiredParams({ service, projectId, token })
 	showDebug(`Requesting list of all version for service ${bold(service)} Google Cloud Platform's App Engine ${bold(projectId)}.`, options)
 
-	return fetch.get(APP_SERVICE_VERSION_URL(projectId, service) + '?pageSize=200', {
+	return fetch.get(APP_SERVICE_VERSION_URL(projectId, service) + '?pageSize=2000', {
 		'Content-Type': 'application/json',
 		Authorization: `Bearer ${token}`
 	})
@@ -482,7 +503,23 @@ const getService = (projectId, service, token, options={ debug:false }) => Promi
 	return fetch.get(APP_SERVICE_URL(projectId, service), {
 		'Content-Type': 'application/json',
 		Authorization: `Bearer ${token}`
-	})
+	}, { verbose: false })
+		.catch(e => {
+			try {
+				const er = JSON.parse(e.message)
+				if (er.code == 403 || er.code == 404)
+					return { status: er.code, data: null, message: er.message }
+				else
+					throw e
+			} catch(_e) {(() => {
+				throw e
+			})(_e)}
+		})
+		.then(res => {
+			const r = res || {}
+			showDebug(`Response received:\nStatus: ${r.status}\nData: ${r.data}`, options)
+			return res
+		})
 })
 
 // https://cloud.google.com/appengine/docs/admin-api/reference/rest/v1/apps.domainMappings/list
@@ -530,11 +567,12 @@ module.exports = {
 		request: requestConsent
 	},
 	project: {
-		'get': getProjects,
+		'get': getProject,
 		list: listProjects, 
 		create: createProject,
 		billing: {
 			'get': getProjectBillingInfo,
+			goToSetupPage: redirectToBillingPage,
 			isEnabled: testBillingEnabled,
 			enable: setUpProjectBilling
 		}
@@ -555,7 +593,8 @@ module.exports = {
 				list: listServiceVersions,
 				migrateAllTraffic: migrateAllTraffic,
 				'get': getServiceVersion
-			}
+			},
+			list: listServices
 		},
 		domain: {
 			list: listDomains

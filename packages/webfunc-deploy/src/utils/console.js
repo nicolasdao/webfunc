@@ -32,6 +32,7 @@ const info = (...msgs) => `${gray('>')} ${msgs.join('\n')}`
 const debugInfo = (...msgs) => `${green('> DEBUG')} ${msgs.join('\n')}`
 const success = info
 const question = info
+const note = (...msgs) => gray(info(...msgs))
 const cmd = text => `${gray('`')}${cyan(text)}${gray('`')}`
 const link = text => underline(text)
 const aborted = msg => `${red('> Aborted!')} ${msg}`
@@ -197,5 +198,6 @@ module.exports = {
 	success,
 	wait,
 	question,
-	warn
+	warn,
+	note
 }

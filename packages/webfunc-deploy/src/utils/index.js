@@ -7,7 +7,11 @@
 */
 const shortid = require('shortid')
 
-const newId = () => shortid.generate().replace(/-/g, 'r').replace(/_/g, '9')
+const newId = (options={}) => {
+	const id = shortid.generate().replace(/-/g, 'r').replace(/_/g, '9')
+	return options.short ? id.slice(0,-4) : id
+
+}
 
 const getDateUtc = (date) => {
 	const now_utc =  Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds())

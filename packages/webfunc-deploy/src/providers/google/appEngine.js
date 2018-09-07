@@ -48,7 +48,7 @@ const create = (options={ debug:false }) => Promise.resolve(null).then(() => {
 // const update = 
 
 // cp.8508563561489435884
-const options = { debug: true }
+const options = { debug: false }
 utils.project.confirm(options)
 	// .then(({ token, projectId }) => gcp.project.billing.isEnabled(projectId, token, options)).then(r => {
 	// 	if (r)
@@ -57,7 +57,7 @@ utils.project.confirm(options)
 	// 		console.log('BILLING KO')
 	// 	return { data: {} }
 	// })
-	.then(({ token, projectId }) => gcp.project.get('neapers-92845www', token, { debug: true, verbose: false }))
+	.then(({ token, projectId }) => gcp.app.service.get(projectId, 'default', token, { debug: options.debug, verbose: false }))
 	// .then(({ token, projectId }) => gcp.app.getOperationStatus(projectId, '8508563561489435884', token, options))
 	//.then(({ token, projectId }) => gcp.app.service.version.migrateAllTraffic('web-api', 'v8', projectId, token, options))
 	//.then(({ token, projectId }) => gcp.app.domain.list(projectId, token, options))
