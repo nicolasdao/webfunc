@@ -211,8 +211,8 @@ const getToken = (options = { refresh: false, debug: false }) => authConfig.get(
 	}
 
 	setCredentialsRetrieved(false)
-	return (noNeedToAskTokenPermission ? Promise.resolve({ google: config.google, old: true }) : askUserPermission(options).then(google => ({ google, old: false })))
-		.then(({ google, old }) => old ? getUpToDateCreds(google, options) : google)
+	return (noNeedToAskTokenPermission ? Promise.resolve({ google: config.google, old: true }) : askUserPermission({ debug }).then(google => ({ google, old: false })))
+		.then(({ google, old }) => old ? getUpToDateCreds(google, { debug }) : google)
 		.then(google => google.accessToken)
 		.catch(e => {
 			console.log(error(`Failed to retrieve GCP OAuth token.\nError: ${e.message}\nStack trace: ${e.stack}`))

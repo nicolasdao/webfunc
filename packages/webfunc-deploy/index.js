@@ -14,7 +14,7 @@ const program = require('commander')
 const { cmd, info } = require('./src/utils/console')
 const { login } = require('./src/providers/google/account')
 const project = require('./src/providers/google/project')
-const deploy = require('./src')
+const { deploy, list } = require('./src')
 
 program
 	.version('1.0.0')
@@ -23,7 +23,7 @@ program
 	.option('-d, --debug', 'Show debugging messages.')
 	.action((provider='google', options) => {
 		if (provider == 'google')
-			return login(options)
+			return login({ debug: options.debug })
 				.then(() => {
 					console.log(info('Awesome! You\'re now logged in.'))
 					console.log(info(`If you want to switch to another project, simply type ${cmd('webfunc switch')}.`))
@@ -36,7 +36,7 @@ program
 	.usage('Switch to another project in your current cloud account (i.e., either Google Cloud or AWS). ')
 	.option('-d, --debug', 'Show debugging messages.')
 	.action((options) => {
-		return project.updateCurrent(options).then(() => process.exit(1))
+		return project.updateCurrent({ debug: options.debug }).then(() => process.exit(1))
 	})
 
 program
@@ -44,7 +44,15 @@ program
 	.usage('Deploy nodejs project to the specified cloud provider (i.e., either Google Cloud or AWS). Default provider is \'google\'')
 	.option('-d, --debug', 'Show debugging messages.')
 	.action((provider='google', options) => {
-		return deploy(provider, options)
+		return deploy(provider, { debug: options.debug })
+	})
+
+program
+	.command('list [provider]')
+	.usage('List all the App Engine services currently active in your Google Cloud Platform project.')
+	.option('-d, --debug', 'Show debugging messages.')
+	.action((provider='google', options) => {
+		return list(provider, { debug: options.debug })
 	})
 
 program.parse(process.argv)

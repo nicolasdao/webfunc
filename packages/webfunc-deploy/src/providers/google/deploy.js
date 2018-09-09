@@ -197,7 +197,7 @@ const deploy = (serviceName, options={ debug:false, projectPath:null, promote:tr
 	})
 })
 
-deploy('web-api', { debug:false, projectPath: '/Users/nicolasdao/Documents/projects/temp/app' })
+//deploy('web-api', { debug:false, projectPath: '/Users/nicolasdao/Documents/projects/temp/app' })
 
 
 module.exports = deploy

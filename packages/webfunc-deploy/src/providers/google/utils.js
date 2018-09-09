@@ -21,7 +21,9 @@ const { updateCurrent: updateCurrentProject } = require('./project')
  * @return {String} result.token     	  Refreshed OAuth token
  * @return {String} result.projectId      Project id
  */
-const confirmCurrentProject = (options={ debug:false }) => Promise.resolve(null).then(() => {
+const confirmCurrentProject = (options={ debug:false, selectProject: false }) => Promise.resolve(null).then(() => {
+	if (options.debug === undefined) options.debug = false
+	if (options.selectProject === undefined) options.selectProject = false
 	//////////////////////////////
 	// 1. Show current project
 	//////////////////////////////
@@ -74,7 +76,7 @@ const confirmAppEngineIsReady = (projectId, token, options={}) => gcp.app.getReg
 				return promptList({ message: 'Choose one of the following options:', choices, separator: false}).then(answer => {
 					if (!answer)
 						process.exit(1)
-					return getToken(answer == 'account' ? { debug: options.debug, refresh: true } : { debug: options.debug, refresh: false })
+					return getToken(answer == 'account' ? { debug: options.debug, refresh: true, origin: 'Testing project active' } : { debug: options.debug, refresh: false, origin: 'Testing project active' })
 						.then(tkn => updateCurrentProject(options).then(({ project: newProjectId }) => ({ projectId: newProjectId, token: tkn })))
 				})
 			})() 
@@ -160,16 +162,23 @@ const confirmAppEngineIsReady = (projectId, token, options={}) => gcp.app.getReg
 			{ name: 'No (choose another project)', value: 'switchProject', short: 'No. Choose another project' },
 			{ name: 'No (choose another account)', value: 'switchAccount', short: 'No (choose another account)' }
 		]
-		if (locationId)
-			console.log(info(`Current Google App Engine: Project ${bold(projectId)} (${bold(locationId)})`))
-		else
-			console.log(warn(`There is no App Engine for project ${bold(projectId)}. Attempting to deploy will fail.`))
 
-		return promptList({ message: 'Do you want to continue?', choices, separator: false}).then(answer => {
+		const ask = !options.selectProject
+			? (() => {
+				if (locationId)
+					console.log(info(`Current Google App Engine: Project ${bold(projectId)} (${bold(locationId)})`))
+				else
+					console.log(warn(`There is no App Engine for project ${bold(projectId)}. Attempting to deploy will fail.`))
+
+				return promptList({ message: 'Do you want to continue?', choices, separator: false})
+			})()
+			: Promise.resolve('yes')
+
+		return ask.then(answer => {
 			if (!answer)
 				process.exit(1)
 			else if (answer == 'switchProject' || answer == 'switchAccount')
-				return getToken(answer == 'switchAccount' ? { debug: options.debug, refresh: true } : { debug: options.debug, refresh: false })
+				return getToken(answer == 'switchAccount' ? { debug: options.debug, refresh: true, origin: 'Prompt to confirm' } : { debug: options.debug, refresh: false, origin: 'Prompt to confirm' })
 					.then(tkn => updateCurrentProject(options).then(({ project: newProjectId }) => confirmAppEngineIsReady(newProjectId, tkn, options)))
 			else
 				return { token, projectId, locationId }

@@ -191,13 +191,14 @@ module.exports = {
 	debugInfo: debugInfo,
 	error,
 	exec: execCommand,
+	gray,
 	highlight,
 	info,
 	link,
+	note,
 	promptList,
+	question,
 	success,
 	wait,
-	question,
-	warn,
-	note
+	warn
 }

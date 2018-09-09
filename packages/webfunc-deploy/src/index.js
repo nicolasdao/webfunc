@@ -6,11 +6,19 @@
  * LICENSE file in the root directory of this source tree.
 */
 
-const gcpDeploy = require('./providers/google/deploy')
+const { deploy: gcpDeploy, service: gcpService } = require('./providers/google/command')
 
 const deploy = (provider='google', options={ debug:false }) => Promise.resolve(null).then(() => {
 	if (provider == 'google')
 		return gcpDeploy(options)
 })
 
-module.exports = deploy
+const list = (provider='google', options={ debug:false }) => Promise.resolve(null).then(() => {
+	if (provider == 'google')
+		return gcpService.list(options)
+})
+
+module.exports = {
+	deploy,
+	list
+}

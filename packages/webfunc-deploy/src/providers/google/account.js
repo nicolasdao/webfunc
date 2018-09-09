@@ -9,7 +9,7 @@
 const getToken = require('./getToken')
 const project = require('./project')
 
-const login = (options={ debug:false }) => getToken(Object.assign(options || {}, { refresh: true }))
+const login = (options={ debug:false }) => getToken(Object.assign({}, options || {}, { refresh: true, origin: 'login' }))
 	.then(() => project.updateCurrent(options))
 
 module.exports = {

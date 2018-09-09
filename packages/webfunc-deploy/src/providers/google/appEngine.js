@@ -57,12 +57,12 @@ utils.project.confirm(options)
 	// 		console.log('BILLING KO')
 	// 	return { data: {} }
 	// })
-	.then(({ token, projectId }) => gcp.app.service.get(projectId, 'default', token, { debug: options.debug, verbose: false }))
+	.then(({ token, projectId }) => gcp.app.service.list(projectId, token, { debug: options.debug, verbose: false, includeVersions: true }))
 	// .then(({ token, projectId }) => gcp.app.getOperationStatus(projectId, '8508563561489435884', token, options))
 	//.then(({ token, projectId }) => gcp.app.service.version.migrateAllTraffic('web-api', 'v8', projectId, token, options))
 	//.then(({ token, projectId }) => gcp.app.domain.list(projectId, token, options))
 	.then(({ data }) => {
-		console.log('RESULT: ', data)
+		console.log('RESULT: ', JSON.stringify(data, null, '  '))
 	})
 	.catch(e => {
 		console.log(error('Boom'), e.message, e.stack)
