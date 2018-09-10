@@ -7,14 +7,16 @@
 */
 
 const clipboardy = require('clipboardy')
+const path = require('path')
 const gcp = require('./gcp')
-const { error, wait, success, link, bold, info, note } = require('../../utils/console')
+const { error, wait, success, link, bold, info, note, warn } = require('../../utils/console')
 const { zipToBuffer } = require('../../utils/files')
-const { identity, promise, date }  = require('../../utils')
+const { identity, promise, date, obj, collection }  = require('../../utils')
 const utils = require('./utils')
 const projectHelper = require('./project')
+const getToken = require('./getToken')
 
-const createBucket = (projectId, bucketName, token, options={}) => {
+const _createBucket = (projectId, bucketName, token, options={}) => {
 	const bucketCreationDone = wait('Creating new deployment bucket')
 	return gcp.bucket.create(bucketName, projectId, token, { debug: options.debug, verbose: false })
 		.then(() => {
@@ -28,7 +30,7 @@ const createBucket = (projectId, bucketName, token, options={}) => {
 				if (er.code == 403 && er.message.indexOf('absent billing account') >= 0) {
 					return projectHelper.enableBilling(projectId, token, options).then(({ answer }) => {
 						if (answer == 'n') throw e
-						return createBucket(projectId, bucketName, token, options)
+						return _createBucket(projectId, bucketName, token, options)
 					})
 				}
 			} catch(_e) { (() => null)(_e) }
@@ -36,25 +38,125 @@ const createBucket = (projectId, bucketName, token, options={}) => {
 		})
 }
 
-const deploy = (serviceName, options={ debug:false, projectPath:null, promote:true }) => Promise.resolve(null).then(() => {
-	if (options.promote === undefined) options.promote = true
-	serviceName = serviceName || 'default'
+const _getProjectPath = projectPath => {
+	if (!projectPath)
+		return process.cwd()
+	else if (projectPath.match(/^\./)) 
+		return path.join(process.cwd(), projectPath)
+	else if (projectPath.match(/^(\\|\/|~)/)) 
+		return projectPath
+	else 
+		throw new Error(`Invalid path ${projectPath}`)
+}
+
+const _selectLessValuableVersions = (nbr, versions) => nbr > 1
+	? collection.sortBy(versions, v => v.createTime, 'asc').slice(0, Math.round(nbr))
+	: []
+
+const _deleteAppVersions = (projectId, nbr=10, options={}) => getToken(options).then(token => {
+	return gcp.app.service.list(projectId, token, obj.merge(options, { includeVersions:true }))
+		.then(({ data: services }) => {
+		// 1. Finding the versions ratios per services. 
+		// 	  This service ratio is used to establich how many versions per service must be deleted
+			const legitSvcs = services.map(s => ({
+				name: s.id,
+				versions: (s.versions || []).filter(v => !v.traffic)
+			})).filter(x => x.versions && x.versions.length > 0)
+			const allVersionsCount = legitSvcs.reduce((count, svc) => count + svc.versions.length, 0)
+			// 2. Nominating the versions to be deleted based on these rules:
+			// 		1. Must not serve traffic
+			// 		2. Must be as old as possible
+			const svcToBeCleaned = legitSvcs.map(svc => {
+				const nbrOfVersionsToDelete = svc.versions.length/allVersionsCount*nbr
+				const versions = _selectLessValuableVersions(nbrOfVersionsToDelete, svc.versions)
+				return { name: svc.name, versions }
+			}).filter(x => x.versions.length > 0).reduce((acc, svc) => {
+				acc.push(...svc.versions.map(v => ({ version: v.id, service: svc.name })))
+				return acc
+			}, [])
+
+			// 3. Delete less valuable versions
+			const opsCount = svcToBeCleaned.length
+			return Promise.all(svcToBeCleaned.map(({ version, service }) => 
+				gcp.app.service.version.delete(projectId, service, version, token, options)
+					.catch(e => ({ projectId, service, version, error: e })))
+			)
+			// 4. Confirm that at least 1 version has been deleted
+				.then(values => {
+					const failuresCount = values.filter(x => x.error).length
+					if (opsCount - failuresCount == 0) {
+						const er = (values[0] || {}).error
+						throw new Error(`Failed to delete ${opsCount} unused App Engine Service's versions to allow for new deployments.\n${er.message}\n${er.stack}`)
+					} 
+					const opIds = values.filter(x => x.data && x.data.operationId).map(({ data }) => data.operationId)
+					return opIds.reduce((check, opId) => check.then(status => {
+						return status || utils.operation.check(projectId, opId, token, null, null, options)
+							.then(res => res && !res.error ? 'ok' : null)
+							.catch(() => null)
+					}), Promise.resolve(null))
+						.then(status => {
+							if (!status)
+								throw new Error(`Failed to delete ${opsCount} unused App Engine Service's versions to allow for new deployments.`)
+						})
+				})
+		})
+})
+
+const _deployApp = (bucket, zip, service, token, waitDone, options={}) => {
+	waitDone = wait(`Deploying nodejs app to project ${bold(bucket.projectId)} under App Engine's service ${bold(service.name)} version ${bold(service.version)}`)
+	return gcp.app.deploy({ bucket, zip }, service, token, obj.merge(options, { verbose: false })).then(({ data }) => {
+		if (!data.operationId) {
+			const msg = 'Unexpected response. Could not determine the operationId used to check the deployment status.'
+			console.log(error(msg))
+			throw new Error(msg)
+		}
+		return { operationId: data.operationId, waitDone }
+	}).catch(e => {
+		waitDone()
+		try {
+			const er = JSON.parse(e.message)
+			const versionsThreshold = (((er.message || '').match(/Your app may not have more than(.*?)versions/) || [])[1] || '').trim()
+			if (!options.noCleaning && er.code == 400 && versionsThreshold) {
+				console.log(warn(`The App Engine in project ${bucket.projectId} has exceeded the maximum amount of versions allowed (${versionsThreshold}).`))
+				waitDone = wait('Cleaning up your project')
+				return _deleteAppVersions(bucket.projectId, 10, options).then(() => {
+					waitDone()
+					console.log(success('Project successfully cleaned up.'))
+					console.log(info('Trying to re-deploy now'))
+					return _deployApp(bucket, zip, service, token, waitDone, obj.merge(options, { noCleaning: true }))
+				})
+			}
+
+		} catch(_e) { (() => null)(_e) }
+
+		throw e
+	})
+}
+
+const deploy = (options={}) => Promise.resolve(null).then(() => {
+	if (options.promote === undefined) 
+		options.promote = true
+	const projectPath = _getProjectPath(options.projectPath)
 	let waitDone
 
-	let service = { name: serviceName, version: `v${date.timestamp({ short:false })}` }
+	let service = { name: (options.serviceName || 'default'), version: `v${date.timestamp({ short:false })}` }
 
 	//////////////////////////////
 	// 1. Show current project and app engine details to help the user confirm that's the right one.
 	//////////////////////////////
-	return utils.project.confirm(options).then(({ token, projectId }) => {
-		const bucket = { name: `webfunc-deployment-${service.version}-${identity.new()}`.toLowerCase(), projectId }
+	return utils.project.confirm(options).then(({ token, projectId, service: svcName }) => {
+		if (svcName && service.name != svcName)
+			service.name = svcName
+		const bucket = { 
+			name: `webfunc-deployment-${service.version}-${identity.new()}`.toLowerCase(), 
+			projectId }
 		let zip = { name: 'webfunc-app.zip' }
 		let deployStart
 		//////////////////////////////
 		// 2. Zip project 
 		//////////////////////////////
 		waitDone = wait('Zipping project...')
-		return zipToBuffer(options.projectPath || process.cwd(), options).then(({ filesCount, buffer }) => {
+		return zipToBuffer(projectPath, options).then(({ filesCount, buffer }) => {
 			waitDone()
 			console.log(success(`Nodejs app (${filesCount} files) successfully zipped.`))
 			zip.file = buffer
@@ -64,7 +166,7 @@ const deploy = (serviceName, options={ debug:false, projectPath:null, promote:tr
 			// 3. Create bucket & Check that the 'default' service exists
 			//////////////////////////////
 			.then(() => {
-				const bucketTask = createBucket(bucket.projectId, bucket.name, token, options).catch(e => ({ _error: e }))
+				const bucketTask = _createBucket(bucket.projectId, bucket.name, token, options).catch(e => ({ _error: e }))
 				const testDefaultServiceExistsTask = service.name == 'default' 
 					? Promise.resolve({ data: true })
 					: gcp.app.service.get(bucket.projectId, 'default', token, { debug: options.debug, verbose: false }).catch(e => ({ _error: e }))
@@ -98,36 +200,25 @@ const deploy = (serviceName, options={ debug:false, projectPath:null, promote:tr
 			//////////////////////////////
 			.then(() => {
 				deployStart = Date.now()
-				waitDone = wait(`Deploying nodejs app to project ${bold(bucket.projectId)} under App Engine's service ${bold(service.name)} version ${bold(service.version)}`)
-				return gcp.app.deploy({ bucket, zip }, service, token, options).then(({ data }) => {
-					if (!data.operationId) {
-						const msg = 'Unexpected response. Could not determine the operationId used to check the deployment status.'
-						console.log(error(msg))
-						throw new Error(msg)
-					}
-					return { operationId: data.operationId }
-				})
+				return _deployApp(bucket, zip, service, token, waitDone, options)
 			})
 			////////////////////////////////////
 			// 6. Checking deployment status
 			////////////////////////////////////
-			.then(({ operationId }) => promise.check(
-				() => gcp.app.getOperationStatus(bucket.projectId, operationId, token, options).catch(e => {
-					console.log(error(`Unable to verify deployment status. Manually check the status of your build here: ${link(`https://console.cloud.google.com/cloud-build/builds?project=${bucket.projectId}`)}`))
-					throw e
-				}), 
-				({ data }) => {
-					if (data && data.done) {
-						waitDone()
-						return true
-					}
-					else if (data && data.message) {
+			.then(({ operationId, waitDone: done }) => {
+				waitDone = done
+				return utils.operation.check(
+					bucket.projectId, 
+					operationId, 
+					token, 
+					() => waitDone(), 
+					(data) => {
 						console.log(error('Fail to deploy. Though your project was successfully uploaded to Google Cloud Platform, an error occured during the deployment to App Engine. Details:', JSON.stringify(data, null, '  ')))
 						throw new Error('Deployment failed.')
-					} else 
-						return false
-				})
-			).then(({ data }) => {
+					}, 
+					options)
+			})
+			.then(({ data }) => {
 				const showVersionUrl = data && data.response && data.response.versionUrl
 				console.log(success(`App successfully deployed to App Engine's service ${bold(service.name)} (version: ${service.version}) in ${((Date.now() - deployStart)/1000).toFixed(2)} seconds.`))
 				if (showVersionUrl) {

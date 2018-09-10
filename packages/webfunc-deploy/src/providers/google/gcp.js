@@ -419,7 +419,7 @@ const createApp = (projectId, regionId, token, options={ debug:false }) => _vali
 	})
 })
 
-const deployApp = (source, service, token, options={ debug:false }) => Promise.resolve(null).then(() => {
+const deployApp = (source, service, token, options={}) => Promise.resolve(null).then(() => {
 	const { bucket, zip } = source || {}
 	const { name:serviceName='default' , version } = service || {}
 	_validateRequiredParams({ bucketName: bucket.name, projectId: bucket.projectId, zipName: zip.name, zipFilesCount: zip.filesCount, version, token })
@@ -441,7 +441,7 @@ const deployApp = (source, service, token, options={ debug:false }) => Promise.r
 		'Content-Type': 'application/json',
 		Authorization: `Bearer ${token}`
 	},
-	JSON.stringify(appJson)).then(res => {
+	JSON.stringify(appJson), options).then(res => {
 		if (res.data && res.data.name)
 			res.data.operationId = res.data.name.split('/').slice(-1)[0]
 		return res
@@ -573,6 +573,20 @@ const listServiceVersions = (projectId, service, token, options={ debug:false })
 	})
 })
 
+const deleteServiceVersion = (projectId, service, version, token, options={ debug:false }) => Promise.resolve(null).then(() => {
+	_validateRequiredParams({ projectId, service, version, token })
+	_showDebug(`Deleting a version for service ${bold(service)} on Google Cloud Platform's App Engine ${bold(projectId)}.`, options)
+
+	return fetch.delete(APP_SERVICE_VERSION_URL(projectId, service, version), {
+		'Content-Type': 'application/json',
+		Authorization: `Bearer ${token}`
+	}).then(res => {
+		if (res.data && res.data.name)
+			res.data.operationId = res.data.name.split('/').slice(-1)[0]
+		return res
+	})
+})
+
 const migrateAllTraffic = (projectId, service, version, token, options={ debug:false }) => Promise.resolve(null).then(() => {
 	_validateRequiredParams({ service, version, projectId, token })
 	_showDebug(`Requesting operation status from Google Cloud Platform's project ${bold(projectId)}.`, options)
@@ -649,6 +663,7 @@ module.exports = {
 			version: {
 				'get': getServiceVersion,
 				list: listServiceVersions,
+				delete: deleteServiceVersion,
 				migrateAllTraffic: migrateAllTraffic
 			}
 		},

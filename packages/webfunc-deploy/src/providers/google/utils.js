@@ -47,10 +47,10 @@ const confirmCurrentProject = (options={ debug:false, selectProject: false }) =>
 		////////////////////////////////////////////
 		// 3. Make sure the App Engine exists.
 		////////////////////////////////////////////
-		.then(({ token, projectId }) => confirmAppEngineIsReady(projectId, token, options))
+		.then(({ token, projectId }) => _confirmAppEngineIsReady(projectId, token, options))
 })
 
-const confirmAppEngineIsReady = (projectId, token, options={}) => gcp.app.getRegions()
+const _confirmAppEngineIsReady = (projectId, token, options={}) => gcp.app.getRegions()
 ////////////////////////////////////////////
 // 1. Get regions
 ////////////////////////////////////////////
@@ -159,6 +159,7 @@ const confirmAppEngineIsReady = (projectId, token, options={}) => gcp.app.getReg
 	.then(({ token, projectId, locationId }) => { // 1.2. Prompt to confirm that the hosting destination is correct.
 		const choices = [
 			{ name: 'Yes', value: 'yes', short: 'Yes' },
+			{ name: 'No (choose another service)', value: 'switchService', short: 'No. Choose another service' },
 			{ name: 'No (choose another project)', value: 'switchProject', short: 'No. Choose another project' },
 			{ name: 'No (choose another account)', value: 'switchAccount', short: 'No (choose another account)' }
 		]
@@ -166,7 +167,7 @@ const confirmAppEngineIsReady = (projectId, token, options={}) => gcp.app.getReg
 		const ask = !options.selectProject
 			? (() => {
 				if (locationId)
-					console.log(info(`Current Google App Engine: Project ${bold(projectId)} (${bold(locationId)})`))
+					console.log(info(`Current settings: Project ${bold(projectId)} (${locationId}) ${bold('default')} service`))
 				else
 					console.log(warn(`There is no App Engine for project ${bold(projectId)}. Attempting to deploy will fail.`))
 
@@ -177,16 +178,46 @@ const confirmAppEngineIsReady = (projectId, token, options={}) => gcp.app.getReg
 		return ask.then(answer => {
 			if (!answer)
 				process.exit(1)
-			else if (answer == 'switchProject' || answer == 'switchAccount')
+			else if (answer == 'switchService') {
+				return _chooseService(projectId, options).then(service => ({ token, projectId, locationId, service }))
+			} else if (answer == 'switchProject' || answer == 'switchAccount')
 				return getToken(answer == 'switchAccount' ? { debug: options.debug, refresh: true, origin: 'Prompt to confirm' } : { debug: options.debug, refresh: false, origin: 'Prompt to confirm' })
-					.then(tkn => updateCurrentProject(options).then(({ project: newProjectId }) => confirmAppEngineIsReady(newProjectId, tkn, options)))
+					.then(tkn => updateCurrentProject(options).then(({ project: newProjectId }) => _confirmAppEngineIsReady(newProjectId, tkn, options)))
 			else
 				return { token, projectId, locationId }
 		})
 	})
 
+const _chooseService = (projectId, options={}) => Promise.resolve(null).then(() => {
+	return (() => 'web-api')({ projectId, options })
+})
+
+const checkOperation = (projectId, operationId, token, onSuccess, onFailure, options) => promise.check(
+	() => gcp.app.getOperationStatus(projectId, operationId, token, options).catch(e => {
+		console.log(error(`Unable to check operation status. To manually check that status, go to ${link(`https://console.cloud.google.com/cloud-build/builds?project=${projectId}`)}`))
+		throw e
+	}), 
+	({ data }) => {
+		if (data && data.done) {
+			if (onSuccess) onSuccess(data)
+			return { message: 'done' }
+		}
+		else if (data && data.message) {
+			if (onFailure) onFailure(data)
+			return { error: data }
+		} else 
+			return false
+	})
+
 module.exports = {
 	project: {
 		confirm: confirmCurrentProject
+	},
+	operation: {
+		check: checkOperation
 	}
 }
+
+
+
+

@@ -76,6 +76,7 @@ const _arraySortBy = (arr, fn = x => x, dir='asc') => (arr || []).sort((a,b) => 
 
 const sortBy = (obj, fn = x => x, dir='asc') => Array.isArray(obj) ? _arraySortBy(obj, fn, dir) : _objectSortBy(obj, fn, dir)
 const newSeed = (size=0) => Array.apply(null, Array(size))
+const mergeObj = (...objs) => Object.assign(...objs.map(obj => JSON.parse(JSON.stringify(obj))))
 
 module.exports = {
 	file: require('./files'),
@@ -89,5 +90,8 @@ module.exports = {
 	collection: {
 		sortBy,
 		seed: newSeed
+	},
+	obj: {
+		merge: mergeObj
 	}
 }

@@ -14,15 +14,15 @@ const { collection } = require('../../utils')
 
 const _adjustContentToWidth = (content, maxWidth, options={}) => {
 	const { paddingLeft=0, paddingRight=0, format } = options
-	const padLeft = collection.seed(paddingLeft).map(x => ' ').join('')
-	const padRight = collection.seed(paddingRight).map(x => ' ').join('')
+	const padLeft = collection.seed(paddingLeft).map(() => ' ').join('')
+	const padRight = collection.seed(paddingRight).map(() => ' ').join('')
 	const missingBlanksCount = maxWidth - (paddingLeft + content.length + paddingRight)
-	const missingBlanks = missingBlanksCount > 0 ? collection.seed(missingBlanksCount).map(x => ' ').join('') : ''
+	const missingBlanks = missingBlanksCount > 0 ? collection.seed(missingBlanksCount).map(() => ' ').join('') : ''
 	return padLeft + ((format && typeof(format) == 'function') ? format(content) : content) + missingBlanks + padRight
 }
 
 const _getMaxColWidth = (contents=[], options={}) => {
-	const { paddingLeft= 2, paddingRight= 4, format } = options
+	const { paddingLeft= 2, paddingRight= 4 } = options
 	return Math.max(...contents.map(content => `${content}`.length)) + paddingLeft + paddingRight
 }
 
@@ -33,16 +33,16 @@ const listServices = (options={}) => Promise.resolve(null).then(() => {
 		.then(({ token, projectId, locationId }) => {
 			// 2. Get all the services and their versions for this project
 			console.log(`Services for project ${bold(projectId)} (${locationId}):`)
-			const loadingDone = wait(`Loading services...`)
+			const loadingDone = wait('Loading services...')
 			return gcp.app.service.list(projectId, token, { debug: options.debug, verbose: false, includeVersions: true })
-			.then(res => {
-				loadingDone()
-				return { projectId, data: res.data }
-			})
-			.catch(e => {
-				loadingDone()
-				throw e
-			})
+				.then(res => {
+					loadingDone()
+					return { projectId, data: res.data }
+				})
+				.catch(e => {
+					loadingDone()
+					throw e
+				})
 		})
 		.then(({ projectId, data }) => {
 			// 3. Display the results

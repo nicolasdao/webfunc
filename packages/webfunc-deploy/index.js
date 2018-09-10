@@ -43,8 +43,9 @@ program
 	.command('deploy [provider]')
 	.usage('Deploy nodejs project to the specified cloud provider (i.e., either Google Cloud or AWS). Default provider is \'google\'')
 	.option('-d, --debug', 'Show debugging messages.')
+	.option('--dir <dir>', 'App\'s directory (default is current working directory)')
 	.action((provider='google', options) => {
-		return deploy(provider, { debug: options.debug })
+		return deploy(provider, { debug: options.debug, projectPath: options.dir })
 	})
 
 program
