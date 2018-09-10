@@ -279,6 +279,7 @@ const deploy = (options={}) => Promise.resolve(null).then(() => {
 			////////////////////////////////////
 			.then(() => {
 				console.log(note(`More details about this deployment in your Google Cloud Dashboard: ${link(`https://console.cloud.google.com/appengine/versions?project=${bucket.projectId}&serviceId=${service.name}`)}`))
+				return 
 			})
 
 	}).catch(e => {
@@ -287,9 +288,6 @@ const deploy = (options={}) => Promise.resolve(null).then(() => {
 		throw e
 	})
 })
-
-//deploy('web-api', { debug:false, projectPath: '/Users/nicolasdao/Documents/projects/temp/app' })
-
 
 module.exports = deploy
 

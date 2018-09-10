@@ -10,7 +10,7 @@ const { login } = require('./account')
 const getToken = require('./getToken')
 const authConfig = require('../../utils/authConfig')
 const { askQuestion, bold, info, question, promptList, wait, success, error, link, warn, debugInfo } = require('../../utils/console')
-const { promise } = require('../../utils')
+const { promise, collection } = require('../../utils')
 const gcp = require('./gcp')
 const { updateCurrent: updateCurrentProject } = require('./project')
 
@@ -70,8 +70,8 @@ const _confirmAppEngineIsReady = (projectId, token, options={}) => gcp.app.getRe
 			? (() => {
 				console.log(warn(`Your current project ${bold(projectId)} is not active anymore.`))
 				const choices = [
-					{ name: 'Choose another project', value: 'project', short: 'Choose another project' },
-					{ name: 'Choose another account', value: 'account', short: 'Choose another account' }
+					{ name: 'Choose another project', value: 'project' },
+					{ name: 'Choose another account', value: 'account' }
 				]
 				return promptList({ message: 'Choose one of the following options:', choices, separator: false}).then(answer => {
 					if (!answer)
@@ -158,10 +158,10 @@ const _confirmAppEngineIsReady = (projectId, token, options={}) => gcp.app.getRe
 ////////////////////////////////////////////
 	.then(({ token, projectId, locationId }) => { // 1.2. Prompt to confirm that the hosting destination is correct.
 		const choices = [
-			{ name: 'Yes', value: 'yes', short: 'Yes' },
-			{ name: 'No (choose another service)', value: 'switchService', short: 'No. Choose another service' },
-			{ name: 'No (choose another project)', value: 'switchProject', short: 'No. Choose another project' },
-			{ name: 'No (choose another account)', value: 'switchAccount', short: 'No (choose another account)' }
+			{ name: 'Yes', value: 'yes' },
+			{ name: 'No (choose another service)', value: 'switchService' },
+			{ name: 'No (choose another project)', value: 'switchProject' },
+			{ name: 'No (choose another account)', value: 'switchAccount' }
 		]
 
 		const ask = !options.selectProject
@@ -188,8 +188,44 @@ const _confirmAppEngineIsReady = (projectId, token, options={}) => gcp.app.getRe
 		})
 	})
 
-const _chooseService = (projectId, options={}) => Promise.resolve(null).then(() => {
-	return (() => 'web-api')({ projectId, options })
+const _chooseServiceName = () => askQuestion(question('Enter service name: ')).then(answer => {
+	if (!answer || answer.length < 3 || !answer.match(/^[a-z0-9\-_]+$/)) {
+		console.log(info('A service name must be at least 3 characters long and it can only contain lowercase alphanumerics, \'-\' and \'_\'.'))
+		return _chooseServiceName()
+	} else 
+		return answer
+})
+
+const _chooseService = (projectId, options={}) => getToken(options).then(token => {
+	const loadingSvcDone = wait('Loading services')
+	return gcp.app.service.list(projectId, token, options).then(res => ({ loadingSvcDone, data: res.data })).catch(e => { loadingSvcDone(); throw e })
+}).then(({ loadingSvcDone, data }) => {
+	loadingSvcDone()
+	const currentService = options.serviceName || 'default'
+	if (!data || data.length == 0) {
+		console.log(info('The \'default\' service is required to be created first. Once it is created, creating other services will be allowed.'))
+		return askQuestion(question('Do you want to continue using the \'default\' service (Y/n)? ')).then(answer => {
+			if (answer == 'n')
+				process.exit(1)
+			else
+				return 'default'
+		})
+	} else {
+		const choices = [
+			...collection.sortBy(data.map(d => {
+				const isCurrent = d.id == currentService
+				const n = isCurrent ? `<${bold('Current')}> ${d.id}` : `${d.id}`
+				return { name: n, value: `${d.id}`, idx: isCurrent ? 0 : 1 }
+			}), x => x.idx, 'asc'),
+			{ name: `<${bold('Create new service')}>`, value: 'create new' }]
+
+		return promptList({ message: 'Choose one of the following options:', choices, separator: false}).then(answer => {
+			if (answer == 'create new')
+				return _chooseServiceName()
+			else
+				return answer
+		})
+	}
 })
 
 const checkOperation = (projectId, operationId, token, onSuccess, onFailure, options) => promise.check(

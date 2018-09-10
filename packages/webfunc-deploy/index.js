@@ -45,7 +45,7 @@ program
 	.option('-d, --debug', 'Show debugging messages.')
 	.option('--dir <dir>', 'App\'s directory (default is current working directory)')
 	.action((provider='google', options) => {
-		return deploy(provider, { debug: options.debug, projectPath: options.dir })
+		return deploy(provider, { debug: options.debug, projectPath: options.dir }).then(() => process.exit(1))
 	})
 
 program
@@ -53,7 +53,7 @@ program
 	.usage('List all the App Engine services currently active in your Google Cloud Platform project.')
 	.option('-d, --debug', 'Show debugging messages.')
 	.action((provider='google', options) => {
-		return list(provider, { debug: options.debug })
+		return list(provider, { debug: options.debug }).then(() => process.exit(1))
 	})
 
 program.parse(process.argv)

@@ -161,7 +161,7 @@ const enableBilling = (projectId, token, options) => {
 			console.log(warn(`You won't be able to deploy any code until billing is enabled.\nThis is a Google Cloud policy (more info at ${link('https://support.google.com/cloud/answer/6158867')}).\nTo enable billing on project ${bold(projectId)}, browse to ${link(`https://console.cloud.google.com/billing/linkedaccount?project=${projectId}&folder&organizationId`)}.`))
 			return { projectId, answer }
 		}
-		const instructionDone = wait('Redirecting you to your Google Account to enable billing.\nCome back here when it\'s done')
+		const instructionDone = wait('Redirecting you to your Google Account to enable billing.\n  Come back here when it\'s done')
 		return promise.delay(6000)
 			.then(() => {
 				instructionDone()

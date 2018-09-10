@@ -7,7 +7,6 @@
 */
 
 const { deploy: gcpDeploy, service: gcpService } = require('./providers/google/command')
-const { collection } = require('./utils')
 
 const deploy = (provider='google', options={ debug:false }) => Promise.resolve(null).then(() => {
 	if (provider == 'google')
