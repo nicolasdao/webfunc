@@ -52,6 +52,7 @@ program
 
 program
 	.command('list [provider]')
+	.alias('ls')
 	.usage('List all the App Engine services currently active in your Google Cloud Platform project.')
 	.option('-d, --debug', 'Show debugging messages.')
 	.option('--dir <dir>', 'App\'s directory (default is current working directory).')
