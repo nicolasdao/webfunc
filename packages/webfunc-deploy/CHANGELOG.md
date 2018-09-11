@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.15.2"></a>
+## [0.15.2](https://github.com/nicolasdao/webfunc/compare/v0.15.1...v0.15.2) (2018-09-11)
+
+
+### Bug Fixes
+
+* Throw error when it exists. Replace process.exit(1) with process.exit() ([931922f](https://github.com/nicolasdao/webfunc/commit/931922f))
+
+
+
 <a name="0.15.1"></a>
 ## [0.15.1](https://github.com/nicolasdao/webfunc/compare/v0.15.0...v0.15.1) (2018-09-11)
 
