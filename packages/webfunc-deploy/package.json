@@ -1,6 +1,6 @@
 {
   "name": "@webfunc/deploy",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Deploy nodejs web apps to Google Cloud Platform App Engine and Functions as well as AWS Lambdas.",
   "main": "index.js",
   "contributors": [
