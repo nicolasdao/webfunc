@@ -1,19 +1,30 @@
 {
-  "name": "emptyjs",
+  "name": "@webfunc/deploy",
   "version": "0.0.1",
-  "description": "",
+  "description": "Deploy nodejs web apps to Google Cloud Platform App Engine and Functions as well as AWS Lambdas.",
   "main": "index.js",
+  "contributors": [
+    "Nicolas Dao <nic@neap.co> (https://neap.co/)"
+  ],
   "bin": {
     "webfunc": "./index.js"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/nicolasdao/template-emptyjs.git"
+    "url": "https://github.com/nicolasdao/webfunc.git"
   },
+  "keywords": [
+    "deploy",
+    "serverless",
+    "google-cloud",
+    "aws-lambdas",
+    "cloud",
+    "functions"
+  ],
   "bugs": {
-    "url": "https://github.com/nicolasdao/template-emptyjs/issues"
+    "url": "https://github.com/nicolasdao/webfunc/issues"
   },
-  "homepage": "https://github.com/nicolasdao/template-emptyjs#readme",
+  "homepage": "https://github.com/nicolasdao/webfunc#readme",
   "scripts": {
     "lint": "eslint index.js src/ test/ --fix",
     "release": "standard-version",
