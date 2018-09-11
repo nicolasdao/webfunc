@@ -9,8 +9,10 @@
 const gcp = require('./gcp')
 const utils = require('./utils')
 const deploy = require('./deploy')
-const { bold, gray, wait } = require('../../utils/console')
-const { collection } = require('../../utils')
+const { bold, gray, wait, error } = require('../../utils/console')
+const { collection, obj } = require('../../utils')
+const projectHelper = require('./project')
+const { hosting } = require('./config')
 
 const _adjustContentToWidth = (content, maxWidth, options={}) => {
 	const { paddingLeft=0, paddingRight=0, format } = options
@@ -26,68 +28,76 @@ const _getMaxColWidth = (contents=[], options={}) => {
 	return Math.max(...contents.map(content => `${content}`.length)) + paddingLeft + paddingRight
 }
 
-const listServices = (options={}) => Promise.resolve(null).then(() => {
-	options.selectProject = true
-	// 1. Get the current project and token
-	return utils.project.confirm(options)
-		.then(({ token, projectId, locationId }) => {
+const listServices = (options={}) => Promise.resolve(projectHelper.getFullPath(options.projectPath))
+	.then(projectPath => hosting.get(projectPath, options).then(appConfig => appConfig || {}))
+	.then(appConfig => {
+		const appProjectId = appConfig.projectId
+		const chooseProjectExplicitely = options.global || !appProjectId
+		options.selectProject = !chooseProjectExplicitely
+		// 1. Get the current project and token
+		return utils.project.confirm(obj.merge(options, { appConfig: appConfig.projectId && !chooseProjectExplicitely ? appConfig : null }))
+			.then(({ token, projectId, locationId }) => {
 			// 2. Get all the services and their versions for this project
-			console.log(`Services for project ${bold(projectId)} (${locationId}):`)
-			const loadingDone = wait('Loading services...')
-			return gcp.app.service.list(projectId, token, { debug: options.debug, verbose: false, includeVersions: true })
-				.then(res => {
-					loadingDone()
-					return { projectId, data: res.data }
-				})
-				.catch(e => {
-					loadingDone()
-					throw e
-				})
-		})
-		.then(({ projectId, data }) => {
-			// 3. Display the results
-			const opts = { paddingLeft: 2, paddingRight: 2 }
-			const deploymentPaddingLeft = 2
-			const deployPaddLeft = collection.seed(deploymentPaddingLeft).map(() => ' ').join('')
-			const headerOpts = Object.assign({}, opts, { format: gray })
-			data = data || []
-			data.forEach((service,i) => {
-				// 3.1. Display service name and url
-				console.log(`${`\n${i+1}. `}${bold(service.id)} - ${service.url}`)
-				if (service.versions && service.versions.length > 0) {
-					const versions = service.versions.map(v => ({
-						'latest deploy': v.id, // e.g., 'v1'
-						'traffic alloc.': `${(v.traffic * 100).toFixed(2)}%`,
-						status: v.servingStatus, // e.g., 'SERVING'
-						type: v.env, // e.g., 'standard' or 'flex'
-						created: v.createTime,
-						user: (v.createdBy || '').toLowerCase()
-					})).slice(0,5)
-
-					const deployments = Object.keys(versions[0]).map(colName => {
-						const colWidth = _getMaxColWidth([colName, ...versions.map(v => v[colName])], opts)
-						const header = _adjustContentToWidth(colName, colWidth, headerOpts)
-						const nonFormattedhHeader = _adjustContentToWidth(colName, colWidth, Object.assign({}, headerOpts, { format: null }))
-						const colItems = versions.map(v => _adjustContentToWidth(v[colName], colWidth, opts))
-						return { header, nonFormattedhHeader, items: colItems }
+				console.log(`Services for project ${bold(projectId)} (${locationId}):`)
+				const loadingDone = wait('Loading services...')
+				return gcp.app.service.list(projectId, token, { debug: options.debug, verbose: false, includeVersions: true })
+					.then(res => {
+						loadingDone()
+						return { projectId, data: res.data }
 					})
-
-					// 3.2. Display the versions, i.e., the deployments
-					// header
-					const h = `${deployPaddLeft}|${deployments.map(d => d.header).join('|')}|`
-					const nonFormattedH = `|${deployments.map(d => d.nonFormattedhHeader).join('|')}|`
-					const u = deployPaddLeft + collection.seed(nonFormattedH.length).map(() => '=').join('')
-					console.log(h) 
-					console.log(u) 
-					// body
-					versions.forEach((v,idx) => console.log(`${deployPaddLeft}|${deployments.map(d => d.items[idx]).join('|')}|`))
-					console.log(gray(`${deployPaddLeft}for more info about this service, go to https://console.cloud.google.com/appengine/versions?project=${projectId}&serviceId=${service.id}\n`))
-				} else
-					console.log(`${deployPaddLeft}No deployments found\n`)
+					.catch(e => {
+						loadingDone()
+						throw e
+					})
 			})
-			return 
-		})
-})
+			.then(({ projectId, data }) => {
+			// 3. Display the results
+				const opts = { paddingLeft: 2, paddingRight: 2 }
+				const deploymentPaddingLeft = 2
+				const deployPaddLeft = collection.seed(deploymentPaddingLeft).map(() => ' ').join('')
+				const headerOpts = Object.assign({}, opts, { format: gray })
+				data = data || []
+				data.forEach((service,i) => {
+				// 3.1. Display service name and url
+					console.log(`${`\n${i+1}. `}${bold(service.id)} - ${service.url}`)
+					if (service.versions && service.versions.length > 0) {
+						const versions = service.versions.map(v => ({
+							'latest deploy': v.id, // e.g., 'v1'
+							'traffic alloc.': `${(v.traffic * 100).toFixed(2)}%`,
+							status: v.servingStatus, // e.g., 'SERVING'
+							type: v.env, // e.g., 'standard' or 'flex'
+							created: v.createTime,
+							user: (v.createdBy || '').toLowerCase()
+						})).slice(0,5)
+
+						const deployments = Object.keys(versions[0]).map(colName => {
+							const colWidth = _getMaxColWidth([colName, ...versions.map(v => v[colName])], opts)
+							const header = _adjustContentToWidth(colName, colWidth, headerOpts)
+							const nonFormattedhHeader = _adjustContentToWidth(colName, colWidth, Object.assign({}, headerOpts, { format: null }))
+							const colItems = versions.map(v => _adjustContentToWidth(v[colName], colWidth, opts))
+							return { header, nonFormattedhHeader, items: colItems }
+						})
+
+						// 3.2. Display the versions, i.e., the deployments
+						// header
+						const h = `${deployPaddLeft}|${deployments.map(d => d.header).join('|')}|`
+						const nonFormattedH = `|${deployments.map(d => d.nonFormattedhHeader).join('|')}|`
+						const u = deployPaddLeft + collection.seed(nonFormattedH.length).map(() => '=').join('')
+						console.log(h) 
+						console.log(u) 
+						// body
+						versions.forEach((v,idx) => console.log(`${deployPaddLeft}|${deployments.map(d => d.items[idx]).join('|')}|`))
+						console.log(gray(`${deployPaddLeft}for more info about this service, go to https://console.cloud.google.com/appengine/versions?project=${projectId}&serviceId=${service.id}\n`))
+					} else
+						console.log(`${deployPaddLeft}No deployments found\n`)
+				})
+				return 
+			})
+	})
+	.catch(e => {
+		console.log(error('Failed to list services', e.message, e.stack))
+		throw e
+	})
 
 
 module.exports = {

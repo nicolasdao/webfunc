@@ -7,7 +7,6 @@
 */
 
 const clipboardy = require('clipboardy')
-const path = require('path')
 const gcp = require('./gcp')
 const { error, wait, success, link, bold, info, note, warn, askQuestion, question } = require('../../utils/console')
 const { zipToBuffer } = require('../../utils/files')
@@ -37,17 +36,6 @@ const _createBucket = (projectId, bucketName, token, options={}) => {
 			} catch(_e) { (() => null)(_e) }
 			throw e 
 		})
-}
-
-const _getProjectPath = projectPath => {
-	if (!projectPath)
-		return process.cwd()
-	else if (projectPath.match(/^\./)) 
-		return path.join(process.cwd(), projectPath)
-	else if (projectPath.match(/^(\\|\/|~)/)) 
-		return projectPath
-	else 
-		throw new Error(`Invalid path ${projectPath}`)
 }
 
 const _selectLessValuableVersions = (nbr, versions) => nbr > 1
@@ -163,7 +151,7 @@ const _testEnv = (projectPath, options={}) => options.env
 const deploy = (options={}) => Promise.resolve(null).then(() => {
 	if (options.promote === undefined) 
 		options.promote = true
-	const projectPath = _getProjectPath(options.projectPath)
+	const projectPath = projectHelper.getFullPath(options.projectPath)
 	let waitDone = () => null
 
 	let service = { name: (options.serviceName || 'default'), version: `v${date.timestamp({ short:false })}` }

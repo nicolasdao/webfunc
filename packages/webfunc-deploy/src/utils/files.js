@@ -177,6 +177,7 @@ const writeToFile = (filePath, stringContent) => new Promise((onSuccess, onFailu
 	err ? onFailure(err) : onSuccess()))
 
 const getJson = (filePath) => readFile(filePath)
+	.catch(() => null)
 	.then(content => {
 		try {
 			return content ? JSON.parse(content) : {}

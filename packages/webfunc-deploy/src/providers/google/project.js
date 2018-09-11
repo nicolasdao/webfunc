@@ -10,6 +10,7 @@ const getToken = require('./getToken')
 const authConfig = require('../../utils/authConfig')
 const gcp = require('./gcp')
 const { identity, promise } = require('../../utils')
+const path = require('path')
 
 const getProjects = (options={ debug:false, show:false }) => getToken({ debug: (options || {}).debug }).then(token => {
 	const { debug, show } = options || {}
@@ -188,12 +189,24 @@ const enableBilling = (projectId, token, options) => {
 	})
 }
 
+const getProjectPath = projectPath => {
+	if (!projectPath)
+		return process.cwd()
+	else if (projectPath.match(/^\./)) 
+		return path.join(process.cwd(), projectPath)
+	else if (projectPath.match(/^(\\|\/|~)/)) 
+		return projectPath
+	else 
+		throw new Error(`Invalid path ${projectPath}`)
+}
+
 module.exports = {
 	getAll: getProjects,
 	current: getCurrentProject,
 	updateCurrent: updateCurrentProject,
 	create: createNewProject,
-	enableBilling
+	enableBilling,
+	getFullPath: getProjectPath
 }
 
 

@@ -43,9 +43,9 @@ program
 	.command('deploy [provider]')
 	.usage('. This command deploys the targetted project to the specified cloud provider (i.e., either Google Cloud or AWS). Default provider is \'google\'')
 	.option('-d, --debug', 'Show debugging messages.')
-	.option('--dir <dir>', 'App\'s directory (default is current working directory)')
-	.option('-c, --custom', 'Show debugging messages.')
-	.option('-e, --env <env>', 'Show debugging messages.')
+	.option('--dir <dir>', 'App\'s directory (default is current working directory).')
+	.option('-c, --custom', 'Helps to override the \'hosting\' property of the app.json file.')
+	.option('-e, --env <env>', 'Choose the \'hosting\' settings defined in the app.<env>.json file.')
 	.action((provider='google', options) => { 
 		return deploy(provider, { debug: options.debug, projectPath: options.dir, ignoreAppConfig: options.custom, env: options.env }).then(() => process.exit(1))
 	})
@@ -54,8 +54,11 @@ program
 	.command('list [provider]')
 	.usage('List all the App Engine services currently active in your Google Cloud Platform project.')
 	.option('-d, --debug', 'Show debugging messages.')
+	.option('--dir <dir>', 'App\'s directory (default is current working directory).')
+	.option('-g, --global', 'Choose a project from your account first before listing the services.')
+	.option('-e, --env <env>', 'Choose the \'hosting\' settings defined in the app.<env>.json file.')
 	.action((provider='google', options) => {
-		return list(provider, { debug: options.debug }).then(() => process.exit(1))
+		return list(provider, { debug: options.debug, global: options.global, projectPath: options.dir, env: options.env }).then(() => process.exit(1))
 	})
 
 program.parse(process.argv)
