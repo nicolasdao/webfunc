@@ -11,10 +11,11 @@ const path = require('path')
 const gcp = require('./gcp')
 const { error, wait, success, link, bold, info, note, warn, askQuestion, question } = require('../../utils/console')
 const { zipToBuffer } = require('../../utils/files')
-const { identity, promise, date, obj, collection, file }  = require('../../utils')
+const { identity, promise, date, obj, collection }  = require('../../utils')
 const utils = require('./utils')
 const projectHelper = require('./project')
 const getToken = require('./getToken')
+const { hosting } = require('./config')
 
 const _createBucket = (projectId, bucketName, token, options={}) => {
 	const bucketCreationDone = wait('Creating new deployment bucket')
@@ -133,34 +134,26 @@ const _deployApp = (bucket, zip, service, token, waitDone, options={}) => {
 	})
 }
 
-const _getAppConfig = (appPath) => file.read(path.join(appPath, 'app.json'))
-	.then(content => {
-		try {
-			return JSON.parse(content)
-		} catch(e) {
-			console.log(`Invalid json format in file ${path.join(appPath, 'app.json')}.`)
-			throw e
-		}
-	})
-	.catch(e => (() => null)(e))
-
-const _saveAppConfig = ({ projectId, service, type }, appPath) => file.read(path.join(appPath, 'app.json'))
-	.catch(e => (() => null)(e))
-	.then(content => {
-		try {
-			const current = content ? JSON.parse(content) : {}
-			const updated = Object.assign({}, current, { projectId, service, type })
-			return file.write(path.join(appPath, 'app.json'), JSON.stringify(updated, null, '  '))
-		} catch(e) {
-			console.log(`Failed to save app.json. Invalid json format in file ${path.join(appPath, 'app.json')}.`)
-			throw e
-		}
-	})
+const _testEnv = (projectPath, options={}) => options.env 
+	? hosting.exists(projectPath, options).then(yes => {
+		if (!options.noPrompt && !yes) {
+			console.log(warn(`No ${bold(`app.${options.env}.json`)} config file found in your app.`))
+			console.log(info(`We can use your app.json now and create a new app.${options.env}.json after your deployment is over.`))
+			return askQuestion(question('Do you want to continue (Y/n)? ')).then(answer => {
+				if (answer == 'n')
+					process.exit(1)
+				return yes
+			})
+		} else
+			return yes
+	}) 
+	: Promise.resolve(true)
 
 /**
  * [description]
  * @param  {Object}   options.appConfig 		[description]
  * @param  {Boolean}  options.ignoreAppConfig   [description]
+ * @param  {String}   options.env             	[description]
  * @param  {Boolean}  options.debug             [description]
  * @param  {Boolean}  options.promote           [description]
  * @param  {String}   options.projectPath       [description]
@@ -178,7 +171,7 @@ const deploy = (options={}) => Promise.resolve(null).then(() => {
 	//////////////////////////////
 	// 1. Show current project and app engine details to help the user confirm that's the right one.
 	//////////////////////////////
-	return _getAppConfig(projectPath).then(appConfig => utils.project.confirm(obj.merge(options, { appConfig }))).then(({ token, projectId, locationId, service: svcName }) => {
+	return _testEnv(projectPath, options).then(() => hosting.get(projectPath, options)).then(appConfig => utils.project.confirm(obj.merge(options, { appConfig }))).then(({ token, projectId, locationId, service: svcName }) => {
 		if (svcName && service.name != svcName)
 			service.name = svcName
 		const bucket = { 
@@ -187,7 +180,7 @@ const deploy = (options={}) => Promise.resolve(null).then(() => {
 		let zip = { name: 'webfunc-app.zip' }
 		let deployStart
 		
-		console.log(info(`Deploying to service ${bold(service.name)} in project ${bold(projectId)} ${locationId ? `(${locationId}) ` : ''}`))
+		console.log(info(`Deploying app ${options.env ? `(${bold(options.env)} config) `: ''}to service ${bold(service.name)} in project ${bold(projectId)} ${locationId ? `(${locationId}) ` : ''}`))
 
 		//////////////////////////////
 		// 2. Zip project 
@@ -319,25 +312,29 @@ const deploy = (options={}) => Promise.resolve(null).then(() => {
 			////////////////////////////////////
 			// 9. Potentially save the app.json
 			////////////////////////////////////
-			.then(() => _getAppConfig(projectPath).then(appConfig => {
+			.then(() => _testEnv(projectPath, obj.merge(options, { noPrompt: true })))
+			.then(envExists => hosting.get(projectPath, options).then(appConfig => {
 				appConfig = appConfig || {}
 				const appProjectId = appConfig.projectId
 				const appService = appConfig.service
+				const envConfigDoesNotExistYet = options.env && !envExists
+				const appJson = options.env ? `app.${options.env}.json` : 'app.json'
+				const updateConfig = appProjectId && !envConfigDoesNotExistYet
 				// 9.1. The app.json has changed
-				if (projectId != appProjectId || service.name != appService) {
-					const introMsg = appProjectId
+				if (envConfigDoesNotExistYet || projectId != appProjectId || service.name != appService) {
+					const introMsg = updateConfig
 						? 'This deployement configuration is different from the one defined in the app.json'
-						: `If you don't want to answer all those questions next time, create an ${bold('app.json')} file in your app project.`
-					const actionMessage = appProjectId
-						? `Do you want to update the ${bold('app.json')} with this new configuration (Y/n)?`
-						: `Do you want to create an ${bold('app.json')} file (Y/n)? `
+						: `If you don't want to answer all those questions next time, create an ${bold(appJson)} file in your app project.`
+					const actionMessage = updateConfig
+						? `Do you want to update the ${bold(appJson)} with this new configuration (Y/n)?`
+						: `Do you want to create an ${bold(appJson)} file (Y/n)? `
 					
 					console.log(info(introMsg))
 					return askQuestion(question(actionMessage)).then(answer => {
 						if (answer == 'n')
 							return
 						else {
-							return _saveAppConfig({ projectId, service: service.name, type: 'standard' }, projectPath)
+							return hosting.save({ projectId, service: service.name, type: 'standard' }, projectPath, options)
 						}
 					})
 				} else

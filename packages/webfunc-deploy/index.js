@@ -19,7 +19,7 @@ const { deploy, list } = require('./src')
 program
 	.version('1.0.0')
 	.command('login [provider]')
-	.usage(`Login to your Google Cloud (${cmd('webfunc login google')}) or AWS (${cmd('webfunc login aws')}) account. Default is 'google' (${cmd('webfunc login')}). `)
+	.usage(`. This command logs the user to his/her Google Cloud (${cmd('webfunc login google')}) or AWS (${cmd('webfunc login aws')}) account. Default is 'google' (${cmd('webfunc login')}). `)
 	.option('-d, --debug', 'Show debugging messages.')
 	.action((provider='google', options) => {
 		if (provider == 'google')
@@ -33,7 +33,7 @@ program
 
 program
 	.command('switch')
-	.usage('Switch to another project in your current cloud account (i.e., either Google Cloud or AWS). ')
+	.usage('. This command switches to another project in your current cloud account (i.e., either Google Cloud or AWS). ')
 	.option('-d, --debug', 'Show debugging messages.')
 	.action((options) => {
 		return project.updateCurrent({ debug: options.debug }).then(() => process.exit(1))
@@ -41,11 +41,13 @@ program
 
 program
 	.command('deploy [provider]')
-	.usage('Deploy nodejs project to the specified cloud provider (i.e., either Google Cloud or AWS). Default provider is \'google\'')
+	.usage('. This command deploys the targetted project to the specified cloud provider (i.e., either Google Cloud or AWS). Default provider is \'google\'')
 	.option('-d, --debug', 'Show debugging messages.')
 	.option('--dir <dir>', 'App\'s directory (default is current working directory)')
-	.action((provider='google', options) => {
-		return deploy(provider, { debug: options.debug, projectPath: options.dir }).then(() => process.exit(1))
+	.option('-c, --custom', 'Show debugging messages.')
+	.option('-e, --env <env>', 'Show debugging messages.')
+	.action((provider='google', options) => { 
+		return deploy(provider, { debug: options.debug, projectPath: options.dir, ignoreAppConfig: options.custom, env: options.env }).then(() => process.exit(1))
 	})
 
 program

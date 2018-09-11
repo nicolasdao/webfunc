@@ -76,7 +76,19 @@ const _arraySortBy = (arr, fn = x => x, dir='asc') => (arr || []).sort((a,b) => 
 
 const sortBy = (obj, fn = x => x, dir='asc') => Array.isArray(obj) ? _arraySortBy(obj, fn, dir) : _objectSortBy(obj, fn, dir)
 const newSeed = (size=0) => Array.apply(null, Array(size))
-const mergeObj = (...objs) => Object.assign(...objs.map(obj => JSON.parse(JSON.stringify(obj))))
+const mergeObj = (...objs) => objs.reduce((acc, obj) => { //Object.assign(...objs.map(obj => JSON.parse(JSON.stringify(obj))))
+	if (!obj || typeof(obj) != 'object' || Array.isArray(obj))
+		throw new Error('Invalid argument exception. Merging objects only support object arguments. No arrays, primitive types, or non-truthy entities are allowed.')
+
+	Object.keys(obj).forEach(property => {
+		const val = obj[property]
+		const originVal = acc[property]
+		const readyToMerge = !originVal || !val || typeof(val) != 'object' || Array.isArray(val) || typeof(originVal) != 'object' || Array.isArray(originVal)
+		acc[property] = readyToMerge ? val : mergeObj(originVal, val)	
+	})
+
+	return acc
+}, {})
 
 module.exports = {
 	file: require('./files'),

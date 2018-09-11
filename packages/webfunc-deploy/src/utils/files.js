@@ -176,11 +176,22 @@ const readFile = filePath => new Promise((onSuccess, onFailure) => _fs.readFile(
 const writeToFile = (filePath, stringContent) => new Promise((onSuccess, onFailure) => _fs.writeFile(filePath, stringContent, err => 
 	err ? onFailure(err) : onSuccess()))
 
+const getJson = (filePath) => readFile(filePath)
+	.then(content => {
+		try {
+			return content ? JSON.parse(content) : {}
+		} catch(e) {
+			console.log(error(`Invalid json format in file ${filePath}.`))
+			throw e
+		}
+	})
+
 module.exports = {
 	zipToBuffer: zipNodejsProject,
 	exists: fileExists,
 	write: writeToFile,
-	read: readFile
+	read: readFile,
+	getJson
 }
 
 
