@@ -1,5 +1,5 @@
 {
-  "name": "webfunc",
+  "name": "@webfunc/webfunc",
   "version": "0.14.1",
   "description": "Lightweight HTTP handler for Google Cloud Functions. It supports CORS and also assists in initialization of web app projects hosted on Google Cloud Functions.",
   "contributors": [
@@ -13,7 +13,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/nicolasdao/webfunc.git"
+    "url": "https://github.com/webfuncjs/webfunc.git"
   },
   "keywords": [
     "cors",
@@ -26,9 +26,9 @@
   "author": "Nicolas Dao",
   "license": "BSD-3-Clause",
   "bugs": {
-    "url": "https://github.com/nicolasdao/webfunc/issues"
+    "url": "https://github.com/webfuncjs/webfunc/issues"
   },
-  "homepage": "https://github.com/nicolasdao/webfunc#readme",
+  "homepage": "https://github.com/webfuncjs/webfunc#readme",
   "dependencies": {
     "append-query": "^2.0.1",
     "colors": "^1.1.2",
