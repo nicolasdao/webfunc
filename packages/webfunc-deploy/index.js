@@ -27,7 +27,7 @@ program
 				.then(() => {
 					console.log(info('Awesome! You\'re now logged in.'))
 					console.log(info(`If you want to switch to another project, simply type ${cmd('webfunc switch')}.`))
-					process.exit(1)
+					process.exit()
 				})
 	})
 
@@ -36,18 +36,19 @@ program
 	.usage('. This command switches to another project in your current cloud account (i.e., either Google Cloud or AWS). ')
 	.option('-d, --debug', 'Show debugging messages.')
 	.action((options) => {
-		return project.updateCurrent({ debug: options.debug }).then(() => process.exit(1))
+		return project.updateCurrent({ debug: options.debug }).then(() => process.exit())
 	})
 
 program
 	.command('deploy [provider]')
+	.alias('up')
 	.usage('. This command deploys the targetted project to the specified cloud provider (i.e., either Google Cloud or AWS). Default provider is \'google\'')
 	.option('-d, --debug', 'Show debugging messages.')
 	.option('--dir <dir>', 'App\'s directory (default is current working directory).')
 	.option('-c, --custom', 'Helps to override the \'hosting\' property of the app.json file.')
 	.option('-e, --env <env>', 'Choose the \'hosting\' settings defined in the app.<env>.json file.')
 	.action((provider='google', options) => { 
-		return deploy(provider, { debug: options.debug, projectPath: options.dir, ignoreAppConfig: options.custom, env: options.env }).then(() => process.exit(1))
+		return deploy(provider, { debug: options.debug, projectPath: options.dir, ignoreAppConfig: options.custom, env: options.env }).then(() => process.exit())
 	})
 
 program
@@ -59,7 +60,7 @@ program
 	.option('-g, --global', 'Choose a project from your account first before listing the services.')
 	.option('-e, --env <env>', 'Choose the \'hosting\' settings defined in the app.<env>.json file.')
 	.action((provider='google', options) => {
-		return list(provider, { debug: options.debug, global: options.global, projectPath: options.dir, env: options.env }).then(() => process.exit(1))
+		return list(provider, { debug: options.debug, global: options.global, projectPath: options.dir, env: options.env }).then(() => process.exit())
 	})
 
 program.parse(process.argv)

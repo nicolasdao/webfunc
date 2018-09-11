@@ -129,7 +129,7 @@ const _testEnv = (projectPath, options={}) => options.env
 			console.log(info(`We can use your app.json now and create a new app.${options.env}.json after your deployment is over.`))
 			return askQuestion(question('Do you want to continue (Y/n)? ')).then(answer => {
 				if (answer == 'n')
-					process.exit(1)
+					process.exit()
 				return yes
 			})
 		} else

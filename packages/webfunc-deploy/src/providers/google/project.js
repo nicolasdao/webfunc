@@ -20,7 +20,7 @@ const getProjects = (options={ debug:false, show:false }) => getToken({ debug: (
 
 	if (!token) {
 		console.log(error('Failed to retrieve projects from Google Cloud Platform. Could not access OAuth token required for safe authentication.'))
-		process.exit(1)
+		process.exit()
 	}
 
 	return gcp.project.list(token, options).then(({ data }) => {
@@ -67,7 +67,7 @@ const selectProject = (options={ debug:false, current: null }) => getProjects(op
 		.catch(e => {
 			console.log(error(e.message))
 			console.log(error(e.stack))
-			process.exit(1)
+			process.exit()
 		})
 })
 
@@ -86,7 +86,7 @@ const updateCurrentProject = (options={ debug:false }) => authConfig.get(options
 		.then(project => {
 			if (!project) {
 				console.log(error('Failed to update the current Google Could Platform project.'))
-				process.exit(1)
+				process.exit()
 			} else if (project == '[create]')
 				return getToken(options).then(token => createNewProject(token, options))
 			else 
@@ -122,7 +122,7 @@ const createNewProject = (token, options={ debug:false }) => {
 		const projectId = `${projectName.toLowerCase().trim().replace(/\s+/g,'-')}-${identity.new({ short: true })}`.toLowerCase()
 		return askQuestion(question(`Are you sure you want to create a new project called ${bold(projectName)} (id: ${bold(projectId)}) (Y/n)? `)).then(answer => {
 			if (answer == 'n')
-				process.exit(1)
+				process.exit()
 			
 			if (options.debug)
 				console.log(debugInfo(`Creating project ${bold(projectName)} (id: ${bold(projectId)}).`))
@@ -176,7 +176,7 @@ const enableBilling = (projectId, token, options) => {
 					return askQuestion(question('Are you sure you want to continue (Y/n)? '))
 						.then(a => {
 							if (a == 'n')
-								process.exit(1)
+								process.exit()
 						})
 				}
 				return answer

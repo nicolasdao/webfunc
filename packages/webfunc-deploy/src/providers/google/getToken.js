@@ -95,7 +95,7 @@ const retrieveAndStore_GCP_Credentials = (req, res) => Promise.resolve(null).the
 		})
 }).catch(e => {
 	console.log(error('Something went wrong while processing response from the Google Cloud Platform consent page.', e.message, e.stack))
-	process.exit(1)
+	process.exit()
 })
 
 const server = createServer(retrieveAndStore_GCP_Credentials)
@@ -113,7 +113,7 @@ const startServer = (options={ debug:false }) => {
 	options.ports = options.ports || [...PORTS]
 	if (options.ports.length == 0) {
 		console.log(error(`Failed to start the node server responsible for receiving and processing the user's GCP consent response. The following ports are all allocated:\n    ${PORTS.join(',')}\nTry to free on of those ports so the server can run.`))
-		process.exit(1)
+		process.exit()
 	}
 	const port = options.ports.shift()
 	return serverListen(server, port, options)
@@ -127,7 +127,7 @@ const askUserPermission = (options={ debug:false }) => askQuestion(info('We need
 		const { debug } = options
 		if (answer && answer.toLowerCase().trim() == 'n') {
 			console.log(error('Cannot access Google Cloud Platform.'))
-			process.exit(1)
+			process.exit()
 		} else {
 			if (debug)
 				console.log(debugInfo('Starting server to process response from GCP consent page...'))
@@ -154,7 +154,7 @@ const askUserPermission = (options={ debug:false }) => askQuestion(info('We need
 						console.log(error(`The process waiting for the Google Cloud Platform user to consent has timeout after ${CONSENT_TIMEOUT/60/1000} minutes. Please try again.`))
 					else
 						console.log(error(e.message))
-					process.exit(1)
+					process.exit()
 				})
 		}
 	})
@@ -216,7 +216,7 @@ const getToken = (options = { refresh: false, debug: false }) => authConfig.get(
 		.then(google => google.accessToken)
 		.catch(e => {
 			console.log(error(`Failed to retrieve GCP OAuth token.\nError: ${e.message}\nStack trace: ${e.stack}`))
-			process.exit(1)
+			process.exit()
 		})
 })
 

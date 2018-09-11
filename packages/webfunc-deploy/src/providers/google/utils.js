@@ -89,7 +89,7 @@ const _confirmAppEngineIsReady = (projectId, token, options={}) => {
 						]
 						return promptList({ message: 'Choose one of the following options:', choices, separator: false}).then(answer => {
 							if (!answer)
-								process.exit(1)
+								process.exit()
 							return getToken(answer == 'account' ? { debug: options.debug, refresh: true, origin: 'Testing project active' } : { debug: options.debug, refresh: false, origin: 'Testing project active' })
 								.then(tkn => updateCurrentProject(options).then(({ project: newProjectId }) => ({ projectId: newProjectId, token: tkn })))
 						})
@@ -132,10 +132,10 @@ const _confirmAppEngineIsReady = (projectId, token, options={}) => {
 						.catch(e => {
 							console.log(error(e.message))
 							console.log(error(e.stack))
-							process.exit(1)
+							process.exit()
 						}).then(answer => {
 							if (!answer) 
-								process.exit(1)
+								process.exit()
 
 							const appEngDone = wait(`Creating a new App Engine (region: ${bold(answer)}) in project ${bold(projectId)}`)
 							return gcp.app.create(projectId, answer, token, options)
@@ -151,7 +151,7 @@ const _confirmAppEngineIsReady = (projectId, token, options={}) => {
 										}
 										else if (data && data.message) {
 											console.log(error('Fail to create App Engine. Details:', JSON.stringify(data, null, '  ')))
-											process.exit(1)
+											process.exit()
 										} else 
 											return false
 									})
@@ -192,7 +192,7 @@ const _confirmAppEngineIsReady = (projectId, token, options={}) => {
 
 			return ask.then(answer => {
 				if (!answer)
-					process.exit(1)
+					process.exit()
 				else if (answer == 'switchService') {
 					return _chooseService(projectId, options).then(service => ({ token, projectId, locationId, service }))
 				} else if (answer == 'switchProject' || answer == 'switchAccount')
@@ -222,7 +222,7 @@ const _chooseService = (projectId, options={}) => getToken(options).then(token =
 		console.log(info('The \'default\' service is required to be created first. Once it is created, creating other services will be allowed.'))
 		return askQuestion(question('Do you want to continue using the \'default\' service (Y/n)? ')).then(answer => {
 			if (answer == 'n')
-				process.exit(1)
+				process.exit()
 			else
 				return 'default'
 		})
