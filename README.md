@@ -1,13 +1,8 @@
-<div style="
-    min-width: 200px;
-    min-height: 30px;
-    border: 1px solid #ff6060;
-    border-radius: 5px;
-    background-color: #ffb6b6;
-"><p style="
-    margin: 3px 0px 0px 10px;
-    color: #d83125;
-"><strong>WARNING</strong>: This project is no longer supported. If you still plan on using this project, be aware that it does not support Zeit Now >= 2.0. We are currently working on a replacement project that we hope to release very soon. Thank you for your support. The Neap Team</p></div>
+```
+__WARNING__: This project is no longer supported. If you still plan on using this project, be aware that it does not support Zeit Now >= 2.0. We are currently working on a replacement project that we hope to release very soon. Thank you for your support. 
+
+The Neap Team
+```
 
 # WebFunc &middot;  [![NPM](https://img.shields.io/npm/v/webfunc.svg?style=flat)](https://www.npmjs.com/package/webfunc) [![Tests](https://travis-ci.org/nicolasdao/webfunc.svg?branch=master)](https://travis-ci.org/nicolasdao/webfunc) [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause) [![Neap](https://neap.co/img/made_by_neap.svg)](#this-is-what-we-re-up-to)
 __*Universal Serverless Web Framework*__. Write code for serverless similar to [Express](https://expressjs.com/) once, deploy everywhere (thanks to the awesome [Zeit Now-CLI](https://zeit.co/now)). This also include creating functions that can get triggered by [Google Cloud PubSub topics](https://cloud.google.com/pubsub/docs/overview). Targeted platforms:
