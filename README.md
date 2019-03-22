@@ -1,5 +1,6 @@
+__WARNING__:
 ```
-__WARNING__: This project is no longer supported. If you still plan on using this project, be aware that it does not support Zeit Now >= 2.0. We are currently working on a replacement project that we hope to release very soon. Thank you for your support. 
+This project is no longer supported. If you still plan on using this project, be aware that it does not support Zeit Now >= 2.0. We are currently working on a replacement project that we hope to release very soon. Thank you for your support. 
 
 The Neap Team
 ```
