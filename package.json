@@ -8,8 +8,10 @@
   "main": "src/index.js",
   "scripts": {
     "test": "mocha",
-    "eslint": "eslint src/ test/ --fix",
-    "release": "standard-version"
+    "lint": "eslint index.js test/ src/ --fix",
+    "push": "git push --follow-tags origin master && npm publish",
+    "rls": "standard-version --release-as",
+    "v": "node -e \"console.log(require('./package.json').version)\""
   },
   "repository": {
     "type": "git",
