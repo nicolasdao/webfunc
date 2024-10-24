@@ -35,15 +35,15 @@
     "express": "^4.16.2",
     "http-errors": "^1.6.1",
     "node-mocks-http": "^1.6.4",
-    "path-to-regexp": "^2.1.0",
+    "path-to-regexp": "^8.2.0",
     "raw-body": "^2.3.2",
     "shortid": "^2.2.8",
     "vary": "^1.1.2"
   },
   "devDependencies": {
     "chai": "^4.1.0",
-    "eslint": "^4.1.1",
-    "mocha": "^3.4.2",
-    "standard-version": "^4.2.0"
+    "eslint": "^9.13.0",
+    "mocha": "^10.7.3",
+    "standard-version": "^9.5.0"
   }
 }
