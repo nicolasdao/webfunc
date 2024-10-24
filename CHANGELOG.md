@@ -1,6 +1,13 @@
-# Change Log
+# Changelog
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
+
+## [0.15.0](https://github.com/nicolasdao/webfunc/compare/v0.14.1...v0.15.0) (2024-10-24)
+
+
+### Bug Fixes
+
+* Vulnerabilities ([3e4dabc](https://github.com/nicolasdao/webfunc/commit/3e4dabc7ebc48fe22ef4f568ce8f03ea0d874744))
 
 <a name="0.14.1"></a>
 ## [0.14.1](https://github.com/nicolasdao/webfunc/compare/v0.14.0...v0.14.1) (2018-03-04)
